@@ -1,7 +1,7 @@
 import dialogflow_v2 as dialogflow
 from google.oauth2 import service_account
 from django.conf import settings
-from operator_interface.models import Message
+from operator_interface.models import Message, MessageSuggestion, Conversation
 from celery import shared_task
 import operator_interface.tasks
 import logging
@@ -26,8 +26,26 @@ def handle_message(mid):
     query_input = dialogflow.types.QueryInput(text=text_input)
 
     response = session_client.detect_intent(session=session, query_input=query_input)
+    handle_response(conversation, response)
 
-    resp_message = Message(conversation=conversation, text=response.query_result.fulfillment_text,
+
+@shared_task
+def handle_event(cid, event):
+    conversation = Conversation.objects.get(id=cid)
+
+    logging.info(f"Got event of \"{event}\" to process with dialogflow")
+
+    session = session_client.session_path(settings.GOOGLE_PROJECT_ID,
+                                          f"{conversation.platform}:{conversation.platform_id}:{conversation.noonce}")
+
+    event_input = dialogflow.types.EventInput(event=event)
+    query_input = dialogflow.types.QueryInput(event=event_input)
+
+    response = session_client.detect_intent(session=session, query_input=query_input)
+    handle_response(conversation, response)
+
+
+def handle_response(conversation, response):
     for context in response.query_result.output_contexts:
         context = context.name.split("/")[-1]
         if context == "human-needed":
