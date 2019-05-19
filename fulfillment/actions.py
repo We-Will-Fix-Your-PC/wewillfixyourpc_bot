@@ -81,7 +81,7 @@ def opening_hours(params, _):
         if is_today:
             if hours is None:
                 return {
-                    "fulfillmentText": f"Today we are closed"
+                    "fulfillmentText": f"We are closed today"
                 }
             return {
                 "fulfillmentText": f"Today we are open {format_hours(hours)}"
@@ -93,7 +93,7 @@ def opening_hours(params, _):
             if is_next_of_weekday:
                 if hours is None:
                     return {
-                        "fulfillmentText": f"{want_date.strftime('%A')} we are closed"
+                        "fulfillmentText": f"We are closed {want_date.strftime('%A')}"
                     }
                 return {
                     "fulfillmentText": f"{want_date.strftime('%A')} we are open {format_hours(hours)}"
@@ -101,11 +101,13 @@ def opening_hours(params, _):
             else:
                 if hours is None:
                     return {
-                        "fulfillmentText": f"{want_date.strftime('%A %B %-d')}{suffix(want_date.day)} we are closed"
+                        "fulfillmentText":
+                            f"On {want_date.strftime('%A %B the %-d')}{suffix(want_date.day)} we are closed"
                     }
                 return {
-                    "fulfillmentText": f"{want_date.strftime('%A %B %-d')}{suffix(want_date.day)} we are"
-                    f" open {format_hours(hours)}"
+                    "fulfillmentText":
+                        f"On {want_date.strftime('%A %B the %-d')}{suffix(want_date.day)} we are open"
+                        f" {format_hours(hours)}"
                 }
 
     days = [("Monday", "Monday", opening_hours_defs["monday"]),
