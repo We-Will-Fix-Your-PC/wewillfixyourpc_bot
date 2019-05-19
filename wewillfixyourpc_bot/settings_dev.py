@@ -20,7 +20,8 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # See https://docs.djangoproject.com/en/2.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = '-)s1^^n2u@&ac_&@a5$v8(xxx^kjaa81r*+4wun!z*dj+0j$ra'
+with open(os.path.join(BASE_DIR, "SECRET_KEY")) as f:
+    SECRET_KEY = f.read()
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -40,6 +41,7 @@ INSTALLED_APPS = [
     'djsingleton',
     'phonenumber_field',
     'fulfillment',
+    'dialogflow_client',
 ]
 
 MIDDLEWARE = [
@@ -128,3 +130,5 @@ PHONENUMBER_DEFAULT_REGION = "GB"
 CELERY_RESULT_BACKEND = "redis://localhost"
 CELERY_BROKER_URL = "pyamqp://"
 
+GOOGLE_CREDENTIALS_FILE = "WeWillFixYourPC.json"
+GOOGLE_PROJECT_ID = "wewillfixyourpc-8df73"
