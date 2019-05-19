@@ -18,12 +18,16 @@ def handle_facebook_message(psid, message):
 
 
 @shared_task
-def send_facebook_message(psid, resp):
+def send_facebook_message(mid):
+    message = Message.objects.get(id=mid)
+    psid = message.conversation.platform_id
     request_body = {
         "recipient": {
             "id": psid
         },
-        "message": resp
+        "message": {
+            "text": message.text
+        }
     }
     r = requests.post("https://graph.facebook.com/v2.6/me/messages",
                       params={"access_token": settings.FACEBOOK_ACCESS_TOKEN}, json=request_body)
