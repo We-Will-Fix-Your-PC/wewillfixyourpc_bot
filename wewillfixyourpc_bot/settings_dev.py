@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'djsingleton',
     'phonenumber_field',
     'fulfillment',
+    'facebook',
     'dialogflow_client',
 ]
 
@@ -130,5 +131,12 @@ PHONENUMBER_DEFAULT_REGION = "GB"
 CELERY_RESULT_BACKEND = "redis://localhost"
 CELERY_BROKER_URL = "pyamqp://"
 
+with open(os.path.join(BASE_DIR, "facebook.json")) as f:
+    facebook_conf = json.load(f)
+
+FACEBOOK_VERIFY_TOKEN = facebook_conf["verify_token"]
+FACEBOOK_ACCESS_TOKEN = facebook_conf["access_token"]
+
 GOOGLE_CREDENTIALS_FILE = "WeWillFixYourPC.json"
 GOOGLE_PROJECT_ID = "wewillfixyourpc-8df73"
+
