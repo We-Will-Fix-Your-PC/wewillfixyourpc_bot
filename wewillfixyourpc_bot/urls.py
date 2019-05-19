@@ -20,4 +20,5 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('fulfillment/', include('fulfillment.urls')),
     path('twitter/', include('twitter.urls')),
+    path('facebook/', include('facebook.urls')),
 ]
