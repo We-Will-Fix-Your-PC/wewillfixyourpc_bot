@@ -218,3 +218,7 @@ fabric.properties
 .idea/sonarlint
 
 # End of https://www.gitignore.io/api/django,pycharm
+
+facebook.json
+WeWillFixYourPC.json
+SECRET_KEY
