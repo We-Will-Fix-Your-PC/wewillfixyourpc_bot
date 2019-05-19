@@ -3,6 +3,7 @@ from django.conf import settings
 import requests
 from operator_interface.models import Conversation, Message
 import operator_interface.tasks
+import logging
 
 
 @shared_task
@@ -31,4 +32,5 @@ def send_facebook_message(mid):
     }
     r = requests.post("https://graph.facebook.com/v2.6/me/messages",
                       params={"access_token": settings.FACEBOOK_ACCESS_TOKEN}, json=request_body)
-    r.raise_for_status()
+    if r.status_code != 200:
+        logging.error(f"Error sending facebook message: {r.status_code} {r.text}")

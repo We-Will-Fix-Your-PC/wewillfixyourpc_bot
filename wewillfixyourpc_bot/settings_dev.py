@@ -133,6 +133,8 @@ PHONENUMBER_DEFAULT_REGION = "GB"
 
 CELERY_RESULT_BACKEND = "redis://localhost"
 CELERY_BROKER_URL = "pyamqp://"
+CELERY_TASK_SERIALIZER = "json"
+CELERY_ACCEPT_CONTENT = ["json"]
 
 with open(os.path.join(BASE_DIR, "facebook.json")) as f:
     facebook_conf = json.load(f)

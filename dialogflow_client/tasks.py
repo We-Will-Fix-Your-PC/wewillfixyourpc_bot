@@ -4,6 +4,7 @@ from django.conf import settings
 from operator_interface.models import Message
 from celery import shared_task
 import operator_interface.tasks
+import logging
 
 credentials = service_account.Credentials.from_service_account_file(settings.GOOGLE_CREDENTIALS_FILE)
 session_client = dialogflow.SessionsClient(credentials=credentials)
@@ -14,6 +15,9 @@ def handle_message(mid):
     message = Message.objects.get(id=mid)
     conversation = message.conversation
     text = message.text
+
+    logging.info(f"Got message of \"{text}\" to process with dialogflow")
+
     session = session_client.session_path(settings.GOOGLE_PROJECT_ID,
                                           f"{conversation.platform}:{conversation.platform_id}")
 
@@ -25,5 +29,7 @@ def handle_message(mid):
     resp_message = Message(conversation=conversation, text=response.query_result.fulfillment_text,
                            direction=Message.TO_CUSTOMER, message_id=response.response_id)
     resp_message.save()
+
+    logging.info(f"Dialogflow gave response of \"{text}\"")
 
     operator_interface.tasks.process_message.delay(resp_message.id)
