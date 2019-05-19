@@ -54,8 +54,33 @@ def handle_response(conversation, response):
         if context == "close":
             conversation.noonce = secrets.token_urlsafe(10)
             conversation.save()
+
+    messages = response.query_result.fulfillment_messages
+    text = list(filter(lambda m: m.WhichOneof("message") == "text", messages))
+    text_platform = []
+    if conversation.platform == Conversation.FACEBOOK:
+        text_platform = \
+            list(filter(lambda m: m.platform == dialogflow.types.intent_pb2.Intent.Message.FACEBOOK, text))
+    if len(text_platform) > 0:
+        text = text_platform[0].text.text[0]
+    else:
+        text = text[0].text.text[0]
+
+    quick_replies = list(filter(lambda m: m.WhichOneof("message") == "quick_replies", messages))
+    if conversation.platform == Conversation.FACEBOOK:
+        quick_replies = \
+            list(filter(lambda m: m.platform == dialogflow.types.intent_pb2.Intent.Message.FACEBOOK, quick_replies))
+
+    resp_message = Message(conversation=conversation, text=text,
                            direction=Message.TO_CUSTOMER, message_id=response.response_id)
     resp_message.save()
+
+    if conversation.platform == Conversation.FACEBOOK:
+        if len(quick_replies) > 0:
+            quick_replies = quick_replies[0].quick_replies.quick_replies
+            for reply in quick_replies:
+                suggestion = MessageSuggestion(message=resp_message, suggested_response=reply)
+                suggestion.save()
 
     logging.info(f"Dialogflow gave response of \"{text}\"")
 

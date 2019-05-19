@@ -22,6 +22,15 @@ def handle_facebook_message(psid, message):
 def send_facebook_message(mid):
     message = Message.objects.get(id=mid)
     psid = message.conversation.platform_id
+
+    quick_replies = []
+    for suggestion in message.messagesuggestion_set.all():
+        quick_replies.append({
+            "content_type": "text",
+            "title": suggestion.suggested_response,
+            "payload": suggestion.id
+        })
+
     request_body = {
         "recipient": {
             "id": psid
@@ -30,7 +39,19 @@ def send_facebook_message(mid):
             "text": message.text
         }
     }
+    if len(quick_replies) > 0:
+        request_body["message"]["quick_replies"] = quick_replies
     r = requests.post("https://graph.facebook.com/v2.6/me/messages",
                       params={"access_token": settings.FACEBOOK_ACCESS_TOKEN}, json=request_body)
     if r.status_code != 200:
         logging.error(f"Error sending facebook message: {r.status_code} {r.text}")
+        request_body = {
+            "recipient": {
+                "id": psid
+            },
+            "message": {
+                "text": "Sorry, I'm having some difficulty processing your request. Please try again later"
+            }
+        }
+        requests.post("https://graph.facebook.com/v2.6/me/messages",
+                      params={"access_token": settings.FACEBOOK_ACCESS_TOKEN}, json=request_body).raise_for_status()
