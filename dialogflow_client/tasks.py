@@ -5,6 +5,7 @@ from operator_interface.models import Message
 from celery import shared_task
 import operator_interface.tasks
 import logging
+import secrets
 
 credentials = service_account.Credentials.from_service_account_file(settings.GOOGLE_CREDENTIALS_FILE)
 session_client = dialogflow.SessionsClient(credentials=credentials)
@@ -19,7 +20,7 @@ def handle_message(mid):
     logging.info(f"Got message of \"{text}\" to process with dialogflow")
 
     session = session_client.session_path(settings.GOOGLE_PROJECT_ID,
-                                          f"{conversation.platform}:{conversation.platform_id}")
+                                          f"{conversation.platform}:{conversation.platform_id}:{conversation.noonce}")
 
     text_input = dialogflow.types.TextInput(text=text, language_code="en-GB")
     query_input = dialogflow.types.QueryInput(text=text_input)
@@ -27,6 +28,14 @@ def handle_message(mid):
     response = session_client.detect_intent(session=session, query_input=query_input)
 
     resp_message = Message(conversation=conversation, text=response.query_result.fulfillment_text,
+    for context in response.query_result.output_contexts:
+        context = context.name.split("/")[-1]
+        if context == "human-needed":
+            conversation.agent_responding = False
+            conversation.save()
+        if context == "close":
+            conversation.noonce = secrets.token_urlsafe(10)
+            conversation.save()
                            direction=Message.TO_CUSTOMER, message_id=response.response_id)
     resp_message.save()
 

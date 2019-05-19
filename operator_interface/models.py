@@ -1,5 +1,6 @@
 from django.db import models
 from django.utils import timezone
+import secrets
 
 
 class Conversation(models.Model):
@@ -12,6 +13,7 @@ class Conversation(models.Model):
 
     platform = models.CharField(max_length=2, choices=PLATFORM_CHOICES)
     platform_id = models.CharField(max_length=255)
+    noonce = models.CharField(max_length=255)
     agent_responding = models.BooleanField(default=True)
 
     @classmethod
@@ -19,7 +21,7 @@ class Conversation(models.Model):
         try:
             return cls.objects.get(platform=platform, platform_id=platform_id)
         except cls.DoesNotExist:
-            conv = cls(platform=platform, platform_id=platform_id)
+            conv = cls(platform=platform, platform_id=platform_id, noonce=secrets.token_urlsafe(10))
             conv.save()
             return conv
 
