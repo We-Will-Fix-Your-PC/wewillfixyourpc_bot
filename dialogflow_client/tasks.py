@@ -3,6 +3,7 @@ from google.oauth2 import service_account
 from django.conf import settings
 from operator_interface.models import Message
 from celery import shared_task
+import operator_interface.tasks
 
 credentials = service_account.Credentials.from_service_account_file(settings.GOOGLE_CREDENTIALS_FILE)
 session_client = dialogflow.SessionsClient(credentials=credentials)
@@ -20,4 +21,9 @@ def handle_message(mid):
     query_input = dialogflow.types.QueryInput(text=text_input)
 
     response = session_client.detect_intent(session=session, query_input=query_input)
-    print(response.query_result.fulfillment_text)
+
+    resp_message = Message(conversation=conversation, text=response.query_result.fulfillment_text,
+                           direction=Message.TO_CUSTOMER, message_id=response.response_id)
+    resp_message.save()
+
+    operator_interface.tasks.process_message.delay(resp_message.id)

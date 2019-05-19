@@ -1,4 +1,5 @@
 from django.db import models
+from django.utils import timezone
 
 
 class Conversation(models.Model):
@@ -35,6 +36,7 @@ class Message(models.Model):
     message_id = models.CharField(max_length=255)
     direction = models.CharField(max_length=1, choices=DIRECTION_CHOICES)
     text = models.TextField()
+    timestamp = models.DateTimeField(default=timezone.now)
 
     @classmethod
     def message_exits(cls, conversation, message_id):
