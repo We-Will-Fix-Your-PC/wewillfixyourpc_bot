@@ -1,0 +1,9 @@
+Django
+djsingleton
+django-phonenumber-field
+dateutils
+phonenumbers
+mysqlclient
+redis
+celery
+TwitterAPI
