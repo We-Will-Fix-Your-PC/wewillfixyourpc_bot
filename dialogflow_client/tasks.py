@@ -30,7 +30,7 @@ def handle_event(cid, event):
 
     logging.info(f"Got event of \"{event}\" to process with dialogflow")
 
-    event_input = dialogflow.types.EventInput(event=event, language_code="en-GB")
+    event_input = dialogflow.types.EventInput(name=event, language_code="en-GB")
     query_input = dialogflow.types.QueryInput(event=event_input)
 
     handle_response(conversation, query_input)
