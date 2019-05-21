@@ -2,8 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="597cf093-beff-4a88-a5da-78bbb737ec9c" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/dialogflow_client/tasks.py" beforeDir="false" afterPath="$PROJECT_DIR$/dialogflow_client/tasks.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/operator_interface/models.py" beforeDir="false" afterPath="$PROJECT_DIR$/operator_interface/models.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -62,11 +61,6 @@
         </entry>
       </file>
       <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/operator_interface/tests.py">
-          <provider selected="true" editor-type-id="text-editor" />
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/operator_interface/views.py">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="42">
@@ -91,6 +85,18 @@
         </entry>
       </file>
       <file pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/operator_interface/models.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="240">
+              <caret line="28" column="53" selection-start-line="28" selection-start-column="53" selection-end-line="28" selection-end-column="53" />
+              <folding>
+                <element signature="e#0#28#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/dialogflow_client/tasks.py">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="448">
@@ -188,7 +194,6 @@
         <option value="$PROJECT_DIR$/operator_interface/templates/operator_interface/src/Conversation.js" />
         <option value="$PROJECT_DIR$/operator_interface/templates/operator_interface/src/App.scss" />
         <option value="$PROJECT_DIR$/fulfillment/views.py" />
-        <option value="$PROJECT_DIR$/operator_interface/models.py" />
         <option value="$PROJECT_DIR$/operator_interface/admin.py" />
         <option value="$PROJECT_DIR$/fulfillment/actions.py" />
         <option value="$PROJECT_DIR$/facebook/urls.py" />
@@ -207,6 +212,7 @@
         <option value="$PROJECT_DIR$/operator_interface/tasks.py" />
         <option value="$PROJECT_DIR$/facebook/tasks.py" />
         <option value="$PROJECT_DIR$/dialogflow_client/tasks.py" />
+        <option value="$PROJECT_DIR$/operator_interface/models.py" />
       </list>
     </option>
   </component>
@@ -386,12 +392,12 @@
       <workItem from="1558181008461" duration="19055000" />
       <workItem from="1558257699507" duration="29763000" />
       <workItem from="1558363303260" duration="17350000" />
-      <workItem from="1558419459227" duration="25858000" />
+      <workItem from="1558419459227" duration="26503000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="92026000" />
+    <option name="totallyTimeSpent" value="92671000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="0" y="0" width="1920" height="1181" extended-state="6" />
@@ -629,16 +635,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/operator_interface/models.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="756">
-          <caret line="54" column="36" selection-start-line="54" selection-start-column="36" selection-end-line="54" selection-end-column="36" />
-          <folding>
-            <element signature="e#0#28#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/operator_interface/admin.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="70">
@@ -759,16 +755,6 @@
     <entry file="file://$PROJECT_DIR$/dialogflow_client/models.py">
       <provider selected="true" editor-type-id="text-editor" />
     </entry>
-    <entry file="file://$PROJECT_DIR$/wewillfixyourpc_bot/settings.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="982">
-          <caret line="193" column="10" selection-start-line="193" selection-start-column="10" selection-end-line="193" selection-end-column="10" />
-          <folding>
-            <element signature="e#320#329#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/facebook/views.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="700">
@@ -816,6 +802,16 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/dialogflow_client/tasks.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="448">
+          <caret line="32" column="50" selection-start-line="32" selection-start-column="50" selection-end-line="32" selection-end-column="50" />
+          <folding>
+            <element signature="e#0#34#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/operator_interface/views.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="42">
@@ -826,12 +822,22 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/dialogflow_client/tasks.py">
+    <entry file="file://$PROJECT_DIR$/wewillfixyourpc_bot/settings.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="448">
-          <caret line="32" column="50" selection-start-line="32" selection-start-column="50" selection-end-line="32" selection-end-column="50" />
+        <state relative-caret-position="982">
+          <caret line="193" column="10" selection-start-line="193" selection-start-column="10" selection-end-line="193" selection-end-column="10" />
           <folding>
-            <element signature="e#0#34#0" expanded="true" />
+            <element signature="e#320#329#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/operator_interface/models.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="240">
+          <caret line="28" column="53" selection-start-line="28" selection-start-column="53" selection-end-line="28" selection-end-column="53" />
+          <folding>
+            <element signature="e#0#28#0" expanded="true" />
           </folding>
         </state>
       </provider>

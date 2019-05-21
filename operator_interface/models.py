@@ -40,7 +40,7 @@ class Conversation(models.Model):
             conv.save()
             return conv
 
-    def rest(self):
+    def reset(self):
         self.noonce = secrets.token_urlsafe(10)
         self.agent_responding = True
         self.save()
@@ -68,6 +68,9 @@ class Message(models.Model):
     direction = models.CharField(max_length=1, choices=DIRECTION_CHOICES)
     text = models.TextField()
     timestamp = models.DateTimeField(default=timezone.now)
+
+    def __str__(self):
+        return f"{str(self.conversation)} - {self.timestamp.isoformat()}"
 
     @classmethod
     def message_exits(cls, conversation, message_id):
