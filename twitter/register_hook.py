@@ -6,7 +6,7 @@ import django
 from django.conf import settings
 
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'wewillfixyourpc_bot.settings_dev')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'wewillfixyourpc_bot.settings')
 django.setup()
 
 import twitter.views

@@ -7,3 +7,6 @@ mysqlclient
 redis
 celery
 pika
+requests
+requests_oauthlib
+dialogflow
