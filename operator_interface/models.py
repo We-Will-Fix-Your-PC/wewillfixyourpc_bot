@@ -84,3 +84,6 @@ class Message(models.Model):
 class MessageSuggestion(models.Model):
     message = models.ForeignKey(Message, on_delete=models.CASCADE)
     suggested_response = models.TextField()
+
+    def __str__(self):
+        return self.suggested_response

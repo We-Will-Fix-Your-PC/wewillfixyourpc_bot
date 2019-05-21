@@ -48,19 +48,19 @@ def update_facebook_profile(psid, cid):
         "fields": "first_name,last_name,profile_pic",
         "access_token": settings.FACEBOOK_ACCESS_TOKEN
     })
-    if r.status_code == 200:
-        r = r.json()
-        name = f"{r['first_name']} {r['last_name']}"
-        profile_pic = r["profile_pic"]
-        if not conversation.customer_pic or conversation.customer_pic.name != psid:
-            r = requests.get(profile_pic)
-            if r.status_code == 200:
-                conversation.customer_pic = \
-                    InMemoryUploadedFile(file=BytesIO(r.content), size=len(r.content), charset=r.encoding,
-                                         content_type=r.headers.get('content-type'), field_name=psid,
-                                         name=psid)
-        conversation.customer_name = name
-        conversation.save()
+    r.raise_for_status()
+    r = r.json()
+    name = f"{r['first_name']} {r['last_name']}"
+    profile_pic = r["profile_pic"]
+    if not conversation.customer_pic or conversation.customer_pic.name != psid:
+        r = requests.get(profile_pic)
+        if r.status_code == 200:
+            conversation.customer_pic = \
+                InMemoryUploadedFile(file=BytesIO(r.content), size=len(r.content), charset=r.encoding,
+                                     content_type=r.headers.get('content-type'), field_name=psid,
+                                     name=psid)
+    conversation.customer_name = name
+    conversation.save()
 
 
 @shared_task
@@ -72,7 +72,7 @@ def handle_mark_facebook_message_read(psid):
                           "id": psid
                       },
                       "sender_action": "mark_seen"
-                  })
+                  }).raise_for_status()
 
 
 @shared_task
@@ -85,7 +85,7 @@ def handle_facebook_message_typing_on(cid):
                           "id": conversation.platform_id
                       },
                       "sender_action": "typing_on"
-                  })
+                  }).raise_for_status()
 
 
 @shared_task
@@ -100,7 +100,7 @@ def send_facebook_message(mid):
                           "id": psid
                       },
                       "sender_action": "typing_off"
-                  })
+                  }).raise_for_status()
 
     quick_replies = []
     for suggestion in message.messagesuggestion_set.all():
