@@ -16,6 +16,11 @@ class Conversation(models.Model):
     noonce = models.CharField(max_length=255)
     agent_responding = models.BooleanField(default=True)
 
+    def __str__(self):
+        platform = list(filter(lambda p: p[0] == self.platform, self.PLATFORM_CHOICES))
+        platform = platform[0][1] if len(platform) else "UNKNOWN"
+        return f"{platform} - {self.customer_name}"
+
     @classmethod
     def get_or_create_conversation(cls, platform, platform_id):
         try:
