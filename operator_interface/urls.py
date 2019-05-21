@@ -1,7 +1,7 @@
 from django.urls import path
 from . import views
 
-app_name = 'facebook'
+app_name = 'operator'
 urlpatterns = [
-    path('webhook/', views.webhook),
+    path('', views.index),
 ]

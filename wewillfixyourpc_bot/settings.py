@@ -42,6 +42,10 @@ INSTALLED_APPS = [
     'djsingleton',
     'phonenumber_field',
     'fulfillment',
+    'facebook',
+    'twitter',
+    'operator_interface',
+    'dialogflow_client',
 ]
 
 MIDDLEWARE = [

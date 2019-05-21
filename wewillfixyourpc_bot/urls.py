@@ -15,10 +15,17 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from django.conf.urls.static import static
+from django.conf import settings
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('fulfillment/', include('fulfillment.urls')),
-    path('twitter/', include('twitter.urls')),
-    path('facebook/', include('facebook.urls')),
+    path('fulfillment/', include('fulfillment.urls', namespace='fulfillment')),
+    path('twitter/', include('twitter.urls', namespace='twitter')),
+    path('facebook/', include('facebook.urls', namespace='facebook')),
+    path('', include('operator_interface.urls', namespace='operator')),
 ]
+
+if settings.DEBUG:
+    urlpatterns += static('static/', document_root=settings.STATIC_ROOT)
+    urlpatterns += static('media/', document_root=settings.MEDIA_ROOT)
