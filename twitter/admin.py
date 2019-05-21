@@ -1,3 +1,9 @@
 from django.contrib import admin
+from djsingleton.admin import SingletonAdmin
+from . import models
+from . import forms
 
-# Register your models here.
+
+@admin.register(models.Config)
+class ConfigAdmin(SingletonAdmin):
+    form = forms.TwitterAuthForm

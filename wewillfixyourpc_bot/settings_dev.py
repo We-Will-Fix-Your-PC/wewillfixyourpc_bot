@@ -142,9 +142,19 @@ CELERY_ACCEPT_CONTENT = ["json"]
 
 with open(os.path.join(BASE_DIR, "facebook.json")) as f:
     facebook_conf = json.load(f)
+with open(os.path.join(BASE_DIR, "twitter.json")) as f:
+    twitter_conf = json.load(f)
 
 FACEBOOK_VERIFY_TOKEN = facebook_conf["verify_token"]
 FACEBOOK_ACCESS_TOKEN = facebook_conf["access_token"]
+
+TWITTER_CONSUMER_KEY = twitter_conf["consumer_key"]
+TWITTER_CONSUMER_SECRET = twitter_conf["consumer_secret"]
+TWITTER_ACCESS_TOKEN = twitter_conf["access_token"]
+TWITTER_ACCESS_TOKEN_SECRET = twitter_conf["access_token_secret"]
+
+TWITTER_ENVNAME = "main"
+TWITTER_WEBHOOK_ID = "1130531172226949120"
 
 GOOGLE_CREDENTIALS_FILE = "WeWillFixYourPC.json"
 GOOGLE_PROJECT_ID = "wewillfixyourpc-8df73"
