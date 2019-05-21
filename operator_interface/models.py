@@ -25,6 +25,10 @@ class Conversation(models.Model):
             conv.save()
             return conv
 
+    def rest(self):
+        self.noonce = secrets.token_urlsafe(10)
+        self.agent_responding = True
+        self.save()
 
 class Message(models.Model):
     TO_CUSTOMER = 'I'
