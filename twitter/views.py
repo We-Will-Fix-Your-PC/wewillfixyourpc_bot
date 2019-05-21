@@ -101,6 +101,32 @@ def deauthorise(request):
     return redirect(request.META.get('HTTP_REFERER'))
 
 
+@csrf_exempt
 def webhook(request):
-    print(request.body)
+    if request.method == "GET":
+        sha256_hash_digest = hmac.new(settings.TWITTER_CONSUMER_SECRET.encode(),
+                                      msg=request.GET.get('crc_token').encode(),
+                                      digestmod=hashlib.sha256).digest()
+
+        # construct response data with base64 encoded hash
+        return HttpResponse(json.dumps({
+            'response_token': 'sha256=' + base64.b64encode(sha256_hash_digest).decode()
+        }))
+
+    r = json.loads(request.body)
+
+    for_user = r["for_user_id"]
+    if r.get("direct_message_events") is not None:
+        users = r["users"]
+        messages = r["direct_message_events"]
+        for message in messages:
+            if message["type"] == "message_create":
+                mid = message["id"]
+                message = message["message_create"]
+                psid = message["sender_id"]
+                if psid != for_user:
+                    message = message["message_data"]
+                    user = users[psid]
+                    tasks.handle_twitter_message.delay(mid, psid, message, user)
+
     return HttpResponse("")
