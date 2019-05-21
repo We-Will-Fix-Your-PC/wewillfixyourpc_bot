@@ -15,6 +15,9 @@ class Conversation(models.Model):
     platform_id = models.CharField(max_length=255)
     noonce = models.CharField(max_length=255)
     agent_responding = models.BooleanField(default=True)
+    customer_name = models.CharField(max_length=255, blank=True, null=True)
+    customer_username = models.CharField(max_length=255, blank=True, null=True)
+    customer_pic = models.ImageField(blank=True, null=True)
 
     def __str__(self):
         platform = list(filter(lambda p: p[0] == self.platform, self.PLATFORM_CHOICES))
@@ -22,11 +25,18 @@ class Conversation(models.Model):
         return f"{platform} - {self.customer_name}"
 
     @classmethod
-    def get_or_create_conversation(cls, platform, platform_id):
+    def get_or_create_conversation(cls, platform, platform_id, customer_name=None, customer_username=None,
+                                   customer_pic=None):
         try:
-            return cls.objects.get(platform=platform, platform_id=platform_id)
+            conv = cls.objects.get(platform=platform, platform_id=platform_id)
+            conv.customer_name = customer_name
+            conv.customer_username = customer_username
+            conv.customer_pic = customer_pic
+            conv.save()
+            return conv
         except cls.DoesNotExist:
-            conv = cls(platform=platform, platform_id=platform_id, noonce=secrets.token_urlsafe(10))
+            conv = cls(platform=platform, platform_id=platform_id, noonce=secrets.token_urlsafe(10),
+                       customer_name=customer_name, customer_username=customer_username, customer_pic=None)
             conv.save()
             return conv
 
