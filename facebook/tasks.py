@@ -4,8 +4,7 @@ import requests
 from operator_interface.models import Conversation, Message
 import operator_interface.tasks
 import logging
-import os
-import urllib.parse
+import json
 from io import BytesIO
 from django.core.files.uploadedfile import InMemoryUploadedFile
 
@@ -21,23 +20,41 @@ def handle_facebook_message(psid, message):
             message_m.save()
             handle_mark_facebook_message_read.delay(psid)
             operator_interface.tasks.process_message.delay(message_m.id)
-        r = requests.get(f"https://graph.facebook.com/{psid}", params={
-            "fields": "first_name,last_name,profile_pic",
-            "access_token": settings.FACEBOOK_ACCESS_TOKEN
-        })
-        if r.status_code == 200:
-            r = r.json()
-            name = f"{r['first_name']} {r['last_name']}"
-            profile_pic = r["profile_pic"]
-            if not conversation.customer_pic or conversation.customer_pic.name != psid:
-                r = requests.get(profile_pic)
-                if r.status_code == 200:
-                    conversation.customer_pic = \
-                        InMemoryUploadedFile(file=BytesIO(r.content), size=len(r.content), charset=r.encoding,
-                                             content_type=r.headers.get('content-type'), field_name=psid,
-                                             name=psid)
-            conversation.customer_name = name
-            conversation.save()
+        update_facebook_profile.delay(psid, conversation.id)
+
+
+@shared_task
+def handle_facebook_postback(psid, postback):
+    payload = postback.get("payload")
+    if payload is not None:
+        conversation = Conversation.get_or_create_conversation(Conversation.FACEBOOK, psid)
+        payload = json.loads(payload)
+        action = payload["action"]
+        if action == "start_action":
+            operator_interface.tasks.process_event.delay(conversation.id, "WELCOME")
+        update_facebook_profile.delay(psid, conversation.id)
+
+
+@shared_task
+def update_facebook_profile(psid, cid):
+    conversation = Conversation.objects.get(id=cid)
+    r = requests.get(f"https://graph.facebook.com/{psid}", params={
+        "fields": "first_name,last_name,profile_pic",
+        "access_token": settings.FACEBOOK_ACCESS_TOKEN
+    })
+    if r.status_code == 200:
+        r = r.json()
+        name = f"{r['first_name']} {r['last_name']}"
+        profile_pic = r["profile_pic"]
+        if not conversation.customer_pic or conversation.customer_pic.name != psid:
+            r = requests.get(profile_pic)
+            if r.status_code == 200:
+                conversation.customer_pic = \
+                    InMemoryUploadedFile(file=BytesIO(r.content), size=len(r.content), charset=r.encoding,
+                                         content_type=r.headers.get('content-type'), field_name=psid,
+                                         name=psid)
+        conversation.customer_name = name
+        conversation.save()
 
 
 @shared_task

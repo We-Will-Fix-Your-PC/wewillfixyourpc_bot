@@ -5,7 +5,6 @@ from operator_interface.models import Message, MessageSuggestion, Conversation
 from celery import shared_task
 import operator_interface.tasks
 import logging
-import secrets
 
 credentials = service_account.Credentials.from_service_account_file(settings.GOOGLE_CREDENTIALS_FILE)
 session_client = dialogflow.SessionsClient(credentials=credentials)
@@ -31,7 +30,7 @@ def handle_event(cid, event):
 
     logging.info(f"Got event of \"{event}\" to process with dialogflow")
 
-    event_input = dialogflow.types.EventInput(event=event)
+    event_input = dialogflow.types.EventInput(event=event, language_code="en-GB")
     query_input = dialogflow.types.QueryInput(event=event_input)
 
     handle_response(conversation, query_input)

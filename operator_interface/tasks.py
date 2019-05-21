@@ -45,6 +45,14 @@ def process_message(mid):
 
 
 @shared_task
+def process_event(cid, event):
+    conversation = models.Conversation.objects.get(id=cid)
+
+    if conversation.agent_responding:
+        dialogflow_client.tasks.handle_event.delay(cid, event)
+
+
+@shared_task
 def process_typing(cid):
     conversation = models.Conversation.objects.get(id=cid)
     if conversation.platform == models.Conversation.FACEBOOK:

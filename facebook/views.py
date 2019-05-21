@@ -42,8 +42,12 @@ def webhook(request):
         psid = entry["sender"]["id"]
 
         message = entry.get("message")
+        postback = entry.get("postback")
 
         if message is not None:
             tasks.handle_facebook_message.delay(psid, message)
+
+        if postback is not None:
+            tasks.handle_facebook_postback.delay(psid, postback)
 
     return HttpResponse("")
