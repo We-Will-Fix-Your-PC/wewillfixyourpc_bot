@@ -1,0 +1,68 @@
+@import '@material/react-ripple/index.scss';
+@import '@material/react-drawer/index.scss';
+@import '@material/react-top-app-bar/index.scss';
+@import '@material/react-material-icon/index.scss';
+@import '@material/react-text-field/index.scss';
+@import '@material/react-list/index.scss';
+@import "@material/shape/mixins";
+@import "@material/shape/functions";
+@import "@material/theme/mdc-theme.scss";
+
+.drawer-container {
+  display: flex;
+  flex-direction: row;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.drawer-app-content {
+  flex: auto;
+  overflow: auto;
+  position: relative;
+}
+
+main {
+  position: absolute;
+  bottom: 0;
+  top: 0;
+  left: 0;
+  right: 0;
+
+  h2 {
+    text-align: center;
+  }
+
+  .conversation {
+    height: 100%;
+    display: grid;
+    grid-template-rows: 1fr auto;
+
+    .messages {
+      overflow-y: auto;
+      padding: 0 5px;
+
+      > div {
+        padding: 5px;
+        display: flex;
+        flex-direction: column;
+
+        > div {
+          padding: 15px;
+
+          &.dir-O {
+            align-self: flex-start;
+            @include mdc-theme-prop(background-color, secondary);
+            @include mdc-theme-prop(color, on-secondary);
+            @include mdc-shape-radius(25px 15px 25px 0, $rtl-reflexive: true);
+          }
+          &.dir-I {
+            align-self: flex-end;
+            @include mdc-theme-prop(background-color, primary);
+            @include mdc-theme-prop(color, on-primary);
+            @include mdc-shape-radius(15px 25px 0 15px, $rtl-reflexive: true);
+          }
+        }
+      }
+    }
+  }
+}

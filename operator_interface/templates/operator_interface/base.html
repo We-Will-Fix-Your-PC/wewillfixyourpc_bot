@@ -1,0 +1,52 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Operator panel</title>
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <link href="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <script src="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.js"></script>
+    <script src="{% static 'operator_interface/js/../../static/operator_interface/operator_interface/src/reconnecting-websocket.js' %}"></script>
+
+    <style>
+        body {
+            display: flex;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .mdc-drawer-app-content {
+            flex: auto;
+            overflow: auto;
+            position: relative;
+        }
+
+        .main-content {
+            overflow: auto;
+            height: 100%;
+        }
+
+        .app-bar {
+            position: absolute;
+        }
+
+        .mdc-top-app-bar {
+            z-index: 7;
+        }
+    </style>
+</head>
+<body>
+
+{% block content %}
+{% endblock %}
+
+<script>
+    mdc.autoInit();
+</script>
+</body>
+</html>
