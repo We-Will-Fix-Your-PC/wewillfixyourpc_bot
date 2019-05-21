@@ -27,7 +27,7 @@ def webhook(request):
     if action is None:
         return HttpResponseBadRequest()
 
-    out_data = action(params, text)
+    out_data = action(params, text, data)
     out_data = json.dumps(out_data)
 
     return HttpResponse(out_data)

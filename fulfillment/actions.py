@@ -3,9 +3,10 @@ import dateutil.relativedelta
 import datetime
 import typing
 from . import models
+import operator_interface.models
 
 
-def opening_hours(params, _):
+def opening_hours(params, *_):
     def inner():
         def suffix(d):
             return 'th' if 11 <= d <= 13 else {1: 'st', 2: 'nd', 3: 'rd'}.get(d % 10, 'th')
@@ -166,7 +167,7 @@ def opening_hours(params, _):
     }
 
 
-def contact_email(_, text: str):
+def contact_email(params, text: str, *_):
     contact_details = models.ContactDetails.objects.get()
 
     return {
@@ -191,7 +192,7 @@ def contact_email(_, text: str):
     }
 
 
-def contact_phone(_, text: str):
+def contact_phone(params, text: str, *_):
     contact_details = models.ContactDetails.objects.get()
 
     return {
@@ -216,7 +217,7 @@ def contact_phone(_, text: str):
     }
 
 
-def contact(_, text: str):
+def contact(params, text: str, *_):
     contact_details = models.ContactDetails.objects.get()
 
     return {
@@ -242,7 +243,7 @@ def contact(_, text: str):
     }
 
 
-def location(_, text: str):
+def location(params, text: str, *_):
     contact_details = models.ContactDetails.objects.get()
 
     return {
@@ -267,10 +268,24 @@ def location(_, text: str):
     }
 
 
+def rate(params, _, data):
+    session = data.get("session")
+    session = session.split("/")[-1]
+    platform, platform_id, _ = session.split(":")
+
+    conversation = operator_interface.models.Conversation.objects.get(platform=platform, platform_id=platform_id)
+
+    rating = operator_interface.models.ConversationRating(conversation=conversation, rating=int(params["rating"]))
+    rating.save()
+
+    return {}
+
+
 ACTIONS = {
     'support.opening_hours': opening_hours,
     'support.contact': contact,
     'support.contact.phone': contact_phone,
     'support.contact.email': contact_email,
     'support.location': location,
+    'rate': rate,
 }

@@ -45,6 +45,16 @@ class Conversation(models.Model):
         self.agent_responding = True
         self.save()
 
+
+class ConversationRating(models.Model):
+    conversation = models.ForeignKey(Conversation, on_delete=models.CASCADE)
+    time = models.DateTimeField(auto_now_add=True)
+    rating = models.PositiveSmallIntegerField()
+
+    def __str__(self):
+        return str(self.conversation)
+
+
 class Message(models.Model):
     TO_CUSTOMER = 'I'
     FROM_CUSTOMER = 'O'
