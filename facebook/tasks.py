@@ -4,6 +4,10 @@ import requests
 from operator_interface.models import Conversation, Message
 import operator_interface.tasks
 import logging
+import os
+import urllib.parse
+from io import BytesIO
+from django.core.files.uploadedfile import InMemoryUploadedFile
 
 
 @shared_task
@@ -15,13 +19,46 @@ def handle_facebook_message(psid, message):
         if not Message.message_exits(conversation, mid):
             message_m = Message(conversation=conversation, message_id=mid, text=text, direction=Message.FROM_CUSTOMER)
             message_m.save()
+            handle_mark_facebook_message_read.delay(psid)
             operator_interface.tasks.process_message.delay(message_m.id)
+@shared_task
+def handle_mark_facebook_message_read(psid):
+    requests.post("https://graph.facebook.com/v2.6/me/messages",
+                  params={"access_token": settings.FACEBOOK_ACCESS_TOKEN},
+                  json={
+                      "recipient": {
+                          "id": psid
+                      },
+                      "sender_action": "mark_seen"
+                  })
+
+
+@shared_task
+def handle_facebook_message_typing_on(cid):
+    conversation = Conversation.objects.get(id=cid)
+    requests.post("https://graph.facebook.com/v2.6/me/messages",
+                  params={"access_token": settings.FACEBOOK_ACCESS_TOKEN},
+                  json={
+                      "recipient": {
+                          "id": conversation.platform_id
+                      },
+                      "sender_action": "typing_on"
+                  })
 
 
 @shared_task
 def send_facebook_message(mid):
     message = Message.objects.get(id=mid)
     psid = message.conversation.platform_id
+
+    requests.post("https://graph.facebook.com/v2.6/me/messages",
+                  params={"access_token": settings.FACEBOOK_ACCESS_TOKEN},
+                  json={
+                      "recipient": {
+                          "id": psid
+                      },
+                      "sender_action": "typing_off"
+                  })
 
     quick_replies = []
     for suggestion in message.messagesuggestion_set.all():
