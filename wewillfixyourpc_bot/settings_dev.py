@@ -158,3 +158,36 @@ TWITTER_ENVNAME = "main"
 GOOGLE_CREDENTIALS_FILE = "WeWillFixYourPC.json"
 GOOGLE_PROJECT_ID = "wewillfixyourpc-8df73"
 
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'level': 'DEBUG',
+            'filters': None,
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console'],
+            'level': 'INFO',
+        },
+        'twitter': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+        },
+        'facebook': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+        },
+        'dialogflow_client': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+        },
+        'fulfillment_client': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+        },
+    },
+}

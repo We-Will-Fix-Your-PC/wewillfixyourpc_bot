@@ -5,6 +5,8 @@ from . import tasks
 import json
 import logging
 
+logger = logging.getLogger(__name__)
+
 
 @csrf_exempt
 def webhook(request):
@@ -23,7 +25,7 @@ def webhook(request):
     except json.JSONDecodeError:
         return HttpResponseBadRequest()
 
-    logging.debug(f"Got event from facebook webhook: {data}")
+    logger.debug(f"Got event from facebook webhook: {data}")
 
     m_object = data.get('object')
     if m_object is None:

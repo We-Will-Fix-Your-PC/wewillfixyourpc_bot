@@ -1,4 +1,4 @@
-from django.http import HttpResponse, HttpResponseServerError
+from django.http import HttpResponse, HttpResponseServerError, HttpResponseBadRequest
 from django.shortcuts import redirect, reverse
 from django.views.decorators.csrf import csrf_exempt
 from django.conf import settings
@@ -12,6 +12,8 @@ import urllib.parse
 import logging
 from . import models
 from . import tasks
+
+logger = logging.getLogger(__name__)
 
 
 def get_creds():
@@ -116,9 +118,12 @@ def webhook(request):
 
     r = json.loads(request.body)
 
-    logging.debug(f"Got event from twitter webhook: {r}")
+    logger.debug(f"Got event from twitter webhook: {r}")
 
-    for_user = r["for_user_id"]
+    for_user = r.get("for_user_id")
+    if for_user is None:
+        return HttpResponseBadRequest()
+
     if r.get("direct_message_events") is not None:
         users = r["users"]
         messages = r["direct_message_events"]

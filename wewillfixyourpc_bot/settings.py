@@ -174,6 +174,22 @@ LOGGING = {
     'loggers': {
         'django': {
             'handlers': ['console'],
+            'level': 'INFO',
+        },
+        'twitter': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+        },
+        'facebook': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+        },
+        'dialogflow_client': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+        },
+        'fulfillment_client': {
+            'handlers': ['console'],
             'level': 'DEBUG',
         },
     },
