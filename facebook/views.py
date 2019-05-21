@@ -3,6 +3,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.conf import settings
 from . import tasks
 import json
+import logging
 
 
 @csrf_exempt
@@ -21,6 +22,8 @@ def webhook(request):
         data = json.loads(request.body)
     except json.JSONDecodeError:
         return HttpResponseBadRequest()
+
+    logging.debug(f"Got event from facebook webhook: {data}")
 
     m_object = data.get('object')
     if m_object is None:

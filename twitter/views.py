@@ -9,6 +9,7 @@ import base64
 import requests
 import requests_oauthlib
 import urllib.parse
+import logging
 from . import models
 from . import tasks
 
@@ -114,6 +115,8 @@ def webhook(request):
         }))
 
     r = json.loads(request.body)
+
+    logging.debug(f"Got event from twitter webhook: {r}")
 
     for_user = r["for_user_id"]
     if r.get("direct_message_events") is not None:
