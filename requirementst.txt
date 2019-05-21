@@ -10,3 +10,4 @@ pika
 requests
 requests_oauthlib
 dialogflow
+Pillow
