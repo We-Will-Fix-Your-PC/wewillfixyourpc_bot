@@ -324,11 +324,11 @@ def is_open():
 def human_needed(params, text, _):
     if is_open():
         return {
-            "fulfillmentMessages": f"{text}A human will be here to help you shortly..."
+            "fulfillmentText": f"{text}A human will be here to help you shortly..."
         }
     else:
         return {
-            "fulfillmentMessages": f"{text}We're currently closed but this conversation mas been flagged and a human"
+            "fulfillmentText": f"{text}We're currently closed but this conversation mas been flagged and a human"
             f" will be here to help you as soon as we're open again"
         }
 
