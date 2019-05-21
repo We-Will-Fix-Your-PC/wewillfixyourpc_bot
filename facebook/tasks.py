@@ -5,6 +5,7 @@ from operator_interface.models import Conversation, Message
 import operator_interface.tasks
 import logging
 import json
+import uuid
 from io import BytesIO
 from django.core.files.uploadedfile import InMemoryUploadedFile
 
@@ -32,6 +33,11 @@ def handle_facebook_postback(psid, postback):
         action = payload["action"]
         if action == "start_action":
             operator_interface.tasks.process_event.delay(conversation.id, "WELCOME")
+            message_m = Message(conversation=conversation, message_id=uuid.uuid4(), text="Get started",
+                                direction=Message.FROM_CUSTOMER)
+            message_m.save()
+            handle_mark_facebook_message_read.delay(psid)
+            operator_interface.tasks.send_message_to_interface.delay(message_m.id)
         update_facebook_profile.delay(psid, conversation.id)
 
 
