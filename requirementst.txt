@@ -6,4 +6,4 @@ phonenumbers
 mysqlclient
 redis
 celery
-TwitterAPI
+pika

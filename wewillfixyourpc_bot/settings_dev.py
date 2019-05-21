@@ -154,7 +154,6 @@ TWITTER_ACCESS_TOKEN = twitter_conf["access_token"]
 TWITTER_ACCESS_TOKEN_SECRET = twitter_conf["access_token_secret"]
 
 TWITTER_ENVNAME = "main"
-TWITTER_WEBHOOK_ID = "1130531172226949120"
 
 GOOGLE_CREDENTIALS_FILE = "WeWillFixYourPC.json"
 GOOGLE_PROJECT_ID = "wewillfixyourpc-8df73"
