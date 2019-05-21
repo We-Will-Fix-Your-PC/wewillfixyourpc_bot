@@ -12,3 +12,4 @@ requests_oauthlib
 dialogflow
 Pillow
 redis
+pytz

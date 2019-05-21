@@ -2,18 +2,23 @@ import dateutil.parser
 import dateutil.relativedelta
 import datetime
 import typing
+import pytz
+from django.utils import timezone
 from . import models
 import operator_interface.models
+
+tz = pytz.timezone('Europe/London')
+
+
+def get_one_or_none(**kwargs):
+    query = models.OpeningHours.objects.filter(**kwargs)
+    return query[0] if len(query) > 0 else None
 
 
 def opening_hours(params, *_):
     def inner():
         def suffix(d):
             return 'th' if 11 <= d <= 13 else {1: 'st', 2: 'nd', 3: 'rd'}.get(d % 10, 'th')
-
-        def get_one_or_none(**kwargs):
-            query = models.OpeningHours.objects.filter(**kwargs)
-            return query[0] if len(query) > 0 else None
 
         def format_hours(time: typing.Union[models.OpeningHours, models.OpeningHoursOverride]):
             try:
@@ -271,14 +276,61 @@ def location(params, text: str, *_):
 def rate(params, _, data):
     session = data.get("session")
     session = session.split("/")[-1]
-    platform, platform_id, _ = session.split(":")
+    session_parts = session.split(":")
+    if len(session_parts) == 3:
+        platform, platform_id, _ = session_parts
 
-    conversation = operator_interface.models.Conversation.objects.get(platform=platform, platform_id=platform_id)
+        conversation = operator_interface.models.Conversation.objects.get(platform=platform, platform_id=platform_id)
 
-    rating = operator_interface.models.ConversationRating(conversation=conversation, rating=int(params["rating"]))
-    rating.save()
+        rating = operator_interface.models.ConversationRating(conversation=conversation, rating=int(params["rating"]))
+        rating.save()
 
     return {}
+
+
+def is_open():
+    opening_hours_defs = [
+        get_one_or_none(monday=True),
+        get_one_or_none(tuesday=True),
+        get_one_or_none(wednesday=True),
+        get_one_or_none(thursday=True),
+        get_one_or_none(friday=True),
+        get_one_or_none(saturday=True),
+        get_one_or_none(sunday=True),
+    ]
+    today = datetime.date.today()
+    weekday = today.weekday()
+    hours = opening_hours_defs[weekday]
+
+    if hours is None:
+        return False
+
+    now = datetime.datetime.now().time()
+    time_open = timezone.make_naive(timezone.make_aware(
+                        datetime.datetime.combine(today, hours.open), tz)
+                        .astimezone(pytz.utc)).time()
+    time_close = timezone.make_naive(timezone.make_aware(
+                        datetime.datetime.combine(today, hours.close), tz)
+                        .astimezone(pytz.utc)).time()
+
+    if now < time_open:
+        return False
+    elif now > time_close:
+        return False
+
+    return True
+
+
+def human_needed(params, text, _):
+    if is_open():
+        return {
+            "fulfillmentMessages": f"{text}A human will be here to help you shortly..."
+        }
+    else:
+        return {
+            "fulfillmentMessages": f"{text}We're currently closed but this conversation mas been flagged and a human"
+            f" will be here to help you as soon as we're open again"
+        }
 
 
 ACTIONS = {
@@ -288,4 +340,5 @@ ACTIONS = {
     'support.contact.email': contact_email,
     'support.location': location,
     'rate': rate,
+    'human_needed': human_needed
 }

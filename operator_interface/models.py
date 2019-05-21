@@ -29,9 +29,12 @@ class Conversation(models.Model):
                                    customer_pic=None):
         try:
             conv = cls.objects.get(platform=platform, platform_id=platform_id)
-            conv.customer_name = customer_name
-            conv.customer_username = customer_username
-            conv.customer_pic = customer_pic
+            if customer_name is not None:
+                conv.customer_name = customer_name
+            if customer_username is not None:
+                conv.customer_username = customer_username
+            if customer_pic is not None:
+                conv.customer_pic = customer_pic
             conv.save()
             return conv
         except cls.DoesNotExist:

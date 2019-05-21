@@ -22,6 +22,8 @@ def webhook(request):
         return HttpResponseBadRequest()
 
     text = query.get("fulfillmentText")
+    if text is None:
+        text = ""
 
     action = actions.ACTIONS.get(action)
     if action is None:
