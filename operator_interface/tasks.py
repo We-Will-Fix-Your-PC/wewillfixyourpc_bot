@@ -16,3 +16,12 @@ def process_message(mid):
     elif message.direction == models.Message.TO_CUSTOMER:
         if conversation.platform == models.Conversation.FACEBOOK:
             facebook.tasks.send_facebook_message.delay(mid)
+
+
+@shared_task
+def process_typing(cid):
+    conversation = models.Conversation.objects.get(id=cid)
+    if conversation.platform == models.Conversation.FACEBOOK:
+        facebook.tasks.handle_facebook_message_typing_on.delay(cid)
+    elif conversation.platform == models.Conversation.TWITTER:
+        twitter.tasks.handle_twitter_message_typing_on.delay(cid)
