@@ -78,6 +78,7 @@ class Message(models.Model):
     direction = models.CharField(max_length=1, choices=DIRECTION_CHOICES)
     text = models.TextField()
     timestamp = models.DateTimeField(default=timezone.now)
+    user = models.ForeignKey(User, blank=True, null=True, on_delete=models.SET_NULL)
 
     def __str__(self):
         return f"{str(self.conversation)} - {self.timestamp.isoformat()}"

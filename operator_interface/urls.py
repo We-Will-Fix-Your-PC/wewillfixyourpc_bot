@@ -5,4 +5,5 @@ app_name = 'operator'
 urlpatterns = [
     path('', views.index),
     path('privacy/', views.privacy_policy)
+    path('profile_pic/<int:user_id>/', views.profile_picture, name='profile_pic'),
 ]
