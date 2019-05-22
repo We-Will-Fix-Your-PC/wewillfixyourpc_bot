@@ -13,3 +13,4 @@ dialogflow
 Pillow
 redis
 pytz
+jwt

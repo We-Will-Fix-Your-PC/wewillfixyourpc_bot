@@ -8,8 +8,10 @@ import os
 import sys
 import django
 import json
+import jwt.exceptions
 import threading
 from django.contrib.staticfiles.templatetags.staticfiles import static
+from django.conf import settings
 from tornado.platform.asyncio import AsyncIOMainLoop
 
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
@@ -24,6 +26,27 @@ message_handlers = set()
 
 class OperatorWebSocket(tornado.websocket.WebSocketHandler):
     loop: AsyncIOMainLoop
+    user: User
+
+    def get(self, *args, **kwargs):
+        headers = self.request.headers
+        jws = headers["Sec-WebSocket-Protocol"]
+
+        key = jwt.jwk.OctetJWK(settings.SECRET_KEY.encode())
+        jwt_i = jwt.JWT()
+        try:
+            data = jwt_i.decode(jws, key, True)
+        except (jwt.exceptions.JWSDecodeError, jwt.exceptions.JWTDecodeError):
+            raise tornado.web.HTTPError(403)
+        uid = data.get("sub")
+        if uid is None:
+            raise tornado.web.HTTPError(403)
+        try:
+            self.user = User.objects.get(id=uid)
+        except User.DoesNotExist:
+            raise tornado.web.HTTPError(403)
+
+        super().get(*args, **kwargs)
 
     def open(self):
         self.loop = tornado.ioloop.IOLoop.current()

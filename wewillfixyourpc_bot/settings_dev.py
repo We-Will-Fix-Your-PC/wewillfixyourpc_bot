@@ -46,11 +46,13 @@ INSTALLED_APPS = [
     'twitter',
     'operator_interface',
     'dialogflow_client',
+    'corsheaders',
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -127,11 +129,13 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/2.1/howto/static-files/
 
-STATIC_URL = 'http://localhost:8002/static/'
+STATIC_URL = 'https://recycle-bin.home.misell.cymru/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 
-MEDIA_URL = 'http://localhost:8002/media/'
+MEDIA_URL = 'https://recycle-bin.home.misell.cymru/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+EXTERNAL_URL_BASE = "https://recycle-bin.home.misell.cymru/"
 
 PHONENUMBER_DEFAULT_REGION = "GB"
 
@@ -157,6 +161,9 @@ TWITTER_ENVNAME = "main"
 
 GOOGLE_CREDENTIALS_FILE = "WeWillFixYourPC.json"
 GOOGLE_PROJECT_ID = "wewillfixyourpc-8df73"
+
+CORS_ORIGIN_ALLOW_ALL = True
+CORS_ALLOW_CREDENTIALS = True
 
 LOGGING = {
     'version': 1,

@@ -36,14 +36,19 @@ class App extends Component {
         this.handleOpen = this.handleOpen.bind(this);
         this.handleReceiveMessage = this.handleReceiveMessage.bind(this);
         this.onSend = this.onSend.bind(this);
-
-        this.sock = new ReconnectingWebSocket("ws://localhost:8001", null, {automaticOpen: false});
-        this.sock.onopen = this.handleOpen;
-        this.sock.onmessage = this.handleReceiveMessage;
     }
 
     componentDidMount() {
-        this.sock.open();
+        fetch("http://localhost:8000/token/", {
+            credentials: 'include'
+        })
+            .then(resp => resp.text())
+            .then(resp => {
+                this.sock = new ReconnectingWebSocket("ws://localhost:8001", resp, {automaticOpen: false});
+                this.sock.onopen = this.handleOpen;
+                this.sock.onmessage = this.handleReceiveMessage;
+                this.sock.open();
+            });
     }
 
     componentWillUnmount() {
@@ -69,7 +74,6 @@ class App extends Component {
         const conversationMap = this.state.conversationMap;
         let conversationId = conversationMap[data.conversation.id];
         if (typeof conversationId === "undefined") {
-            console.log(data.conversation);
             conversationId = conversations.push({
                 id: data.conversation.id,
                 customer_name: data.conversation.customer_name,
