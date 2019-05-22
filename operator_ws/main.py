@@ -18,6 +18,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'wewillfixyourpc_bot.settings')
 django.setup()
 
+from django.contrib.auth.models import User
 import operator_interface.models
 import operator_interface.tasks
 
@@ -67,7 +68,7 @@ class OperatorWebSocket(tornado.websocket.WebSocketHandler):
             conversation = operator_interface.models.Conversation.objects.get(id=cid)
             message = operator_interface.models.Message(conversation=conversation, text=text,
                                                         direction=operator_interface.models.Message.TO_CUSTOMER,
-                                                        message_id=uuid.uuid4())
+                                                        message_id=uuid.uuid4(), user=self.user)
             message.save()
             operator_interface.tasks.process_message.delay(message.id)
 
