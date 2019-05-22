@@ -133,8 +133,13 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/2.1/howto/static-files/
 
-STATIC_URL = '/static/'
-STATIC_ROOT = os.path.join(BASE_DIR, "static")
+STATIC_URL = 'https://cardifftec.uk/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+
+MEDIA_URL = 'https://cardifftec.uk/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+EXTERNAL_URL_BASE = "https://cardifftec.uk/"
 
 PHONENUMBER_DEFAULT_REGION = "GB"
 
