@@ -17,9 +17,11 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf.urls.static import static
 from django.conf import settings
+import os
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('accounts/', include('django.contrib.auth.urls')),
     path('fulfillment/', include('fulfillment.urls', namespace='fulfillment')),
     path('twitter/', include('twitter.urls', namespace='twitter')),
     path('facebook/', include('facebook.urls', namespace='facebook')),
@@ -27,5 +29,8 @@ urlpatterns = [
 ]
 
 if settings.DEBUG:
+    urlpatterns += static('static/operator_interface',
+                          document_root=os.path.join(settings.BASE_DIR,
+                                                     'operator_interface/templates/operator_interface/build'))
     urlpatterns += static('static/', document_root=settings.STATIC_ROOT)
     urlpatterns += static('media/', document_root=settings.MEDIA_ROOT)

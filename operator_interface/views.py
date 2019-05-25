@@ -10,7 +10,7 @@ import jwt
 
 @login_required
 def index(request):
-    return render(request, "operator_interface/index.html")
+    return render(request, "operator_interface/build/index.html")
 
 
 @login_required

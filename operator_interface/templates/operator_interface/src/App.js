@@ -48,6 +48,9 @@ class App extends Component {
                 this.sock.onopen = this.handleOpen;
                 this.sock.onmessage = this.handleReceiveMessage;
                 this.sock.open();
+            })
+            .catch(() => {
+                window.location.reload();
             });
     }
 
@@ -145,8 +148,9 @@ class App extends Component {
                                     <MaterialIcon icon='menu' onClick={() => this.setState({open: !this.state.open})}/>
                                 </TopAppBarIcon>
                                 <TopAppBarTitle>{this.state.selectedIndex === null ? "Loading..." :
-                                    this.state.conversations[this.state.selectedIndex].customer_name + " - " +
-                                    this.state.conversations[this.state.selectedIndex].username}</TopAppBarTitle>
+                                    this.state.conversations[this.state.selectedIndex].customer_name +
+                                    ((this.state.conversations[this.state.selectedIndex].username != null) ? " - " +
+                                    this.state.conversations[this.state.selectedIndex].username : "")}</TopAppBarTitle>
                             </TopAppBarSection>
                         </TopAppBarRow>
                     </TopAppBar>
