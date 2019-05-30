@@ -62,8 +62,11 @@ def handle_response(conversation, query_input):
                 "name": conversation.customer_name,
                 "text": "Human needed!"
             })
-        if context == "close":
+        elif context == "close":
             conversation.reset()
+        elif context == "takeover":
+            conversation.agent_responding = True
+            conversation.save()
 
     messages = response.query_result.fulfillment_messages
     text = list(filter(lambda m: m.WhichOneof("message") == "text", messages))
