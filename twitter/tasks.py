@@ -6,6 +6,7 @@ import logging
 from django.core.files.uploadedfile import InMemoryUploadedFile
 import os
 import urllib.parse
+import re
 from io import BytesIO
 from . import views
 
@@ -77,14 +78,27 @@ def send_twitter_message(mid):
             }
         }
     }
+
     if len(quick_replies) > 0:
         request_body["event"]["message_create"]["message_data"]["quick_reply"] = {
             "type": "options",
             "options": quick_replies
         }
+
+    urls = re.findall("(http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*(),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+)", message.text)
+
+    if len(urls) == 1:
+        request_body["event"]["message_create"]["message_data"]["ctas"] = [
+            {
+                "type": "web_url",
+                "label": "Open",
+                "url": urls[1]
+            }
+        ]
+
     r = requests.post("https://api.twitter.com/1.1/direct_messages/events/new.json", auth=creds, json=request_body)
     if r.status_code != 200:
-        logging.error(f"Error sending facebook message: {r.status_code} {r.text}")
+        logging.error(f"Error sending twitter message: {r.status_code} {r.text}")
         request_body = {
             "event": {
                 "type": "message_create",

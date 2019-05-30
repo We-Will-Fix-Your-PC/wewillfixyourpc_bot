@@ -7,6 +7,7 @@ import operator_interface.tasks
 import logging
 import json
 import uuid
+import re
 from io import BytesIO
 from django.core.files.uploadedfile import InMemoryUploadedFile
 
@@ -133,14 +134,35 @@ def send_facebook_message(mid):
         "recipient": {
             "id": psid
         },
-        "message": {
-            "text": message.text
-        }
+        "message": {}
     }
+
     if persona_id is not None:
         request_body["persona_id"] = persona_id
     if len(quick_replies) > 0:
         request_body["message"]["quick_replies"] = quick_replies
+
+    urls = re.findall("(http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*(),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+)", message.text)
+
+    if len(urls) == 1:
+        request_body["message"]["attachment"] = {
+            "type": "template",
+            "payload": {
+                "template_type": "button",
+                "text": message.text,
+                "buttons": [
+                    {
+                        "type": "web_url",
+                        "url": urls[1],
+                        "title": "Open",
+                        "webview_height_ratio": "full"
+                    }
+                ]
+            }
+        }
+    else:
+        request_body["message"]["text"] = message.text
+
     r = requests.post("https://graph.facebook.com/v2.6/me/messages",
                       params={"access_token": settings.FACEBOOK_ACCESS_TOKEN}, json=request_body)
     if r.status_code != 200:
