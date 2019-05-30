@@ -2,12 +2,16 @@ self.addEventListener('push', function (event) {
     console.log('[Service Worker] Push Received.');
     console.log(`[Service Worker] Push had this data: "${event.data.text()}"`);
 
-    const title = 'We Will Fix Your PC Messaging';
-    const options = {
-        body: event.data.text()
-    };
-
-    event.waitUntil(self.registration.showNotification(title, options));
+    const data = event.data.json();
+    if (data.type === "alert") {
+        event.waitUntil(self.registration.showNotification("We Will Fix Your PC", {
+            body: `${data.name} - ${data.text}`
+        }));
+    } else if (data.type === "message") {
+        event.waitUntil(self.registration.showNotification("New message", {
+            body: `${data.name} - ${data.text}`
+        }));
+    }
 });
 
 self.addEventListener('notificationclick', function (event) {
