@@ -158,7 +158,7 @@ def send_facebook_message(mid):
                 "buttons": [
                     {
                         "type": "web_url",
-                        "url": urls[1],
+                        "url": urls[0],
                         "title": "Open",
                         "webview_height_ratio": "full"
                     }

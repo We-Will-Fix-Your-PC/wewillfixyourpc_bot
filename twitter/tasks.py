@@ -92,7 +92,7 @@ def send_twitter_message(mid):
             {
                 "type": "web_url",
                 "label": "Open",
-                "url": urls[1]
+                "url": urls[0]
             }
         ]
 
