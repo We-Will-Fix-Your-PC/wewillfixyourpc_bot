@@ -135,20 +135,20 @@ def opening_hours(params, *_):
             days = "\n".join(days_in_period)
 
             future_overrides = filter(lambda f: f.day.weekday() in day_ids_in_period, future_overrides)
-            future_overrides_txt = map(lambda d: f"On {d.day.strftime('%A %B %-d')}{suffix(d.day.day)} we will be"
-            f" {'closed' if d.closed else f'open {format_hours(d)}'}", future_overrides)
-            future_overrides_txt = "\n".join(future_overrides_txt)
+            future_overrides_txt = map(lambda d: f"\nOn {d.day.strftime('%A %B %-d')}{suffix(d.day.day)} we will be"
+                                            f" {'closed' if d.closed else f'open {format_hours(d)}'}", future_overrides)
+            future_overrides_txt = "".join(future_overrides_txt)
 
-            return f"Our opening hours are:\n{days}\n{future_overrides_txt}.\n\nDo you need help with anything else?"
+            return f"Our opening hours are:\n{days}{future_overrides_txt}\n\nDo you need help with anything else?"
 
         days = reduce_days(days)
         days = map(format_day, days)
         days = "\n".join(days)
 
-        future_overrides_txt = map(lambda d: f"On {d.day.strftime('%A %B %-d')}{suffix(d.day.day)} we will be"
-        f" {'closed' if d.closed else f'open {format_hours(d)}'}", future_overrides)
-        future_overrides_txt = "\n".join(future_overrides_txt)
-        return f"Our opening hours are:\n{days}\n{future_overrides_txt}.\n\nDo you need help with anything else?"
+        future_overrides_txt = map(lambda d: f"\nOn {d.day.strftime('%A %B %-d')}{suffix(d.day.day)} we will be"
+                                        f" {'closed' if d.closed else f'open {format_hours(d)}'}", future_overrides)
+        future_overrides_txt = "".join(future_overrides_txt)
+        return f"Our opening hours are:\n{days}{future_overrides_txt}\n\nDo you need help with anything else?"
 
     return {
         "fulfillmentMessages": [
