@@ -142,7 +142,7 @@ class App extends Component {
                                     <ListItemGraphic graphic={<img src={c.picture} alt=""/>}/>
                                     <ListItemText
                                         primaryText={c.customer_name}
-                                        secondaryText='Jan 9, 2018'/>
+                                        secondaryText={c.messages[c.messages.length-1].text}/>
                                     {!c.agent_responding ?
                                         <ListItemMeta meta={<MaterialIcon icon='notification_important'/>}/> : null}
                                 </ListItem>
