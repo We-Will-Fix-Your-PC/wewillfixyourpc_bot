@@ -16,14 +16,21 @@ from django.core.files.uploadedfile import InMemoryUploadedFile
 def handle_facebook_message(psid, message):
     text = message.get("text")
     mid = message["mid"]
+    is_echo = message.get("is_echo")
     if text is not None:
         conversation = Conversation.get_or_create_conversation(Conversation.FACEBOOK, psid)
         update_facebook_profile(psid, conversation.id)
         if not Message.message_exits(conversation, mid):
             message_m = Message(conversation=conversation, message_id=mid, text=text, direction=Message.FROM_CUSTOMER)
             message_m.save()
-            handle_mark_facebook_message_read.delay(psid)
-            operator_interface.tasks.process_message.delay(message_m.id)
+
+            if not is_echo:
+                handle_mark_facebook_message_read.delay(psid)
+                operator_interface.tasks.process_message.delay(message_m.id)
+            else:
+                message_m.direction = Message.TO_CUSTOMER
+                message_m.save()
+                operator_interface.tasks.send_message_to_interface(message_m.id)
 
 
 @shared_task
@@ -72,7 +79,7 @@ def update_facebook_profile(psid, cid):
 
 @shared_task
 def handle_mark_facebook_message_read(psid):
-    requests.post("https://graph.facebook.com/v2.6/me/messages",
+    requests.post("https://graph.facebook.com/me/messages",
                   params={"access_token": settings.FACEBOOK_ACCESS_TOKEN},
                   json={
                       "recipient": {
@@ -85,7 +92,7 @@ def handle_mark_facebook_message_read(psid):
 @shared_task
 def handle_facebook_message_typing_on(cid):
     conversation = Conversation.objects.get(id=cid)
-    requests.post("https://graph.facebook.com/v2.6/me/messages",
+    requests.post("https://graph.facebook.com/me/messages",
                   params={"access_token": settings.FACEBOOK_ACCESS_TOKEN},
                   json={
                       "recipient": {
@@ -118,7 +125,7 @@ def send_facebook_message(mid):
         else:
             persona_id = message.user.userprofile.fb_persona_id
 
-    requests.post("https://graph.facebook.com/v2.6/me/messages",
+    requests.post("https://graph.facebook.com/me/messages",
                   params={"access_token": settings.FACEBOOK_ACCESS_TOKEN},
                   json={
                       "recipient": {
@@ -168,7 +175,7 @@ def send_facebook_message(mid):
     else:
         request_body["message"]["text"] = message.text
 
-    r = requests.post("https://graph.facebook.com/v2.6/me/messages",
+    r = requests.post("https://graph.facebook.com/me/messages",
                       params={"access_token": settings.FACEBOOK_ACCESS_TOKEN}, json=request_body)
     if r.status_code != 200:
         logging.error(f"Error sending facebook message: {r.status_code} {r.text}")
@@ -180,5 +187,5 @@ def send_facebook_message(mid):
                 "text": "Sorry, I'm having some difficulty processing your request. Please try again later"
             }
         }
-        requests.post("https://graph.facebook.com/v2.6/me/messages",
+        requests.post("https://graph.facebook.com/me/messages",
                       params={"access_token": settings.FACEBOOK_ACCESS_TOKEN}, json=request_body).raise_for_status()

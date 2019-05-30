@@ -324,7 +324,7 @@ def is_open():
 def human_needed(params, text, _):
     if is_open():
         return {
-            "fulfillmentText": f"{text}A human will be here to help you shortly..."
+            "fulfillmentText": f"{text}Someone will be here to help you shortly..."
         }
     else:
         return {
