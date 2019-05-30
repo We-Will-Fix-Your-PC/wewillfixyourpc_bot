@@ -1375,6 +1375,19 @@
   dependencies:
     tslib "^1.9.3"
 
+"@material/button@^1.1.0":
+  version "1.1.1"
+  resolved "https://registry.yarnpkg.com/@material/button/-/button-1.1.1.tgz#35af0d295f6ce6e3df9d4978485b5294d794f682"
+  integrity sha512-03aEyzZBIeqpgZkqLjro/enz8ORUnfQslBUdAgkPqdjh1X0oIEugr3UaFyC5QlSBTU3j3GIsnKIxWaggkRenpQ==
+  dependencies:
+    "@material/elevation" "^1.1.0"
+    "@material/feature-targeting" "^0.44.1"
+    "@material/ripple" "^1.1.0"
+    "@material/rtl" "^0.42.0"
+    "@material/shape" "^1.1.1"
+    "@material/theme" "^1.1.0"
+    "@material/typography" "^1.0.0"
+
 "@material/checkbox@^0.41.0":
   version "0.41.0"
   resolved "https://registry.yarnpkg.com/@material/checkbox/-/checkbox-0.41.0.tgz#7d1dfa0468fd12b32b459741f7d5cd695d4e4c8d"
@@ -1528,6 +1541,16 @@
     "@material/ripple" "^0.41.0"
     "@material/selection-control" "^0.41.0"
     "@material/theme" "^0.41.0"
+
+"@material/react-button@^0.12.1":
+  version "0.12.1"
+  resolved "https://registry.yarnpkg.com/@material/react-button/-/react-button-0.12.1.tgz#8db40f4a634c56599e89f0e2db21e302c76861c7"
+  integrity sha512-T5EorlTayH5+04Cib0ltZQlz9P7QdAalVMYNmXFbjSCeMZj/5yhV1cBzhZ5uZ+XjtGcEZrE839d+t+/GiXyBeg==
+  dependencies:
+    "@material/button" "^1.1.0"
+    "@material/react-ripple" "^0.12.0"
+    classnames "^2.2.6"
+    react "^16.4.2"
 
 "@material/react-checkbox@^0.10.0":
   version "0.10.0"

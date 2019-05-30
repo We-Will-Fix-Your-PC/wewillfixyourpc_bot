@@ -53,7 +53,7 @@ class OperatorWebSocket(tornado.websocket.WebSocketHandler):
         if len(protocols) == 0:
             return None
         else:
-            return protocols[1]
+            return protocols[0]
 
     def open(self):
         self.loop = tornado.ioloop.IOLoop.current()
@@ -77,6 +77,9 @@ class OperatorWebSocket(tornado.websocket.WebSocketHandler):
                                                         message_id=uuid.uuid4(), user=self.user)
             message.save()
             operator_interface.tasks.process_message.delay(message.id)
+        elif message["type"] == "endConv":
+            cid = message["cid"]
+            operator_interface.tasks.process_event.delay(cid, "end")
 
     def send_message(self, message: operator_interface.models.Message):
         pic = static("operator_interface/img/default_profile_normal.png")

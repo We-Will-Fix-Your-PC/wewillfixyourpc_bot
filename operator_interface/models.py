@@ -1,6 +1,7 @@
 from django.db import models
 from django.utils import timezone
 import secrets
+import json
 from django.contrib.auth.models import User
 
 
@@ -8,6 +9,19 @@ class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     picture = models.ImageField()
     fb_persona_id = models.CharField(max_length=255, blank=True, null=True)
+
+
+class NotificationSubscription(models.Model):
+    subscription_info = models.TextField()
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+
+    @property
+    def subscription_info_json(self):
+        return json.loads(self.subscription_info)
+
+    @subscription_info_json.setter
+    def subscription_info_json(self, value):
+        self.subscription_info = json.dumps(value)
 
 
 class Conversation(models.Model):

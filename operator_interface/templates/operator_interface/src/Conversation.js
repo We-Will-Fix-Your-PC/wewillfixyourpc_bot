@@ -1,5 +1,5 @@
 import React, {Component} from 'react';
-import TextField, {HelperText, Input} from '@material/react-text-field';
+import TextField, {Input} from '@material/react-text-field';
 
 import MaterialIcon from '@material/react-material-icon';
 import './App.scss';

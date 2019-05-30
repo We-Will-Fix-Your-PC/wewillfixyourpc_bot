@@ -11,10 +11,10 @@ import Drawer, {
     DrawerContent,
     DrawerHeader,
     DrawerTitle,
-    DrawerSubtitle
 } from '@material/react-drawer';
 import MaterialIcon from '@material/react-material-icon';
-import List, {ListItem, ListItemGraphic, ListItemText} from '@material/react-list';
+import List, {ListItem, ListItemGraphic, ListItemText, ListItemMeta} from '@material/react-list';
+import Button from '@material/react-button';
 import ReconnectingWebSocket from './reconnecting-websocket';
 import Conversation from './Conversation';
 
@@ -36,15 +36,17 @@ class App extends Component {
         this.handleOpen = this.handleOpen.bind(this);
         this.handleReceiveMessage = this.handleReceiveMessage.bind(this);
         this.onSend = this.onSend.bind(this);
+        this.onEnd = this.onEnd.bind(this);
     }
 
     componentDidMount() {
-        fetch("http://localhost:8000/token/", {
+        fetch(process.env.NODE_ENV === 'production' ? "/token/" : "http://localhost:8000/token/", {
             credentials: 'include'
         })
             .then(resp => resp.text())
             .then(resp => {
-                this.sock = new ReconnectingWebSocket("wss://" + window.location.host + "/websocket/", resp, {automaticOpen: false});
+                this.sock = new ReconnectingWebSocket(process.env.NODE_ENV === 'production' ?
+                    "wss://" + window.location.host + "/websocket/" : "ws://localhost:8001/", resp, {automaticOpen: false});
                 this.sock.onopen = this.handleOpen;
                 this.sock.onmessage = this.handleReceiveMessage;
                 this.sock.open();
@@ -83,6 +85,7 @@ class App extends Component {
                 customer_name: data.conversation.customer_name,
                 username: data.conversation.customer_username,
                 picture: data.conversation.customer_pic,
+                agent_responding: data.conversation.agent_responding,
                 messages: [message]
             }) - 1;
             conversationMap[data.conversation.id] = conversationId;
@@ -90,6 +93,7 @@ class App extends Component {
             conversations[conversationId].customer_name = data.conversation.customer_name;
             conversations[conversationId].username = data.conversation.customer_username;
             conversations[conversationId].picture = data.conversation.customer_pic;
+            conversations[conversationId].agent_responding = data.conversation.agent_responding;
         }
         conversations[conversationId].messages.push(message);
         this.setState({
@@ -114,6 +118,13 @@ class App extends Component {
         }));
     }
 
+    onEnd() {
+        this.sock.send(JSON.stringify({
+            "type": "endConv",
+            "cid": this.state.conversations[this.state.selectedIndex].id
+        }));
+    }
+
     render() {
         return (
             <div className='drawer-container'>
@@ -122,9 +133,6 @@ class App extends Component {
                         <DrawerTitle tag='h2'>
                             Operator interface
                         </DrawerTitle>
-                        <DrawerSubtitle>
-                            Q Misell
-                        </DrawerSubtitle>
                     </DrawerHeader>
 
                     <DrawerContent>
@@ -135,6 +143,8 @@ class App extends Component {
                                     <ListItemText
                                         primaryText={c.customer_name}
                                         secondaryText='Jan 9, 2018'/>
+                                    {!c.agent_responding ?
+                                        <ListItemMeta meta={<MaterialIcon icon='notification_important'/>}/> : null}
                                 </ListItem>
                             ))}
                         </List>
@@ -151,7 +161,14 @@ class App extends Component {
                                 <TopAppBarTitle>{this.state.selectedIndex === null ? "Loading..." :
                                     this.state.conversations[this.state.selectedIndex].customer_name +
                                     ((this.state.conversations[this.state.selectedIndex].username != null) ? " - " +
-                                    this.state.conversations[this.state.selectedIndex].username : "")}</TopAppBarTitle>
+                                        this.state.conversations[this.state.selectedIndex].username : "")}</TopAppBarTitle>
+                            </TopAppBarSection>
+                            <TopAppBarSection role='toolbar'>
+                                {this.state.selectedIndex === null ? null :
+                                    <Button raised onClick={this.onEnd}>
+                                        End conversation
+                                    </Button>
+                                }
                             </TopAppBarSection>
                         </TopAppBarRow>
                     </TopAppBar>

@@ -56,6 +56,12 @@ def handle_response(conversation, query_input):
         if context == "human-needed":
             conversation.agent_responding = False
             conversation.save()
+
+            operator_interface.tasks.send_message_notifications.delay({
+                "type": "alert",
+                "name": conversation.customer_name,
+                "text": "Human needed!"
+            })
         if context == "close":
             conversation.reset()
 

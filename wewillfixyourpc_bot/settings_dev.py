@@ -165,6 +165,8 @@ GOOGLE_PROJECT_ID = "wewillfixyourpc-8df73"
 CORS_ORIGIN_ALLOW_ALL = True
 CORS_ALLOW_CREDENTIALS = True
 
+PUSH_PRIV_KEY = "l-QSHaL78BrO-atnONJZao_jlga_55dei_YnfBudDoc"
+
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,

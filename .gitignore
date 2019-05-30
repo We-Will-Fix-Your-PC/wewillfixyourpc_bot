@@ -222,3 +222,5 @@ facebook.json
 twitter.json
 WeWillFixYourPC.json
 SECRET_KEY
+private_key.pem
+public_key.pem
