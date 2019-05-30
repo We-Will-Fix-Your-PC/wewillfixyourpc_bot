@@ -62,6 +62,7 @@ def update_facebook_profile(psid, cid):
     r = r.json()
     name = f"{r['first_name']} {r['last_name']}"
     profile_pic = r["profile_pic"]
+    timezone = r['timezone']
     if not conversation.customer_pic or conversation.customer_pic.name != psid:
         r = requests.get(profile_pic)
         if r.status_code == 200:
@@ -70,7 +71,6 @@ def update_facebook_profile(psid, cid):
                                      content_type=r.headers.get('content-type'), field_name=psid,
                                      name=psid)
     conversation.customer_name = name
-    timezone = r['timezone']
     if timezone < 0:
         conversation.timezone = f"Etc/GMT-{abs(timezone)}"
     else:
