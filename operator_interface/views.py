@@ -16,10 +16,6 @@ def index(request):
     return render(request, "operator_interface/build/index.html")
 
 
-def sw_js(request):
-    return render(request, "operator_interface/build/sw.js")
-
-
 @login_required
 def token(request):
     key = jwt.jwk.OctetJWK(settings.SECRET_KEY.encode())
@@ -42,6 +38,7 @@ def push_subscription(request):
         subscription = body.get('subscription_info')
         if subscription is None:
             return HttpResponseBadRequest()
+        subscription = json.dumps(subscription)
         try:
             subscription_m = models.NotificationSubscription.objects.get(subscription_info=subscription)
         except models.NotificationSubscription.DoesNotExist:
