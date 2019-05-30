@@ -1,6 +1,10 @@
 from __future__ import absolute_import, unicode_literals
 import os
 from celery import Celery
+import sentry_sdk
+from sentry_sdk.integrations.celery import CeleryIntegration
+
+sentry_sdk.init("https://efc22f89d34a46d0adffb302181ed3f9@sentry.io/1471674", integrations=[CeleryIntegration()])
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'wewillfixyourpc_bot.settings')
 app = Celery('wewillfixyourpc_bot')
