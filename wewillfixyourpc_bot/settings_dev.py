@@ -165,7 +165,8 @@ GOOGLE_PROJECT_ID = "wewillfixyourpc-8df73"
 CORS_ORIGIN_ALLOW_ALL = True
 CORS_ALLOW_CREDENTIALS = True
 
-PUSH_PRIV_KEY = "l-QSHaL78BrO-atnONJZao_jlga_55dei_YnfBudDoc"
+with open(os.path.join(BASE_DIR, "PUSH_PRIV_KEY")) as f:
+    PUSH_PRIV_KEY = f.read()
 
 LOGGING = {
     'version': 1,

@@ -166,6 +166,9 @@ TWITTER_ENVNAME = "main"
 GOOGLE_CREDENTIALS_FILE = "WeWillFixYourPC.json"
 GOOGLE_PROJECT_ID = "wewillfixyourpc-8df73"
 
+with open(os.path.join(BASE_DIR, "PUSH_PRIV_KEY")) as f:
+    PUSH_PRIV_KEY = f.read()
+
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,

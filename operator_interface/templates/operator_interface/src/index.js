@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom';
 import './index.css';
 import App from './App';
 
-const applicationServerPublicKey = 'BEbQmZXhBF0Evb6tjLUyXqwJJv7j08J8dKehxX_5LAyz7YToF8cT2UAzzE3tgtrrVMZQItXOd7vs2FfwzVQT1u4';
+const applicationServerPublicKey = 'BD9YFnVo9uQ1QQNcAV__0luLgROO_4cGRCNh4KRZaxeVwW4m21ApNxUuQFIwiNFk4XBYF7r0i9LOxHbxoP1U4zI';
 
 function urlB64ToUint8Array(base64String) {
     const padding = '='.repeat((4 - base64String.length % 4) % 4);
