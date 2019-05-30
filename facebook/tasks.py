@@ -18,12 +18,12 @@ def handle_facebook_message(psid, message):
     mid = message["mid"]
     if text is not None:
         conversation = Conversation.get_or_create_conversation(Conversation.FACEBOOK, psid)
+        update_facebook_profile(psid, conversation.id)
         if not Message.message_exits(conversation, mid):
             message_m = Message(conversation=conversation, message_id=mid, text=text, direction=Message.FROM_CUSTOMER)
             message_m.save()
             handle_mark_facebook_message_read.delay(psid)
             operator_interface.tasks.process_message.delay(message_m.id)
-        update_facebook_profile.delay(psid, conversation.id)
 
 
 @shared_task
@@ -47,7 +47,7 @@ def handle_facebook_postback(psid, postback):
 def update_facebook_profile(psid, cid):
     conversation = Conversation.objects.get(id=cid)
     r = requests.get(f"https://graph.facebook.com/{psid}", params={
-        "fields": "first_name,last_name,profile_pic",
+        "fields": "first_name,last_name,profile_pic,timezone",
         "access_token": settings.FACEBOOK_ACCESS_TOKEN
     })
     r.raise_for_status()
@@ -62,6 +62,11 @@ def update_facebook_profile(psid, cid):
                                      content_type=r.headers.get('content-type'), field_name=psid,
                                      name=psid)
     conversation.customer_name = name
+    timezone = r['timezone']
+    if timezone < 0:
+        conversation.timezone = f"Etc/GMT-{abs(timezone)}"
+    else:
+        conversation.timezone = f"Etc/GMT+{abs(timezone)}"
     conversation.save()
 
 

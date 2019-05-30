@@ -44,9 +44,12 @@ def handle_response(conversation, query_input):
     query_parameters = \
         dialogflow.types.QueryParameters(sentiment_analysis_request_config=sentiment_analysis_request_config)
 
+    if conversation.timezone is not None:
+        query_parameters.time_zone = conversation.timezone
+
     session = session_client.session_path(settings.GOOGLE_PROJECT_ID,
                                           f"{conversation.platform}:{conversation.platform_id}:{conversation.noonce}")
-    response = session_client.detect_intent(session=session, query_input=query_input, query_parameters=query_parameters)
+    response = session_client.detect_intent(session=session, query_input=query_input, query_params=query_parameters)
 
     for context in response.query_result.output_contexts:
         context = context.name.split("/")[-1]
