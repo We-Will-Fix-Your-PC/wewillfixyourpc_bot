@@ -4,6 +4,7 @@ from . import views
 app_name = 'operator'
 urlpatterns = [
     path('', views.index),
+    path('sw.js', views.sw_js),
     path('privacy/', views.privacy_policy),
     path('token/', views.token),
     path('push_subscription/', views.push_subscription),

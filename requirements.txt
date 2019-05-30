@@ -14,3 +14,4 @@ Pillow
 redis
 pytz
 jwt
+pywebpush
