@@ -44,12 +44,13 @@ class App extends Component {
         })
             .then(resp => resp.text())
             .then(resp => {
-                this.sock = new ReconnectingWebSocket("ws://localhost:8001", resp, {automaticOpen: false});
+                this.sock = new ReconnectingWebSocket("wss://" + window.location.host + "/websocket/", resp, {automaticOpen: false});
                 this.sock.onopen = this.handleOpen;
                 this.sock.onmessage = this.handleReceiveMessage;
                 this.sock.open();
             })
-            .catch(() => {
+            .catch((e) => {
+                console.error(e);
                 window.location.reload();
             });
     }
