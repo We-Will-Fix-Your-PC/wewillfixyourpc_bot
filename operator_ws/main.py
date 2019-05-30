@@ -29,7 +29,7 @@ class OperatorWebSocket(tornado.websocket.WebSocketHandler):
     loop: AsyncIOMainLoop
     user: User
 
-    def get(self, *args, **kwargs):
+    async def get(self, *args, **kwargs):
         headers = self.request.headers
         jws = headers["Sec-WebSocket-Protocol"]
 
@@ -47,7 +47,13 @@ class OperatorWebSocket(tornado.websocket.WebSocketHandler):
         except User.DoesNotExist:
             raise tornado.web.HTTPError(403)
 
-        super().get(*args, **kwargs)
+        await super().get(*args, **kwargs)
+
+    def select_subprotocol(self, protocols):
+        if len(protocols) == 0:
+            return None
+        else:
+            return protocols[1]
 
     def open(self):
         self.loop = tornado.ioloop.IOLoop.current()

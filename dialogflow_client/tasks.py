@@ -39,9 +39,12 @@ def handle_event(cid, event):
 def handle_response(conversation, query_input):
     operator_interface.tasks.process_typing.delay(conversation.id)
 
+    sentiment_analysis_request_config = dialagflow.types.SentimentAnalysisRequestConfig(analyze_query_text_sentiment=True)
+    query_parameters = dialogflow.types.QueryParameters(sentiment_analysis_request_config=)
+
     session = session_client.session_path(settings.GOOGLE_PROJECT_ID,
                                           f"{conversation.platform}:{conversation.platform_id}:{conversation.noonce}")
-    response = session_client.detect_intent(session=session, query_input=query_input)
+    response = session_client.detect_intent(session=session, query_input=query_input, query_parameters=query_parameters)
 
     for context in response.query_result.output_contexts:
         context = context.name.split("/")[-1]
