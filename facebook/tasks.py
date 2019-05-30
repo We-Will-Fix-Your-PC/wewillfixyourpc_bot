@@ -19,7 +19,8 @@ def handle_facebook_message(psid, message):
     is_echo = message.get("is_echo")
     if text is not None:
         conversation = Conversation.get_or_create_conversation(Conversation.FACEBOOK, psid)
-        update_facebook_profile(psid, conversation.id)
+        if not is_echo:
+            update_facebook_profile(psid, conversation.id)
         if not Message.message_exits(conversation, mid):
             message_m = Message(conversation=conversation, message_id=mid, text=text, direction=Message.FROM_CUSTOMER)
             message_m.save()
