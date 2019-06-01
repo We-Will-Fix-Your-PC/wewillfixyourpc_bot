@@ -13,6 +13,10 @@ import threading
 from django.contrib.staticfiles.templatetags.staticfiles import static
 from django.conf import settings
 from tornado.platform.asyncio import AsyncIOMainLoop
+import sentry_sdk
+from sentry_sdk.integrations.tornado import TornadoIntegration
+
+sentry_sdk.init("https://efc22f89d34a46d0adffb302181ed3f9@sentry.io/1471674", integrations=[TornadoIntegration()], send_default_pii=True)
 
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'wewillfixyourpc_bot.settings')
