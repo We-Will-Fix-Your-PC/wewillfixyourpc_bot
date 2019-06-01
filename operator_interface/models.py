@@ -95,6 +95,9 @@ class Message(models.Model):
     timestamp = models.DateTimeField(default=timezone.now)
     user = models.ForeignKey(User, blank=True, null=True, on_delete=models.SET_NULL)
 
+    class Meta:
+        ordering = ('timestamp',)
+
     def __str__(self):
         return f"{str(self.conversation)} - {self.timestamp.isoformat()}"
 
