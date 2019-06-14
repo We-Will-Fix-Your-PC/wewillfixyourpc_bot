@@ -28,6 +28,10 @@ import operator_interface.tasks
 
 message_handlers = set()
 
+def make_sure_mysql_usable():
+    from django.db import connection, connections
+    if connection.connection and not connection.is_usable():
+        del connections._connections.default
 
 class OperatorWebSocket(tornado.websocket.WebSocketHandler):
     loop: AsyncIOMainLoop
@@ -46,6 +50,7 @@ class OperatorWebSocket(tornado.websocket.WebSocketHandler):
         uid = data.get("sub")
         if uid is None:
             raise tornado.web.HTTPError(403)
+        make_sure_mysql_usable()
         try:
             self.user = User.objects.get(id=uid)
         except User.DoesNotExist:
@@ -65,6 +70,7 @@ class OperatorWebSocket(tornado.websocket.WebSocketHandler):
         print("WebSocket opened")
 
     def on_message(self, message):
+        make_sure_mysql_usable()
         message = json.loads(message)
         if message["type"] == "resyncReq":
             last_message = message["lastMessage"]
@@ -86,6 +92,7 @@ class OperatorWebSocket(tornado.websocket.WebSocketHandler):
             operator_interface.tasks.process_event.delay(cid, "end")
 
     def send_message(self, message: operator_interface.models.Message):
+        make_sure_mysql_usable()
         pic = static("operator_interface/img/default_profile_normal.png")
         if message.conversation.customer_pic:
             pic = message.conversation.customer_pic.url
@@ -120,6 +127,7 @@ def rmq_callback(ch, method, properties, body):
     data = json.loads(body)
     mid = data.get("mid")
     if mid is not None:
+        make_sure_mysql_usable()
         try:
             message = operator_interface.models.Message.objects.get(id=mid)
         except operator_interface.models.Message.DoesNotExist:
