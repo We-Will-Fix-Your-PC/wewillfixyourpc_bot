@@ -55,12 +55,11 @@ def handle_facebook_postback(psid, postback):
 def update_facebook_profile(psid, cid):
     conversation = Conversation.objects.get(id=cid)
     r = requests.get(f"https://graph.facebook.com/{psid}", params={
-        "fields": "first_name,last_name,profile_pic,timezone",
+        "fields": "name,profile_pic,timezone",
         "access_token": settings.FACEBOOK_ACCESS_TOKEN
     })
     r.raise_for_status()
     r = r.json()
-    name = f"{r['first_name']} {r['last_name']}"
     profile_pic = r["profile_pic"]
     timezone = r['timezone']
     if not conversation.customer_pic or conversation.customer_pic.name != psid:
@@ -70,7 +69,7 @@ def update_facebook_profile(psid, cid):
                 InMemoryUploadedFile(file=BytesIO(r.content), size=len(r.content), charset=r.encoding,
                                      content_type=r.headers.get('content-type'), field_name=psid,
                                      name=psid)
-    conversation.customer_name = name
+    conversation.customer_name = r['name']
     if timezone < 0:
         conversation.timezone = f"Etc/GMT-{abs(timezone)}"
     else:
