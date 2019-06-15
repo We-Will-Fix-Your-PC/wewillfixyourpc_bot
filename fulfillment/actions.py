@@ -330,7 +330,7 @@ def repair_iphone(params, *_):
             repair_m = models.IPhoneRepair.objects.get(name=model, repair_name=repair_name)
 
             return {
-                "fulfillmentText": f"{p.a(f'{model} {repair_name}')} will cost £{repair_m.price}"
+                "fulfillmentText": f"{p.a(f'{model} {repair_name}').capitalize()} will cost £{repair_m.price}"
             }
         except models.IPhoneRepair.DoesNotExist:
             return {
