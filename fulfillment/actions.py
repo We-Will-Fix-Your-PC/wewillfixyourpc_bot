@@ -329,7 +329,8 @@ def repair_iphone(params, *_):
         repair_m = models.IPhoneRepair.objects.filter(name__startswith=model, repair_name=repair_name)
 
         if len(repair_m) > 0:
-            repair_strs = list(map(lambda r: f"{p.a(f'{r.name} {repair_name}').capitalize()} will cost £{r.price}", repair_m))
+            repair_strs = list(map(lambda r: f"{p.a(f'iPhone {r.name} {repair_name}').capitalize()}"
+            f" will cost £{r.price}", repair_m))
 
             return {
                 "fulfillmentText": "\n".join(repair_strs)
