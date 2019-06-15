@@ -131,7 +131,11 @@ class App extends Component {
             "type": "finishConv",
             "cid": this.state.conversations[this.state.selectedIndex].id
         }));
-        this.state.conversations[this.state.selectedIndex].agent_responding = true;
+        const conversations = this.state.conversations;
+        conversations[this.state.selectedIndex].agent_responding = true;
+        this.setState({
+            conversations: conversations
+        })
     }
 
     render() {
