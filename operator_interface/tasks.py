@@ -79,6 +79,13 @@ def process_event(cid, event):
 
 
 @shared_task
+def hand_back(cid):
+    conversation = models.Conversation.objects.get(id=cid)
+    conversation.agent_responding = True
+    conversation.save()
+
+
+@shared_task
 def process_typing(cid):
     conversation = models.Conversation.objects.get(id=cid)
     if conversation.platform == models.Conversation.FACEBOOK:

@@ -37,6 +37,7 @@ class App extends Component {
         this.handleReceiveMessage = this.handleReceiveMessage.bind(this);
         this.onSend = this.onSend.bind(this);
         this.onEnd = this.onEnd.bind(this);
+        this.onFinish = this.onFinish.bind(this);
     }
 
     componentDidMount() {
@@ -125,6 +126,14 @@ class App extends Component {
         }));
     }
 
+    onFinish() {
+        this.sock.send(JSON.stringify({
+            "type": "finishConv",
+            "cid": this.state.conversations[this.state.selectedIndex].id
+        }));
+        this.state.conversations[this.state.selectedIndex].agent_responding = true;
+    }
+
     render() {
         return (
             <div className='drawer-container'>
@@ -165,9 +174,14 @@ class App extends Component {
                             </TopAppBarSection>
                             <TopAppBarSection role='toolbar'>
                                 {this.state.selectedIndex === null ? null :
-                                    <Button raised onClick={this.onEnd}>
-                                        End conversation
-                                    </Button>
+                                    <React.Fragment>
+                                        <Button raised onClick={this.onEnd}>
+                                            End conversation
+                                        </Button>
+                                        <Button raised onClick={this.onFinish}>
+                                            Hand back to agent
+                                        </Button>
+                                    </React.Fragment>
                                 }
                             </TopAppBarSection>
                         </TopAppBarRow>

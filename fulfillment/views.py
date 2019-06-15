@@ -11,6 +11,8 @@ def webhook(request):
     except json.JSONDecodeError:
         return HttpResponseBadRequest()
 
+    logger.debug(f"Got event from facebok webhook: {data}")
+
     query = data.get('queryResult')
     if query is None:
         return HttpResponseBadRequest()

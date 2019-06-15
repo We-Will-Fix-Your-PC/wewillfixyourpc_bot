@@ -90,6 +90,9 @@ class OperatorWebSocket(tornado.websocket.WebSocketHandler):
         elif message["type"] == "endConv":
             cid = message["cid"]
             operator_interface.tasks.process_event.delay(cid, "end")
+        elif message["type"] == "finishConv":
+            cid = message["cid"]
+            operator_interface.tasks.hand_back.delay(cid)
 
     def send_message(self, message: operator_interface.models.Message):
         make_sure_mysql_usable()

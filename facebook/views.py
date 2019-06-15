@@ -39,7 +39,10 @@ def webhook(request):
 
     for entry in entries:
         entry = entry["messaging"][0]
-        psid = entry["sender"]["id"]
+        psid = {
+            "sender": entry["sender"]["id"],
+            "recipient": entry["recipient"]["id"]
+        }
 
         message = entry.get("message")
         postback = entry.get("postback")

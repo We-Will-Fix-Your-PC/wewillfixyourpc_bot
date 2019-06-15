@@ -18,24 +18,25 @@ def handle_facebook_message(psid, message):
     mid = message["mid"]
     is_echo = message.get("is_echo")
     if text is not None:
+        psid = psid["sender"] if not is_echo else psid["recipient"]
         conversation = Conversation.get_or_create_conversation(Conversation.FACEBOOK, psid)
         if not is_echo:
             update_facebook_profile(psid, conversation.id)
-        if not Message.message_exits(conversation, mid):
-            message_m = Message(conversation=conversation, message_id=mid, text=text, direction=Message.FROM_CUSTOMER)
-            message_m.save()
-
-            if not is_echo:
+            if not Message.message_exits(conversation, mid):
+                message_m = Message(conversation=conversation, message_id=mid, text=text, direction=Message.FROM_CUSTOMER)
+                message_m.save()
                 handle_mark_facebook_message_read.delay(psid)
                 operator_interface.tasks.process_message.delay(message_m.id)
-            else:
-                message_m.direction = Message.TO_CUSTOMER
+        else:
+            if not Message.message_exits(conversation, mid):
+                message_m = Message(conversation=conversation, message_id=mid, text=text, direction=Message.TO_CUSTOMER)
                 message_m.save()
-                operator_interface.tasks.send_message_to_interface(message_m.id)
+                operator_interface.tasks.send_message_to_interface.delay(message_m.id)
 
 
 @shared_task
 def handle_facebook_postback(psid, postback):
+    psid = psid["sender"]
     payload = postback.get("payload")
     if payload is not None:
         conversation = Conversation.get_or_create_conversation(Conversation.FACEBOOK, psid)
