@@ -1,6 +1,7 @@
 import dateutil.parser
 import dateutil.relativedelta
 import datetime
+import inflect
 import typing
 import pytz
 from django.utils import timezone
@@ -8,6 +9,7 @@ from . import models
 import operator_interface.models
 
 tz = pytz.timezone('Europe/London')
+p = inflect.engine()
 
 
 def get_one_or_none(**kwargs):
@@ -17,9 +19,6 @@ def get_one_or_none(**kwargs):
 
 def opening_hours(params, *_):
     def inner():
-        def suffix(d):
-            return 'th' if 11 <= d <= 13 else {1: 'st', 2: 'nd', 3: 'rd'}.get(d % 10, 'th')
-
         def format_hours(time: typing.Union[models.OpeningHours, models.OpeningHoursOverride]):
             try:
                 if time.closed:
@@ -102,9 +101,9 @@ def opening_hours(params, *_):
                         f"Do you need help with anything else?"
                 else:
                     if hours is None:
-                        return f"On {want_date.strftime('%A %B the %-d')}{suffix(want_date.day)} we are closed.\n\n" \
+                        return f"On {want_date.strftime('%A %B')} the {p.ordinal(want_date.day)} we are closed.\n\n" \
                             f"Do you need help with anything else?"
-                    return f"On {want_date.strftime('%A %B the %-d')}{suffix(want_date.day)} we are open" \
+                    return f"On {want_date.strftime('%A %B')} the {p.ordinal(want_date.day)} we are open" \
                         f" {format_hours(hours)}.\n\nDo you need help with anything else?"
 
         days = [("Monday", "Monday", opening_hours_defs["monday"]),
@@ -135,8 +134,8 @@ def opening_hours(params, *_):
             days = "\n".join(days_in_period)
 
             future_overrides = filter(lambda f: f.day.weekday() in day_ids_in_period, future_overrides)
-            future_overrides_txt = map(lambda d: f"\nOn {d.day.strftime('%A %B %-d')}{suffix(d.day.day)} we will be"
-                                            f" {'closed' if d.closed else f'open {format_hours(d)}'}", future_overrides)
+            future_overrides_txt = map(lambda d: f"\nOn {d.day.strftime('%A %B')} the {p.ordinal(d.day.day)} we will be"
+            f" {'closed' if d.closed else f'open {format_hours(d)}'}", future_overrides)
             future_overrides_txt = "".join(future_overrides_txt)
 
             return f"Our opening hours are:\n{days}{future_overrides_txt}\n\nDo you need help with anything else?"
@@ -145,8 +144,8 @@ def opening_hours(params, *_):
         days = map(format_day, days)
         days = "\n".join(days)
 
-        future_overrides_txt = map(lambda d: f"\nOn {d.day.strftime('%A %B %-d')}{suffix(d.day.day)} we will be"
-                                        f" {'closed' if d.closed else f'open {format_hours(d)}'}", future_overrides)
+        future_overrides_txt = map(lambda d: f"\nOn {d.day.strftime('%A %B')} the {p.ordinal(d.day.day)} we will be"
+        f" {'closed' if d.closed else f'open {format_hours(d)}'}", future_overrides)
         future_overrides_txt = "".join(future_overrides_txt)
         return f"Our opening hours are:\n{days}{future_overrides_txt}\n\nDo you need help with anything else?"
 
@@ -165,8 +164,7 @@ def opening_hours(params, *_):
                         "Yes",
                         "No",
                     ]
-                },
-                "platform": "FACEBOOK"
+                }
             },
         ],
     }
@@ -190,8 +188,7 @@ def contact_email(params, text: str, *_):
                         "Yes",
                         "No",
                     ]
-                },
-                "platform": "FACEBOOK"
+                }
             },
         ],
     }
@@ -215,8 +212,7 @@ def contact_phone(params, text: str, *_):
                         "Yes",
                         "No",
                     ]
-                },
-                "platform": "FACEBOOK"
+                }
             },
         ],
     }
@@ -241,8 +237,7 @@ def contact(params, text: str, *_):
                         "Yes",
                         "No",
                     ]
-                },
-                "platform": "FACEBOOK"
+                }
             },
         ],
     }
@@ -266,11 +261,54 @@ def location(params, text: str, *_):
                         "Yes",
                         "No",
                     ]
-                },
-                "platform": "FACEBOOK"
+                }
             },
         ],
     }
+
+
+def repair(params, *_):
+    brand = params.get("brand")
+    if brand is not None:
+        if brand == "iPhone":
+            return {
+                "fulfillmentMessages": [
+                    {
+                        "text": {
+                            "text": [
+                                "Yes we do fix iPhones"
+                            ]
+                        },
+                    },
+                    {
+                        "payload": {
+                            "nextEvent": "IPHONE_REPAIR"
+                        }
+                    },
+                ],
+            }
+
+    return {
+        "fulfillmentText": "Sorry, we don't fix those"
+    }
+
+
+def repair_iphone(params, *_):
+    model = params.get("iphone-model")
+    repair_name = params.get("iphone-repair")
+    if models is not None and repair_name is not None:
+        try:
+            repair_m = models.IPhoneRepair.objects.get(name=model, repair_name=repair_name)
+
+            return {
+                "fulfillmentText": f"{p.a(f'{model} {repair_name}')} will cost £{repair_m.price}"
+            }
+        except models.IPhoneRepair.DoesNotExist:
+            return {
+                "fulfillmentText": f"Sorry, but we do not fix iPhone {model} {p.plural(repair_name)}"
+            }
+
+    return {}
 
 
 def rate(params, _, data):
@@ -307,11 +345,11 @@ def is_open():
 
     now = datetime.datetime.now().time()
     time_open = timezone.make_naive(timezone.make_aware(
-                        datetime.datetime.combine(today, hours.open), tz)
-                        .astimezone(pytz.utc)).time()
+        datetime.datetime.combine(today, hours.open), tz)
+                                    .astimezone(pytz.utc)).time()
     time_close = timezone.make_naive(timezone.make_aware(
-                        datetime.datetime.combine(today, hours.close), tz)
-                        .astimezone(pytz.utc)).time()
+        datetime.datetime.combine(today, hours.close), tz)
+                                     .astimezone(pytz.utc)).time()
 
     if now < time_open:
         return False
@@ -339,6 +377,8 @@ ACTIONS = {
     'support.contact.phone': contact_phone,
     'support.contact.email': contact_email,
     'support.location': location,
+    'repair': repair,
+    'repair.iphone': repair_iphone,
     'rate': rate,
     'human_needed': human_needed
 }

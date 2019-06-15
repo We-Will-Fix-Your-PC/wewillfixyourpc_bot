@@ -70,31 +70,39 @@ def handle_response(conversation, query_input):
 
     messages = response.query_result.fulfillment_messages
     text = list(filter(lambda m: m.WhichOneof("message") == "text", messages))
+    payload = list(filter(lambda m: m.WhichOneof("message") == "payload", messages))
     text_platform = []
     if conversation.platform == Conversation.FACEBOOK:
         text_platform = \
             list(filter(lambda m: m.platform == dialogflow.types.intent_pb2.Intent.Message.FACEBOOK, text))
+    if conversation.platform == Conversation.TWITTER:
+        text_platform = \
+            list(filter(lambda m: m.platform == dialogflow.types.intent_pb2.Intent.Message.TWITTER, text))
+
     if len(text_platform) > 0:
-        text = text_platform[0].text.text[0]
+        text = text_platform[0].text.text
     else:
-        text = text[0].text.text[0]
+        text = text[0].text.text
+
+    next_event = list(filter(lambda p: p.get("nextEvent") is not None, payload))
 
     quick_replies = list(filter(lambda m: m.WhichOneof("message") == "quick_replies", messages))
-    if conversation.platform == Conversation.FACEBOOK:
-        quick_replies = \
-            list(filter(lambda m: m.platform == dialogflow.types.intent_pb2.Intent.Message.FACEBOOK, quick_replies))
+    resp_message = list(map(lambda t: Message(conversation=conversation, text=t,
+                            direction=Message.TO_CUSTOMER, message_id=response.response_id), text))
+    for m in resp_message:
+        m.save()
 
-    resp_message = Message(conversation=conversation, text=text,
-                           direction=Message.TO_CUSTOMER, message_id=response.response_id)
-    resp_message.save()
-
-    if conversation.platform == Conversation.FACEBOOK:
-        if len(quick_replies) > 0:
-            quick_replies = quick_replies[0].quick_replies.quick_replies
-            for reply in quick_replies:
-                suggestion = MessageSuggestion(message=resp_message, suggested_response=reply)
-                suggestion.save()
+    if len(quick_replies) > 0:
+        quick_replies = quick_replies[0].quick_replies.quick_replies
+        for reply in quick_replies:
+            suggestion = MessageSuggestion(message=resp_message[-1], suggested_response=reply)
+            suggestion.save()
 
     logging.info(f"Dialogflow gave response of \"{text}\"")
 
-    operator_interface.tasks.process_message.delay(resp_message.id)
+    for m in resp_message:
+        operator_interface.tasks.process_message.delay(m.id)
+
+    if len(next_event) > 0:
+        next_event = next_event[0]
+        operator_interface.tasks.process_event.delay(conversation.id, next_event["nextEvent"])

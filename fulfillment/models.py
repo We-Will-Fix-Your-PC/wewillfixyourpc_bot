@@ -47,3 +47,15 @@ class OpeningHoursOverride(models.Model):
     def __str__(self):
         return self.day.isoformat()
 
+
+class IPhoneRepair(models.Model):
+    name = models.CharField(max_length=255)
+    repair_name = models.CharField(max_length=255)
+    price = models.DecimalField(decimal_places=2, max_digits=10)
+
+    class Meta:
+        verbose_name = "iPhone Repair"
+        verbose_name_plural = "iPhone Repairs"
+
+    def __str__(self):
+        return f"{self.name} {self.repair_name}"
