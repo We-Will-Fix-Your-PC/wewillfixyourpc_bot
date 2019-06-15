@@ -274,47 +274,48 @@ def repair(params, _, data):
             model = params.get("iphone-model")
             repair_name = params.get("iphone-repair")
 
-            text_out = ["Yes we do fix iPhones"]
+            if model is not None and repair_name is not None:
+                text_out = ["Yes we do fix iPhones"]
 
-            filled = False
+                filled = False
 
-            if len(model) == 0:
-                text_out.append("What model is it?")
-            elif len(repair_name) == 0:
-                text_out.append("What needs fixing?")
-            else:
-                filled = True
+                if len(model) == 0:
+                    text_out.append("What model is it?")
+                elif len(repair_name) == 0:
+                    text_out.append("What needs fixing?")
+                else:
+                    filled = True
 
-            session = data.get("session")
-            out = {
-                "fulfillmentMessages": [
-                    {
-                        "text": {
-                            "text": text_out
-                        },
-                    }
-                ],
-                "outputContexts": [
-                    {
-                        "name": f"{session}/repair",
-                        "lifespanCount": 5,
-                        "parameters": {
-                            "iphone-model": model,
-                            "iphone-repair": repair_name
+                session = data.get("session")
+                out = {
+                    "fulfillmentMessages": [
+                        {
+                            "text": {
+                                "text": text_out
+                            },
                         }
-                    }
-                ],
+                    ],
+                    "outputContexts": [
+                        {
+                            "name": f"{session}/contexts/repair",
+                            "lifespanCount": 5,
+                            "parameters": {
+                                "iphone-model": model,
+                                "iphone-repair": repair_name
+                            }
+                        }
+                    ],
 
-            }
+                }
 
-            if filled:
-                out["fulfillmentMessages"].append({
-                    "payload": {
-                        "nextEvent": "IPHONE_REAPAIR"
-                    }
-                })
+                if filled:
+                    out["fulfillmentMessages"].append({
+                        "payload": {
+                            "nextEvent": "IPHONE_REAPAIR"
+                        }
+                    })
 
-            return out
+                return out
 
     return {
         "fulfillmentText": "Sorry, we don't fix those"
