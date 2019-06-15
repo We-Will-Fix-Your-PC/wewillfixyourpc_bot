@@ -406,7 +406,7 @@ ACTIONS = {
     'support.contact.email': contact_email,
     'support.location': location,
     'repair': repair,
-    'repair.iphone': repair_iphone
+    'repair.iphone': repair_iphone,
     'rate': rate,
     'human_needed': human_needed
 }
