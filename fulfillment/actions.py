@@ -269,11 +269,14 @@ def location(params, text: str, *_):
 
 def repair(params, _, data):
     brand = params.get("brand")
-    if brand is not None:
-        if brand == "iPhone":
-            model = params.get("iphone-model")
-            repair_name = params.get("iphone-repair")
+    model = params.get("iphone-model")
+    repair_name = params.get("iphone-repair")
 
+    if len(model) != 0 or len(repair_name) != 0:
+        brand = "iPhone"
+
+    if brand is not None and len(brand) != 0:
+        if brand == "iPhone":
             if model is not None and repair_name is not None:
                 text_out = ["Yes we do fix iPhones"]
 
