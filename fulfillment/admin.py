@@ -5,3 +5,4 @@ from . import models
 admin.site.register(models.ContactDetails, SingletonAdmin)
 admin.site.register(models.OpeningHours)
 admin.site.register(models.OpeningHoursOverride)
+admin.site.register(models.IPhoneRepair)
