@@ -329,7 +329,7 @@ def repair_iphone(params, *_):
         repair_m = models.IPhoneRepair.objects.filter(name__startswith=model, repair_name=repair_name)
 
         if len(repair_m) > 0:
-            repair_strs = list(map(lambda r: f"{p.a(f'iPhone {r.name} {repair_name}').capitalize()}"
+            repair_strs = list(map(lambda r: f"A{p.a(f'iPhone {r.name} {repair_name}')[1:]}"
             f" will cost £{r.price}", repair_m))
 
             return {
