@@ -16,3 +16,4 @@ pytz
 jwt
 pywebpush
 sentry-sdk
+inflect

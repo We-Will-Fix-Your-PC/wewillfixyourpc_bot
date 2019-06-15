@@ -267,26 +267,54 @@ def location(params, text: str, *_):
     }
 
 
-def repair(params, *_):
+def repair(params, _, data):
     brand = params.get("brand")
     if brand is not None:
         if brand == "iPhone":
-            return {
+            model = params.get("iphone-model")
+            repair_name = params.get("iphone-repair")
+
+            text_out = ["Yes we do fix iPhones"]
+
+            filled = False
+
+            if len(model) == 0:
+                text_out.append("What model is it?")
+            elif len(repair_name) == 0:
+                text_out.append("What needs fixing?")
+            else:
+                filled = True
+
+            session = data.get("session")
+            out = {
                 "fulfillmentMessages": [
                     {
                         "text": {
-                            "text": [
-                                "Yes we do fix iPhones"
-                            ]
+                            "text": text_out
                         },
-                    },
-                    {
-                        "payload": {
-                            "nextEvent": "IPHONE_REPAIR"
-                        }
-                    },
+                    }
                 ],
+                "outputContexts": [
+                    {
+                        "name": f"{session}/repair",
+                        "lifespanCount": 5,
+                        "parameters": {
+                            "iphone-model": model,
+                            "iphone-repair": repair_name
+                        }
+                    }
+                ],
+
             }
+
+            if filled:
+                out["fulfillmentMessages"].append({
+                    "payload": {
+                        "nextEvent": "IPHONE_REAPAIR"
+                    }
+                })
+
+            return out
 
     return {
         "fulfillmentText": "Sorry, we don't fix those"
@@ -378,7 +406,7 @@ ACTIONS = {
     'support.contact.email': contact_email,
     'support.location': location,
     'repair': repair,
-    'repair.iphone': repair_iphone,
+    'repair.iphone': repair_iphone
     'rate': rate,
     'human_needed': human_needed
 }
