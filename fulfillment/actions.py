@@ -283,10 +283,10 @@ def repair(params, _, data):
     if brand is not None and len(brand) != 0:
         if brand == "iPhone":
             if iphone_model is not None and repair_name is not None:
-                generic_repair_fill("iphone", iphone_model, repair_name, repair_iphone, session, params)
+                return generic_repair_fill("iphone", iphone_model, repair_name, repair_iphone, session, params)
         elif brand == "iPad":
             if ipad_model is not None and repair_name is not None:
-                generic_repair_fill("ipad", ipad_model, repair_name, repair_ipad, session, params)
+                return generic_repair_fill("ipad", ipad_model, repair_name, repair_ipad, session, params)
 
     return {
         "fulfillmentText": "Sorry, we don't fix those"
