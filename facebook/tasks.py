@@ -61,6 +61,7 @@ def update_facebook_profile(psid, cid):
     })
     r.raise_for_status()
     r = r.json()
+    name = r['name']
     profile_pic = r["profile_pic"]
     timezone = r['timezone']
     if not conversation.customer_pic or conversation.customer_pic.name != psid:
@@ -70,7 +71,7 @@ def update_facebook_profile(psid, cid):
                 InMemoryUploadedFile(file=BytesIO(r.content), size=len(r.content), charset=r.encoding,
                                      content_type=r.headers.get('content-type'), field_name=psid,
                                      name=psid)
-    conversation.customer_name = r['name']
+    conversation.customer_name = name
     if timezone < 0:
         conversation.timezone = f"Etc/GMT-{abs(timezone)}"
     else:
