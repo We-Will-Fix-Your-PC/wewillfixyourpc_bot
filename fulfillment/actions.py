@@ -286,34 +286,31 @@ def repair(params, _, data):
                 else:
                     filled = True
 
-                session = data.get("session")
-                out = {
-                    "fulfillmentMessages": [
-                        {
-                            "text": {
-                                "text": text_out
-                            },
-                        }
-                    ],
-                    "outputContexts": [
-                        {
-                            "name": f"{session}/contexts/repair",
-                            "lifespanCount": 5,
-                            "parameters": {
-                                "iphone-model": model,
-                                "iphone-repair": repair_name
+                if not filled:
+                    session = data.get("session")
+                    out = {
+                        "fulfillmentMessages": [
+                            {
+                                "text": {
+                                    "text": text_out
+                                },
                             }
-                        }
-                    ],
+                        ],
+                        "outputContexts": [
+                            {
+                                "name": f"{session}/contexts/repair",
+                                "lifespanCount": 2,
+                                "parameters": {
+                                    "iphone-model": model,
+                                    "iphone-repair": repair_name
+                                }
+                            }
+                        ],
 
-                }
+                    }
 
                 if filled:
-                    out["fulfillmentMessages"].append({
-                        "payload": {
-                            "nextEvent": "IPHONE_REAPAIR"
-                        }
-                    })
+                    return repair_iphone(params)
 
                 return out
 
