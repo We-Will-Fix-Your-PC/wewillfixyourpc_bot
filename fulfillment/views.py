@@ -1,8 +1,10 @@
 from django.http import HttpResponse, HttpResponseBadRequest
 import json
+import logging
 from django.views.decorators.csrf import csrf_exempt
 from . import actions
 
+logger = logging.getLogger(__name__)
 
 @csrf_exempt
 def webhook(request):
@@ -11,7 +13,7 @@ def webhook(request):
     except json.JSONDecodeError:
         return HttpResponseBadRequest()
 
-    logger.debug(f"Got event from facebok webhook: {data}")
+    logger.debug(f"Got event from dialogflow webhook: {data}")
 
     query = data.get('queryResult')
     if query is None:
