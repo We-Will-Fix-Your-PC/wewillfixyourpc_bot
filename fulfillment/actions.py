@@ -268,57 +268,52 @@ def location(params, text: str, *_):
 
 
 def repair(params, _, data):
+    session = data.get("session")
     brand = params.get("brand")
-    model = params.get("iphone-model")
+    iphone_model = params.get("iphone-model")
+    ipad_model = params.get("ipad-model")
     repair_name = params.get("iphone-repair")
 
-    if len(model) != 0 or len(repair_name) != 0:
+    if len(iphone_model) != 0:
         brand = "iPhone"
+
+    if len(ipad_model) != 0:
+        brand = "iPad"
 
     if brand is not None and len(brand) != 0:
         if brand == "iPhone":
-            if model is not None and repair_name is not None:
-                text_out = ["Yes we do fix iPhones"]
-
-                filled = False
-
-                if len(model) == 0:
-                    text_out.append("What model is it?")
-                elif len(repair_name) == 0:
-                    text_out.append("What needs fixing?")
-                else:
-                    filled = True
-
-                if not filled:
-                    session = data.get("session")
-                    out = {
-                        "fulfillmentMessages": [
-                            {
-                                "text": {
-                                    "text": text_out
-                                },
-                            }
-                        ],
-                        "outputContexts": [
-                            {
-                                "name": f"{session}/contexts/repair",
-                                "lifespanCount": 2,
-                                "parameters": {
-                                    "iphone-model": model,
-                                    "iphone-repair": repair_name
-                                }
-                            }
-                        ],
-
-                    }
-
-                if filled:
-                    return repair_iphone(params)
-
-                return out
+            if iphone_model is not None and repair_name is not None:
+                generic_repair_fill("iphone", iphone_model, repair_name, repair_iphone, session, params)
+        elif brand == "iPad":
+            if ipad_model is not None and repair_name is not None:
+                generic_repair_fill("ipad", ipad_model, repair_name, repair_ipad, session, params)
 
     return {
         "fulfillmentText": "Sorry, we don't fix those"
+    }
+
+
+def generic_repair_fill(brand_name, model, repair_name, repair_func, session, params):
+    if len(model) == 0:
+        text_out = "What model is it?"
+    elif len(repair_name) == 0:
+        text_out = "What needs fixing?"
+    else:
+        return repair_func(params)
+
+    return {
+        "fulfillmentText": text_out,
+        "outputContexts": [
+            {
+                "name": f"{session}/contexts/repair-{brand_name}",
+                "lifespanCount": 2,
+                "parameters": {
+                    f"{brand_name}-model": model,
+                    "iphone-repair": repair_name
+                }
+            }
+        ],
+
     }
 
 
@@ -326,21 +321,34 @@ def repair_iphone(params, *_):
     model = params.get("iphone-model")
     repair_name = params.get("iphone-repair")
     if models is not None and repair_name is not None:
-        repair_m = models.IPhoneRepair.objects.filter(name__startswith=model, repair_name=repair_name)
-
-        if len(repair_m) > 0:
-            repair_strs = list(map(lambda r: f"A{p.a(f'iPhone {r.name} {repair_name}')[1:]}"
-            f" will cost £{r.price}", repair_m))
-
-            return {
-                "fulfillmentText": "\n".join(repair_strs)
-            }
-        else:
-            return {
-                "fulfillmentText": f"Sorry, but we do not fix iPhone {model} {p.plural(repair_name)}"
-            }
+        return generic_repair(models.IPhoneRepair, model, repair_name)
 
     return {}
+
+
+def repair_ipad(params, *_):
+    model = params.get("ipad-model")
+    repair_name = params.get("iphone-repair")
+    if models is not None and repair_name is not None:
+        return generic_repair(models.IPadRepair, model, repair_name)
+
+    return {}
+
+
+def generic_repair(model_o, model, repair_name):
+    repair_m = model_o.objects.filter(name__startswith=model, repair_name=repair_name)
+
+    if len(repair_m) > 0:
+        repair_strs = list(map(lambda r: f"A{p.a(f'{r.name} {repair_name}')[1:]}"
+        f" will cost £{r.price}", repair_m))
+
+        return {
+            "fulfillmentText": "\n".join(repair_strs)
+        }
+    else:
+        return {
+            "fulfillmentText": f"Sorry, but we do not fix {model} {p.plural(repair_name)}"
+        }
 
 
 def rate(params, _, data):
@@ -411,6 +419,7 @@ ACTIONS = {
     'support.location': location,
     'repair': repair,
     'repair.iphone': repair_iphone,
+    'repair.ipad': repair_ipad,
     'rate': rate,
     'human_needed': human_needed
 }

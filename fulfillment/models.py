@@ -59,3 +59,16 @@ class IPhoneRepair(models.Model):
 
     def __str__(self):
         return f"{self.name} {self.repair_name}"
+
+
+class IPadRepair(models.Model):
+    name = models.CharField(max_length=255)
+    repair_name = models.CharField(max_length=255)
+    price = models.DecimalField(decimal_places=2, max_digits=10)
+
+    class Meta:
+        verbose_name = "iPad Repair"
+        verbose_name_plural = "iPad Repairs"
+
+    def __str__(self):
+        return f"{self.name} {self.repair_name}"
