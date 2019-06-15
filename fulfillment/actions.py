@@ -326,13 +326,15 @@ def repair_iphone(params, *_):
     model = params.get("iphone-model")
     repair_name = params.get("iphone-repair")
     if models is not None and repair_name is not None:
-        try:
-            repair_m = models.IPhoneRepair.objects.get(name=model, repair_name=repair_name)
+        repair_m = models.IPhoneRepair.objects.filter(name__startswith=model, repair_name=repair_name)
+
+        if len(repair_m) > 0:
+            repair_strs = list(map(lambda r: f"{p.a(f'{r.name} {repair_name}').capitalize()} will cost £{r.price}", repair_m))
 
             return {
-                "fulfillmentText": f"{p.a(f'{model} {repair_name}').capitalize()} will cost £{repair_m.price}"
+                "fulfillmentText": "\n".join(repair_strs)
             }
-        except models.IPhoneRepair.DoesNotExist:
+        else:
             return {
                 "fulfillmentText": f"Sorry, but we do not fix iPhone {model} {p.plural(repair_name)}"
             }
