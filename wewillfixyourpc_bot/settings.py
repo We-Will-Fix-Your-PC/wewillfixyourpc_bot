@@ -173,6 +173,7 @@ with open(os.path.join(BASE_DIR, "PUSH_PRIV_KEY")) as f:
 
 CORS_ORIGIN_ALLOW_ALL = True
 CORS_ALLOW_CREDENTIALS = True
+SESSION_COOKIE_SAMESITE = None
 
 LOGGING = {
     'version': 1,
