@@ -7,8 +7,10 @@ import operator_interface.tasks
 import logging
 import json
 import uuid
+import datetime
 import re
 from io import BytesIO
+from django.utils import timezone
 from django.core.files.uploadedfile import InMemoryUploadedFile
 
 
@@ -29,9 +31,14 @@ def handle_facebook_message(psid, message):
                 operator_interface.tasks.process_message.delay(message_m.id)
         else:
             if not Message.message_exits(conversation, mid):
-                message_m = Message(conversation=conversation, message_id=mid, text=text, direction=Message.TO_CUSTOMER)
-                message_m.save()
-                operator_interface.tasks.send_message_to_interface.delay(message_m.id)
+                similar_messages = \
+                    Message.objects.filter(conversation=conversation, text=text,
+                                           timestamp__gte=timezone.now() - datetime.timedelta(seconds=30))
+                if len(similar_messages) == 0:
+                    message_m = \
+                        Message(conversation=conversation, message_id=mid, text=text, direction=Message.TO_CUSTOMER)
+                    message_m.save()
+                    operator_interface.tasks.send_message_to_interface.delay(message_m.id)
 
 
 @shared_task

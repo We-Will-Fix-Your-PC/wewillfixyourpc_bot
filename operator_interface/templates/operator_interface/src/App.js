@@ -41,13 +41,13 @@ class App extends Component {
     }
 
     componentDidMount() {
-        fetch(process.env.NODE_ENV === 'production' ? "/token/" : "http://localhost:8000/token/", {
+        fetch(process.env.NODE_ENV === 'production' ? "/token/" : "https://bot.cardifftec.uk/token/", {
             credentials: 'include'
         })
             .then(resp => resp.text())
             .then(resp => {
                 this.sock = new ReconnectingWebSocket(process.env.NODE_ENV === 'production' ?
-                    "wss://" + window.location.host + "/websocket/" : "ws://localhost:8001/", resp, {automaticOpen: false});
+                    "wss://" + window.location.host + "/websocket/" : "wss://bot.cardifftec.uk/websocket/", resp, {automaticOpen: false});
                 this.sock.onopen = this.handleOpen;
                 this.sock.onmessage = this.handleReceiveMessage;
                 this.sock.open();
@@ -150,13 +150,16 @@ class App extends Component {
 
                     <DrawerContent>
                         <List twoLine avatarList singleSelection selectedIndex={this.state.selectedIndex}>
-                            {this.state.conversations.map((c, i) => (
-                                <ListItem key={i} onClick={() => this.selectConversation(i)}>
-                                    <ListItemGraphic graphic={<img src={c.picture} alt=""/>}/>
+                            {this.state.conversations
+                                .map((c, i) => {return {c: c, i: i, lastMsg: c.messages[c.messages.length - 1]}})
+                                .sort((f, s) => s.lastMsg.timestamp - f.lastMsg.timestamp)
+                                .map(c => (
+                                <ListItem key={c.i} onClick={() => this.selectConversation(c.i)}>
+                                    <ListItemGraphic graphic={<img src={c.c.picture} alt=""/>}/>
                                     <ListItemText
-                                        primaryText={c.customer_name}
-                                        secondaryText={c.messages[c.messages.length-1].text}/>
-                                    {!c.agent_responding ?
+                                        primaryText={c.c.customer_name}
+                                        secondaryText={c.lastMsg.text}/>
+                                    {!c.c.agent_responding ?
                                         <ListItemMeta meta={<MaterialIcon icon='notification_important'/>}/> : null}
                                 </ListItem>
                             ))}

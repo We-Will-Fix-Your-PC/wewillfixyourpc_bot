@@ -1,5 +1,6 @@
 import React, {Component} from 'react';
 import TextField, {Input} from '@material/react-text-field';
+import dateformat from 'dateformat';
 
 import MaterialIcon from '@material/react-material-icon';
 import './App.scss';
@@ -17,12 +18,41 @@ export default class Conversation extends Component {
         return (
             <div className='conversation'>
                 <div className="messages">
-                    {this.props.messages.map((m, i) => (
-                        <div key={i}>
-                            <div className={"dir-" + m.direction}
-                                 dangerouslySetInnerHTML={{__html: m.text.replace(/\n/g, "<br />")}} />
-                        </div>
-                    ))}
+                    {this.props.messages.map((m, i, a) => {
+                        let d = new Date(0);
+                        d.setUTCSeconds(m.timestamp);
+
+                        let out = [];
+
+                        if (i !== 0) {
+                            let prevDate = new Date(0);
+                            prevDate.setUTCSeconds(a[i - 1].timestamp);
+
+                            if (!(prevDate.getDay() === d.getDay() && prevDate.getMonth() === d.getMonth() &&
+                                prevDate.getFullYear() === d.getFullYear())) {
+                                out.push(<div key={(i * 2) + 1}>
+                                    <span>
+                                        <span>{dateformat(d, "ddd mmm dS yyyy")}</span>
+                                    </span>
+                                </div>)
+                            }
+                        } else {
+                            out.push(<div key={(i * 2) + 1}>
+                                <span>
+                                    <span>{dateformat(d, "ddd mmm dS yyyy")}</span>
+                                </span>
+                            </div>);
+                        }
+
+                        out.push(<div key={i * 2}>
+                            <div className={"dir-" + m.direction}>
+                                <div dangerouslySetInnerHTML={{__html: m.text.replace(/\n/g, "<br />")}}/>
+                                <span>{dateformat(d, "h:MM TT")}</span>
+                            </div>
+                        </div>);
+
+                        return out
+                    })}
                 </div>
                 <TextField
                     fullWidth
