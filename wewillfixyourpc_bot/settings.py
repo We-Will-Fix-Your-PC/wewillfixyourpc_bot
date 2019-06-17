@@ -27,7 +27,7 @@ with open(os.path.join(BASE_DIR, "SECRET_KEY")) as f:
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = ["cardifftec.uk"]
+ALLOWED_HOSTS = ["bot.cardifftec.uk"]
 
 
 # Application definition
@@ -134,13 +134,13 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/2.1/howto/static-files/
 
-STATIC_URL = 'https://cardifftec.uk/static/'
+STATIC_URL = 'https://bot.cardifftec.uk/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 
-MEDIA_URL = 'https://cardifftec.uk/media/'
+MEDIA_URL = 'https://bot.cardifftec.uk/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
-EXTERNAL_URL_BASE = "https://cardifftec.uk/"
+EXTERNAL_URL_BASE = "https://bot.cardifftec.uk/"
 
 PHONENUMBER_DEFAULT_REGION = "GB"
 
