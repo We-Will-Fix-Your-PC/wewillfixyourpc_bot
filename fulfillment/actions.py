@@ -313,29 +313,30 @@ def generic_repair_fill(brand_name, model, repair_name, repair_func, session, pa
                 }
             }
         ],
-
     }
 
 
-def repair_iphone(params, *_):
+def repair_iphone(params, _, data):
+    session = data.get("session")
     model = params.get("iphone-model")
     repair_name = params.get("iphone-repair")
     if models is not None and repair_name is not None:
-        return generic_repair(models.IPhoneRepair, model, repair_name)
+        return generic_repair(models.IPhoneRepair, "iphone", model, repair_name, session)
 
     return {}
 
 
-def repair_ipad(params, *_):
+def repair_ipad(params, _, data):
+    session = data.get("session")
     model = params.get("ipad-model")
     repair_name = params.get("iphone-repair")
     if models is not None and repair_name is not None:
-        return generic_repair(models.IPadRepair, model, repair_name)
+        return generic_repair(models.IPadRepair, "ipad", model, repair_name, session)
 
     return {}
 
 
-def generic_repair(model_o, model, repair_name):
+def generic_repair(model_o, brand_name, model, repair_name, session):
     repair_m = model_o.objects.filter(name__startswith=model, repair_name=repair_name)
 
     if len(repair_m) > 0:
@@ -343,11 +344,31 @@ def generic_repair(model_o, model, repair_name):
         f" will cost £{r.price}", repair_m))
 
         return {
-            "fulfillmentText": "\n".join(repair_strs)
+            "fulfillmentText": "\n".join(repair_strs),
+            "outputContexts": [
+                {
+                    "name": f"{session}/contexts/repair-{brand_name}",
+                    "lifespanCount": 2,
+                    "parameters": {
+                        f"{brand_name}-model": model,
+                        "iphone-repair": repair_name
+                    }
+                }
+            ],
         }
     else:
         return {
-            "fulfillmentText": f"Sorry, but we do not fix {model} {p.plural(repair_name)}"
+            "fulfillmentText": f"Sorry, but we do not fix {model} {p.plural(repair_name)}",
+            "outputContexts": [
+                {
+                    "name": f"{session}/contexts/repair-{brand_name}",
+                    "lifespanCount": 2,
+                    "parameters": {
+                        f"{brand_name}-model": model,
+                        "iphone-repair": repair_name
+                    }
+                }
+            ],
         }
 
 
