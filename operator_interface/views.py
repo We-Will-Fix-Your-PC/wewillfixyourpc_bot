@@ -4,6 +4,7 @@ from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import csrf_exempt
 from django.http import HttpResponse, HttpResponseBadRequest
 from django.contrib.auth.models import User
+from django.views.decorators.clickjacking import xframe_options_exempt
 from PIL import Image
 import datetime
 import json
@@ -17,6 +18,7 @@ def index(request):
 
 
 @login_required
+@xframe_options_exempt
 def token(request):
     key = jwt.jwk.OctetJWK(settings.SECRET_KEY.encode())
     jwt_i = jwt.JWT()
