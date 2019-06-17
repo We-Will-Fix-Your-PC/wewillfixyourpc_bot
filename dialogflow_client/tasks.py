@@ -1,10 +1,11 @@
-import dialogflow_v2 as dialogflow
+import dialogflow_v2beta1 as dialogflow
 from google.oauth2 import service_account
 from django.conf import settings
 from operator_interface.models import Message, MessageSuggestion, Conversation
 from celery import shared_task
 import operator_interface.tasks
 import logging
+from . import models
 
 credentials = service_account.Credentials.from_service_account_file(settings.GOOGLE_CREDENTIALS_FILE)
 session_client = dialogflow.SessionsClient(credentials=credentials)
@@ -47,8 +48,18 @@ def handle_response(conversation, query_input):
     if conversation.timezone is not None:
         query_parameters.time_zone = conversation.timezone
 
-    session = session_client.session_path(settings.GOOGLE_PROJECT_ID,
-                                          f"{conversation.platform}:{conversation.platform_id}:{conversation.noonce}")
+    environment = "production"
+    try:
+        testing_user = models.TestingUser.objects.get(platform=conversation.platform,
+                                                      platform_id=conversation.platform_id)
+
+        environment = testing_user.environment
+    except models.TestingUser.DoesNotExist:
+        pass
+
+    session = session_client.environment_session_path(settings.GOOGLE_PROJECT_ID, environment,
+                                                      f"{conversation.platform}:{conversation.platform_id}",
+                                                      conversation.noonce)
     response = session_client.detect_intent(session=session, query_input=query_input, query_params=query_parameters)
 
     for context in response.query_result.output_contexts:
