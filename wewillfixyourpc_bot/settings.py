@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     'twitter',
     'operator_interface',
     'dialogflow_client',
+    'corsheaders',
 ]
 
 MIDDLEWARE = [
@@ -168,6 +169,9 @@ GOOGLE_PROJECT_ID = "wewillfixyourpc-8df73"
 
 with open(os.path.join(BASE_DIR, "PUSH_PRIV_KEY")) as f:
     PUSH_PRIV_KEY = f.read()
+
+CORS_ORIGIN_ALLOW_ALL = True
+CORS_ALLOW_CREDENTIALS = True
 
 LOGGING = {
     'version': 1,
