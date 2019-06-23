@@ -1,6 +1,7 @@
 Django
 djsingleton
 django-phonenumber-field
+django-cors-headers
 dateutils
 phonenumbers
 mysqlclient

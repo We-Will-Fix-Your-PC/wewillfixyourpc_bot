@@ -76,7 +76,7 @@ class OperatorWebSocket(tornado.websocket.WebSocketHandler):
             last_message = message["lastMessage"]
             for conversation in operator_interface.models.Conversation.objects.all():
                 for message in conversation.message_set.all():
-                    if int(message.timestamp.strftime("%s")) > last_message:
+                    if int(message.timestamp.timestamp()) > last_message:
                         self.send_message(message)
         elif message["type"] == "msg":
             text = message["text"]
@@ -102,7 +102,7 @@ class OperatorWebSocket(tornado.websocket.WebSocketHandler):
         message = {
             "id": message.id,
             "direction": message.direction,
-            "timestamp": int(message.timestamp.strftime("%s")),
+            "timestamp": int(message.timestamp.timestamp()),
             "text": message.text,
             "conversation": {
                 "id": message.conversation.id,
