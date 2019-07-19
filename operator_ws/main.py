@@ -20,6 +20,7 @@ sentry_sdk.init("https://efc22f89d34a46d0adffb302181ed3f9@sentry.io/1471674", in
 
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'wewillfixyourpc_bot.settings')
+print("Starting...")
 django.setup()
 
 from django.contrib.auth.models import User
