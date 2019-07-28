@@ -340,7 +340,8 @@ def generic_repair(model_o, brand_name, model, repair_name, session):
     repair_m = model_o.objects.filter(name__startswith=model, repair_name=repair_name)
 
     if len(repair_m) > 0:
-        repair_strs = list(map(lambda r: f"A{p.a(f'{r.name} {repair_name}')[1:]} will cost £{r.price}", repair_m))
+        repair_strs = list(map(lambda r: f"A{p.a(f'{r.name} {repair_name}')[1:]} will cost £{r.price}"
+                                         f" and will take roughly {r.repair_tume}", repair_m))
 
         return {
             "fulfillmentText": "\n".join(repair_strs),
