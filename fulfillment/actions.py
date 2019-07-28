@@ -283,23 +283,23 @@ def repair(params, _, data):
     if brand is not None and len(brand) != 0:
         if brand == "iPhone":
             if iphone_model is not None and repair_name is not None:
-                return generic_repair_fill("iphone", iphone_model, repair_name, repair_iphone, session, params)
+                return generic_repair_fill("iphone", iphone_model, repair_name, models.IPhoneRepair, session)
         elif brand == "iPad":
             if ipad_model is not None and repair_name is not None:
-                return generic_repair_fill("ipad", ipad_model, repair_name, repair_ipad, session, params)
+                return generic_repair_fill("ipad", ipad_model, repair_name, models.IPadRepair, session)
 
     return {
         "fulfillmentText": "Sorry, we don't fix those"
     }
 
 
-def generic_repair_fill(brand_name, model, repair_name, repair_func, session, params):
+def generic_repair_fill(brand_name, model, repair_name, model_o, session):
     if len(model) == 0:
         text_out = "What model is it?"
     elif len(repair_name) == 0:
         text_out = "What needs fixing?"
     else:
-        return repair_func(params, session)
+        return generic_repair(model_o, brand_name, model, repair_name, session)
 
     return {
         "fulfillmentText": text_out,
@@ -316,7 +316,8 @@ def generic_repair_fill(brand_name, model, repair_name, repair_func, session, pa
     }
 
 
-def repair_iphone(params, session):
+def repair_iphone(params, _, data):
+    session = data.get("session")
     model = params.get("iphone-model")
     repair_name = params.get("iphone-repair")
     if models is not None and repair_name is not None:
@@ -325,7 +326,8 @@ def repair_iphone(params, session):
     return {}
 
 
-def repair_ipad(params, session):
+def repair_ipad(params, _, data):
+    session = data.get("session")
     model = params.get("ipad-model")
     repair_name = params.get("iphone-repair")
     if models is not None and repair_name is not None:
@@ -338,8 +340,7 @@ def generic_repair(model_o, brand_name, model, repair_name, session):
     repair_m = model_o.objects.filter(name__startswith=model, repair_name=repair_name)
 
     if len(repair_m) > 0:
-        repair_strs = list(map(lambda r: f"A{p.a(f'{r.name} {repair_name}')[1:]}"
-                                         f" will cost £{r.price}", repair_m))
+        repair_strs = list(map(lambda r: f"A{p.a(f'{r.name} {repair_name}')[1:]} will cost £{r.price}", repair_m))
 
         return {
             "fulfillmentText": "\n".join(repair_strs),
