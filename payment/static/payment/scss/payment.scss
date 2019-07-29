@@ -1,0 +1,10 @@
+.payment {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+
+  .loader {
+    max-width: 100px;
+  }
+}

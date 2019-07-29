@@ -1,0 +1,20 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Messenger payment</title>
+    <link rel="stylesheet" href="{% static 'payment/css/payment.css' %}">
+</head>
+<body>
+    <div id="payment" class="payment"></div>
+</body>
+<script src="{% static 'payment/js/payment.js' %}"></script>
+<script>
+    if (window.makePaymentForm) {
+        window.makePaymentForm(document.getElementById("payment"), "{{ payment_id }}", () => {
+            console.log("aaaa");
+        });
+    }
+</script>
+</html>

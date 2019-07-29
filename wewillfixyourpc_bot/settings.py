@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     'twitter',
     'operator_interface',
     'dialogflow_client',
+    'payment',
     'corsheaders',
 ]
 

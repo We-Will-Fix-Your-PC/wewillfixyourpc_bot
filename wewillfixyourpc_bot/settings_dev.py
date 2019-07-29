@@ -31,7 +31,6 @@ ALLOWED_HOSTS = ["*"]
 
 
 # Application definition
-
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -46,6 +45,7 @@ INSTALLED_APPS = [
     'twitter',
     'operator_interface',
     'dialogflow_client',
+    'payment',
     'corsheaders',
 ]
 
@@ -129,13 +129,13 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/2.1/howto/static-files/
 
-STATIC_URL = 'https://recycle-bin.home.misell.cymru/static/'
+STATIC_URL = 'https://3f092962.eu.ngrok.io/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 
-MEDIA_URL = 'https://recycle-bin.home.misell.cymru/media/'
+MEDIA_URL = 'https://3f092962.eu.ngrok.io/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
-EXTERNAL_URL_BASE = "https://recycle-bin.home.misell.cymru/"
+EXTERNAL_URL_BASE = "https://3f092962.eu.ngrok.io/"
 
 PHONENUMBER_DEFAULT_REGION = "GB"
 

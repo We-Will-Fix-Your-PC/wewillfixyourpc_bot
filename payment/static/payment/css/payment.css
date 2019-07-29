@@ -1,0 +1,9 @@
+.payment {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center; }
+  .payment .loader {
+    max-width: 100px; }
+
+/*# sourceMappingURL=payment.css.map */
