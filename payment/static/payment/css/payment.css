@@ -7,20 +7,9 @@
   font-family: Roboto, sans-serif; }
   .payment .loader {
     max-width: 100px; }
-  .payment button {
-    background-color: #ff7300;
-    border: none;
-    padding: 20px;
-    color: #fff;
-    font-size: 25px;
-    align-self: stretch;
-    transition: background-color .1s ease-in-out;
-    border-radius: 5px; }
-    .payment button:hover {
-      background-color: #cc5c00; }
   .payment a {
     color: #444;
-    margin: 10px;
+    margin: 10px 0;
     transition: color .1s ease-in-out; }
     .payment a:hover {
       color: #000; }
@@ -31,6 +20,25 @@
     align-self: stretch;
     border-radius: 5px;
     background: #fff; }
+  .payment .buttons {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center; }
+    .payment .buttons > button {
+      background-color: #ff7300;
+      border: none;
+      padding: 10px;
+      color: #fff;
+      font-size: 20px;
+      align-self: stretch;
+      transition: background-color .1s ease-in-out;
+      border-radius: 5px;
+      margin: 10px 0; }
+      .payment .buttons > button:hover {
+        background-color: #cc5c00; }
+    .payment .buttons > div {
+      margin: 10px 0; }
   .payment .CardForm {
     align-self: stretch; }
     .payment .CardForm .card-list {

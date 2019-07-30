@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom';
 import loader from './loader.svg';
 import SVG from 'react-inlinesvg';
 import CardForm from './cardForm';
+import GPayButton from './gpayButton';
 
 const basicCardInstrument = {
     supportedMethods: 'basic-card',
@@ -16,34 +17,45 @@ const basicCardInstrument = {
 const worldPayTestKey = "T_C_52bc5b16-562d-4198-95d4-00b91f30fe2c";
 const worldPayLiveKey = "L_C_4a900284-cafb-41fd-a544-8478429f539b";
 
+const allowedCardNetworks = ["AMEX", "DISCOVER", "INTERAC", "JCB", "MASTERCARD", "VISA"];
+const allowedCardAuthMethods = ["PAN_ONLY"];
+const testTokenizationSpecification = {
+    type: 'DIRECT',
+    parameters: {
+        protocolVersion: "ECv2",
+        publicKey: "BMfHP71Jz1LtG0G0rUENWmInA1+gHndceODwxKOvJvKHPOaqKWZfkJIB2Ga8fWFg4HbQC7fKju8J7x23hOEqJ74="
+    }
+};
+
+const googlePaymentTestBaseRequest = {
+    apiVersion: 2,
+    apiVersionMinor: 0,
+    merchantInfo: {
+        merchantName: 'We Will Fix Your PC'
+    },
+};
+
+const googlePayBaseCardPaymentMethod = {
+    type: 'CARD',
+    parameters: {
+        allowedAuthMethods: allowedCardAuthMethods,
+        allowedCardNetworks: allowedCardNetworks,
+        billingAddressRequired: true,
+        billingAddressParameters: {
+            format: "FULL",
+        },
+    }
+};
+
 const googlePaymentTestDataRequest = {
     supportedMethods: 'https://google.com/pay',
-    data: {
+    data: Object.assign({
         environment: 'TEST',
-        apiVersion: 2,
-        apiVersionMinor: 0,
-        merchantInfo: {
-            merchantName: 'We Will Fix Your PC'
-        },
-        allowedPaymentMethods: [{
-            type: 'CARD',
-            parameters: {
-                allowedAuthMethods: ["PAN_ONLY"],
-                allowedCardNetworks: ["AMEX", "DISCOVER", "JCB", "MASTERCARD", "VISA"],
-                billingAddressRequired: true,
-                billingAddressParameters: {
-                    format: "FULL",
-                },
-            },
-            tokenizationSpecification: {
-                type: 'DIRECT',
-                parameters: {
-                    protocolVersion: "ECv2",
-                    publicKey: "BMfHP71Jz1LtG0G0rUENWmInA1+gHndceODwxKOvJvKHPOaqKWZfkJIB2Ga8fWFg4HbQC7fKju8J7x23hOEqJ74="
-                }
-            }
-        }]
-    }
+        allowedPaymentMethods: [
+            Object.assign({tokenizationSpecification: testTokenizationSpecification},
+                googlePayBaseCardPaymentMethod)
+        ]
+    }, googlePaymentTestBaseRequest)
 };
 
 class PaymentForm extends Component {
@@ -57,16 +69,22 @@ class PaymentForm extends Component {
             threedsData: null,
             loading: false,
             complete: false,
+            canUsePaymentRequests: null,
+            googlePaymentsClient: null,
+            isGooglePayReady: null
         };
 
         this.form = React.createRef();
 
         this.handleError = this.handleError.bind(this);
         this.updatePayment = this.updatePayment.bind(this);
+        this.paymentTotal = this.paymentTotal.bind(this);
         this.paymentDetails = this.paymentDetails.bind(this);
         this.paymentOptions = this.paymentOptions.bind(this);
+        this.googlePaymentRequest = this.googlePaymentRequest.bind(this);
         this.canUsePaymentRequests = this.canUsePaymentRequests.bind(this);
         this.makePaymentRequest = this.makePaymentRequest.bind(this);
+        this.makeGooglePayment = this.makeGooglePayment.bind(this);
         this.onFormSubmit = this.onFormSubmit.bind(this);
         this.takeBasicPayment = this.takeBasicPayment.bind(this);
         this.takeGooglePayment = this.takeGooglePayment.bind(this);
@@ -76,6 +94,14 @@ class PaymentForm extends Component {
     }
 
     updatePayment() {
+        this.setState({
+            payment: null,
+            selectedMethod: null,
+            complete: false,
+            canUsePaymentRequests: null,
+            googlePaymentsClient: null,
+            isGooglePayReady: null
+        })
         fetch(`/payment/${this.props.paymentId}/`)
             .then(resp => {
                 if (resp.ok) {
@@ -90,9 +116,31 @@ class PaymentForm extends Component {
                 });
                 this.canUsePaymentRequests()
                     .then(value => this.setState({
-                        selectedMethod: value ? "payment-requests" : "form"
+                        canUsePaymentRequest: value
                     }))
                     .catch(err => this.handleError(err));
+                if (resp.environment === "T") {
+                    const paymentsClient = new window.google.payments.api.PaymentsClient({environment: 'TEST'});
+                    this.setState({
+                        googlePaymentsClient: paymentsClient
+                    });
+                    const isReadyToPayRequest = Object.assign({}, googlePaymentTestBaseRequest);
+                    isReadyToPayRequest.allowedPaymentMethods = [googlePayBaseCardPaymentMethod];
+                    paymentsClient.isReadyToPay(isReadyToPayRequest)
+                        .then(resp => {
+                            if (resp.result) {
+                                this.setState({
+                                    isGooglePayReady: true
+                                });
+                                paymentsClient.prefetchPaymentData(this.googlePaymentRequest());
+                            } else {
+                                this.setState({
+                                    isGooglePayReady: false
+                                });
+                            }
+                        })
+                        .catch(err => this.handleError(err));
+                }
             })
             .catch(err => this.handleError(err))
     }
@@ -102,7 +150,7 @@ class PaymentForm extends Component {
     }
 
     handleError(err, message) {
-        console.log(err ? err.message : null);
+        console.error(err ? err.message : null);
         let error_msg = (message === undefined) ? "Something went wrong" : message;
         this.setState({
             err: error_msg,
@@ -110,8 +158,12 @@ class PaymentForm extends Component {
         })
     }
 
+    paymentTotal() {
+        return this.state.payment.items.reduce((prev, item) => prev + item.price, 0.0);
+    }
+
     paymentDetails() {
-        const total = this.state.payment.items.reduce((prev, item) => prev + item.price, 0.0);
+        const total = this.paymentTotal();
 
         return {
             id: this.state.payment.id,
@@ -196,6 +248,42 @@ class PaymentForm extends Component {
         }
     }
 
+    googlePaymentRequest() {
+        if (this.state.payment.environment === "T") {
+            const paymentDataRequest = Object.assign({}, googlePaymentTestBaseRequest);
+            paymentDataRequest.allowedPaymentMethods = [
+                Object.assign({tokenizationSpecification: testTokenizationSpecification},
+                    googlePayBaseCardPaymentMethod)
+            ];
+            paymentDataRequest.transactionInfo = {
+                totalPriceStatus: 'FINAL',
+                totalPrice: this.paymentTotal().toString(),
+                currencyCode: 'GBP'
+            };
+            if (this.state.payment.customer === null) {
+                paymentDataRequest.emailRequired = true;
+            }
+            return paymentDataRequest;
+        }
+    }
+
+    makeGooglePayment() {
+        const paymentDataRequest = this.googlePaymentRequest();
+        this.state.googlePaymentsClient.loadPaymentData(paymentDataRequest).then((paymentData) => {
+            console.log(paymentData);
+            this.takeGooglePayment({
+                details: paymentData,
+                payerEmail: paymentData.email,
+                payerName: paymentData.paymentMethodData.info.billingAddress.name,
+                complete: () => Promise.resolve(true)
+            });
+        }).catch((err) => {
+            if (err.statusCode !== "CANCELED") {
+                this.handleError(err);
+            }
+        });
+    }
+
     onFormSubmit(res) {
         this.setState({
             loading: true,
@@ -208,7 +296,7 @@ class PaymentForm extends Component {
             token: token,
             billingAddress: res.details.billingAddress,
             name: res.details.cardholderName,
-            accepts: this.props.acceptsHeader,
+            accepts: this.props.acceptsHeader
         };
         this.takePayment(res, data);
     }
@@ -217,18 +305,18 @@ class PaymentForm extends Component {
         let billingAddress = res.details.paymentMethodData.info.billingAddress;
         let data = {
             billingAddress: {
-                    addressLine: [billingAddress.address1, billingAddress.address2, billingAddress.address3],
-                    country: billingAddress.countryCode,
-                    city: billingAddress.locality,
-                    dependentLocality: billingAddress.administrativeArea,
-                    organization: "",
-                    phone: "",
-                    postalCode: billingAddress.postalCode,
-                    recipient: billingAddress.name,
-                    region: "",
-                    regionCode: "",
-                    sortingCode: billingAddress.sortingCode
-                },
+                addressLine: [billingAddress.address1, billingAddress.address2, billingAddress.address3],
+                country: billingAddress.countryCode,
+                city: billingAddress.locality,
+                dependentLocality: billingAddress.administrativeArea,
+                organization: "",
+                phone: "",
+                postalCode: billingAddress.postalCode,
+                recipient: billingAddress.name,
+                region: "",
+                regionCode: "",
+                sortingCode: billingAddress.sortingCode
+            },
             name: billingAddress.name,
             accepts: this.props.acceptsHeader,
             googleData: res.details.paymentMethodData.tokenizationData.token
@@ -343,7 +431,8 @@ class PaymentForm extends Component {
             </React.Fragment>;
         } else if (this.state.complete) {
             return <h3>Payment successful</h3>;
-        } else if (this.state.payment === null || this.state.selectedMethod === null) {
+        } else if (this.state.payment === null || this.state.canUsePaymentRequest === null ||
+            this.state.isGooglePayReady === null) {
             return <SVG src={loader} className="loader"/>
         } else if (this.state.threedsData !== null) {
             return <form ref={this.form} action={this.state.threedsData.redirectURL} method="POST">
@@ -354,18 +443,22 @@ class PaymentForm extends Component {
                 <input type="hidden" name="MD" value={this.state.threedsData.orderCode}/>
             </form>
         } else {
-            if (this.state.selectedMethod === "payment-requests") {
-                return <React.Fragment>
-                    <button onClick={this.makePaymentRequest}>
-                        Pay
-                    </button>
+            if ((this.state.canUsePaymentRequest || this.state.isGooglePayReady)
+                && this.state.selectedMethod !== "form") {
+                return <div className="buttons">
+                    {this.state.isGooglePayReady ?
+                        <GPayButton paymentsClient={this.state.googlePaymentsClient}
+                                    onClick={this.makeGooglePayment}/> : null}
+                    {this.state.canUsePaymentRequest ? <button onClick={this.makePaymentRequest}>
+                        Autofill from browser
+                    </button> : null}
                     <a href="#" onClick={() => {
                         this.setState({selectedMethod: "form"})
                     }}>
                         Enter card details manually
                     </a>
-                </React.Fragment>;
-            } else if (this.state.selectedMethod === "form") {
+                </div>;
+            } else {
                 if (!this.state.loading) {
                     const paymentOptions = this.paymentOptions();
 

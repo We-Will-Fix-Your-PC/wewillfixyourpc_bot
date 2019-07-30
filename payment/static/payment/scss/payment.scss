@@ -13,24 +13,9 @@ $orange: #ff7300;
     max-width: 100px;
   }
 
-  button {
-    background-color: $orange;
-    border: none;
-    padding: 20px;
-    color: #fff;
-    font-size: 25px;
-    align-self: stretch;
-    transition: background-color .1s ease-in-out;
-    border-radius: 5px;
-
-    &:hover {
-      background-color: darken($orange, 10%);
-    }
-  }
-
   a {
     color: #444;
-    margin: 10px;
+    margin: 10px 0;
     transition: color .1s ease-in-out;
 
     &:hover {
@@ -45,6 +30,34 @@ $orange: #ff7300;
     align-self: stretch;
     border-radius: 5px;
     background: #fff;
+  }
+
+  .buttons {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+
+    > button {
+      background-color: $orange;
+      border: none;
+      padding: 10px;
+      color: #fff;
+      font-size: 20px;
+      align-self: stretch;
+      transition: background-color .1s ease-in-out;
+      border-radius: 5px;
+      margin: 10px 0;
+
+      &:hover {
+        background-color: darken($orange, 10%);
+      }
+    }
+
+
+    > div {
+      margin: 10px 0;
+    }
   }
 
   .CardForm {

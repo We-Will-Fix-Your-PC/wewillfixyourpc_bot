@@ -3,6 +3,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import render, get_object_or_404, redirect
 from django.conf import settings
 from . import models
+from . import gpay
 import json
 import decimal
 import requests
@@ -127,36 +128,38 @@ def take_worldpay_payment(request, payment_id):
     }
 
     if body.get("token"):
-        r = requests.post("https://api.worldpay.com/v1/orders", headers={
-            "Authorization": token
-        }, json=dict(token=body["token"], **order_data))
+        order_data = dict(token=body["token"], **order_data)
     elif body.get("googleData"):
         try:
-            google_token = json.loads(body["googleData"])
-        except json.JSONDecodeError:
+            message = gpay.unseal_google_token(body["googleData"],
+                                               test=payment_o.environment != models.Payment.ENVIRONMENT_LIVE)
+        except gpay.GPayError as e:
             return HttpResponseBadRequest()
 
-        if google_token["protocolVersion"] != "ECv2":
+        if message["paymentMethod"] != "CARD":
             return HttpResponseBadRequest()
 
-        google_keys_url = "https://payments.developers.google.com/paymentmethodtoken/keys.json" \
-            if payment_o.environment == models.Payment.ENVIRONMENT_LIVE else \
-            "https://payments.developers.google.com/paymentmethodtoken/test/keys.json"
-        google_keys = requests.get(google_keys_url)
-        google_keys.raise_for_status()
-        google_keys = google_keys.json()["keys"]
+        card_details = message["paymentMethodDetails"]
+        if card_details["authMethod"] != "PAN_ONLY":
+            return HttpResponseBadRequest()
 
-        google_key = filter(lambda k: k["protocolVersion"], google_keys)[0]
-
-        print(google_key)
-        return HttpResponse(json.dumps({
-            "state": "SUCCESS"
-        }))
+        order_data = dict(paymentMethod={
+            "name": body.get("name"),
+            "expiryMonth": card_details["expirationMonth"],
+            "expiryYear": card_details["expirationYear"],
+            "cardNumber": card_details["pan"],
+            "type": "Card"
+        }, **order_data)
 
     else:
         return HttpResponseBadRequest()
 
+    r = requests.post("https://api.worldpay.com/v1/orders", headers={
+        "Authorization": token
+    }, json=order_data)
     data = r.json()
+
+    print(data)
 
     if data.get("paymentStatus") is None:
         return HttpResponse(json.dumps({

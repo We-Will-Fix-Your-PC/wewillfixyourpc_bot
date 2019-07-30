@@ -18,3 +18,4 @@ jwt
 pywebpush
 sentry-sdk
 inflect
+cryptography
