@@ -4,17 +4,19 @@
 <head>
     <meta charset="UTF-8">
     <title>Messenger payment</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="{% static 'payment/css/payment.css' %}">
 </head>
 <body>
     <div id="payment" class="payment"></div>
+    {% csrf_token %}
 </body>
 <script src="{% static 'payment/js/payment.js' %}"></script>
 <script>
     if (window.makePaymentForm) {
         window.makePaymentForm(document.getElementById("payment"), "{{ payment_id }}", () => {
             console.log("aaaa");
-        });
+        }, "{{ accepts_header }}");
     }
 </script>
 </html>

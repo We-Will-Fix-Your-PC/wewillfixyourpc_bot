@@ -1,0 +1,20 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Messenger payment</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link rel="stylesheet" href="{% static 'payment/css/payment.css' %}">
+</head>
+<body>
+<div class="payment">
+    {% if 3ds_approved %}
+        <h3>Payment successful</h3>
+    {% else %}
+        <h3>Payment failed</h3>
+        <a href="{% url 'payment:fb_payment' payment_id %}">Try again</a>
+    {% endif %}
+</div>
+</body>
+</html>
