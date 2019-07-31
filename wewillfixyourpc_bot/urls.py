@@ -25,6 +25,7 @@ urlpatterns = [
     path('fulfillment/', include('fulfillment.urls', namespace='fulfillment')),
     path('twitter/', include('twitter.urls', namespace='twitter')),
     path('facebook/', include('facebook.urls', namespace='facebook')),
+    path('payment/', include('payment.urls', namespace='payment')),
     path('', include('operator_interface.urls', namespace='operator')),
 ]
 

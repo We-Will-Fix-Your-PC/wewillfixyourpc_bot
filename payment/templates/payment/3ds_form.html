@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>3DS</title>
+</head>
+<body>
+<form action="{{ threeds.redirectURL }}" method="POST" id="3dsform">
+    <input type="hidden" name="PaReq" value="{{ threeds.oneTime3DsToken }}"/>
+    <input type="hidden" name="TermUrl" value="{{ redirect }}"/>
+    <input type="hidden" name="MD" value="{{ threeds.orderId }}"/>
+</form>
+<script>
+    window.onload = function () {
+        document.getElementById("3dsform").submit();
+    }
+</script>
+</body>
+</html>

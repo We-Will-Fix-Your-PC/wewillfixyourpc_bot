@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     'twitter',
     'operator_interface',
     'dialogflow_client',
+    'payment',
     'corsheaders',
 ]
 
@@ -154,6 +155,10 @@ with open(os.path.join(BASE_DIR, "facebook.json")) as f:
     facebook_conf = json.load(f)
 with open(os.path.join(BASE_DIR, "twitter.json")) as f:
     twitter_conf = json.load(f)
+with open(os.path.join(BASE_DIR, "worldpay.json")) as f:
+    worldpay_conf = json.load(f)
+with open(os.path.join(BASE_DIR, 'gpay-key-test.pem'), 'rb') as f:
+    gpay_priv_key_test = f.read()
 
 FACEBOOK_VERIFY_TOKEN = facebook_conf["verify_token"]
 FACEBOOK_ACCESS_TOKEN = facebook_conf["access_token"]
@@ -164,6 +169,11 @@ TWITTER_ACCESS_TOKEN = twitter_conf["access_token"]
 TWITTER_ACCESS_TOKEN_SECRET = twitter_conf["access_token_secret"]
 
 TWITTER_ENVNAME = "main"
+
+WORLDPAY_TEST_KEY = worldpay_conf["test_key"]
+WORLDPAY_LIVE_KEY = worldpay_conf["live_key"]
+
+GPAY_TEST_PRIVATE_KEYS = [gpay_priv_key_test]
 
 GOOGLE_CREDENTIALS_FILE = "WeWillFixYourPC.json"
 GOOGLE_PROJECT_ID = "wewillfixyourpc-8df73"

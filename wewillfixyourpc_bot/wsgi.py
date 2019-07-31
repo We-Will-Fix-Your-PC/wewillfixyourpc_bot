@@ -10,9 +10,13 @@ https://docs.djangoproject.com/en/2.1/howto/deployment/wsgi/
 import os
 
 from django.core.wsgi import get_wsgi_application
+from django.conf import settings
 import sentry_sdk
 from sentry_sdk.integrations.celery import CeleryIntegration
+from sentry_sdk.integrations.django import DjangoIntegration
 
-sentry_sdk.init("https://efc22f89d34a46d0adffb302181ed3f9@sentry.io/1471674", integrations=[CeleryIntegration()])
+if not settings.DEBUG:
+    sentry_sdk.init("https://efc22f89d34a46d0adffb302181ed3f9@sentry.io/1471674",
+                    integrations=[CeleryIntegration(), DjangoIntegration()])
 
 application = get_wsgi_application()

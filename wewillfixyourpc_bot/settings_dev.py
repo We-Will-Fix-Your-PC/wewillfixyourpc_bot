@@ -31,7 +31,6 @@ ALLOWED_HOSTS = ["*"]
 
 
 # Application definition
-
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -46,6 +45,7 @@ INSTALLED_APPS = [
     'twitter',
     'operator_interface',
     'dialogflow_client',
+    'payment',
     'corsheaders',
 ]
 
@@ -129,13 +129,13 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/2.1/howto/static-files/
 
-STATIC_URL = 'https://recycle-bin.home.misell.cymru/static/'
+STATIC_URL = 'https://3f092962.eu.ngrok.io/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 
-MEDIA_URL = 'https://recycle-bin.home.misell.cymru/media/'
+MEDIA_URL = 'https://3f092962.eu.ngrok.io/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
-EXTERNAL_URL_BASE = "https://recycle-bin.home.misell.cymru/"
+EXTERNAL_URL_BASE = "https://3f092962.eu.ngrok.io/"
 
 PHONENUMBER_DEFAULT_REGION = "GB"
 
@@ -148,6 +148,10 @@ with open(os.path.join(BASE_DIR, "facebook.json")) as f:
     facebook_conf = json.load(f)
 with open(os.path.join(BASE_DIR, "twitter.json")) as f:
     twitter_conf = json.load(f)
+with open(os.path.join(BASE_DIR, "worldpay.json")) as f:
+    worldpay_conf = json.load(f)
+with open(os.path.join(BASE_DIR, 'gpay-key-test.pem'), 'rb') as f:
+    gpay_priv_key_test = f.read()
 
 FACEBOOK_VERIFY_TOKEN = facebook_conf["verify_token"]
 FACEBOOK_ACCESS_TOKEN = facebook_conf["access_token"]
@@ -158,6 +162,11 @@ TWITTER_ACCESS_TOKEN = twitter_conf["access_token"]
 TWITTER_ACCESS_TOKEN_SECRET = twitter_conf["access_token_secret"]
 
 TWITTER_ENVNAME = "main"
+
+WORLDPAY_TEST_KEY = worldpay_conf["test_key"]
+WORLDPAY_LIVE_KEY = worldpay_conf["live_key"]
+
+GPAY_TEST_PRIVATE_KEYS = [gpay_priv_key_test]
 
 GOOGLE_CREDENTIALS_FILE = "WeWillFixYourPC.json"
 GOOGLE_PROJECT_ID = "wewillfixyourpc-8df73"
