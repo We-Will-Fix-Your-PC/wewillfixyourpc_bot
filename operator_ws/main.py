@@ -16,7 +16,8 @@ from tornado.platform.asyncio import AsyncIOMainLoop
 import sentry_sdk
 from sentry_sdk.integrations.tornado import TornadoIntegration
 
-sentry_sdk.init("https://efc22f89d34a46d0adffb302181ed3f9@sentry.io/1471674", integrations=[TornadoIntegration()], send_default_pii=True)
+sentry_sdk.init("https://efc22f89d34a46d0adffb302181ed3f9@sentry.io/1471674", integrations=[TornadoIntegration()],
+                send_default_pii=True)
 
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'wewillfixyourpc_bot.settings')
@@ -29,10 +30,12 @@ import operator_interface.tasks
 
 message_handlers = set()
 
+
 def make_sure_mysql_usable():
     from django.db import connection, connections
     if connection.connection and not connection.is_usable():
         del connections._connections.default
+
 
 class OperatorWebSocket(tornado.websocket.WebSocketHandler):
     loop: AsyncIOMainLoop

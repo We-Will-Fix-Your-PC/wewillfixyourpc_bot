@@ -20,23 +20,25 @@
     align-self: stretch;
     border-radius: 5px;
     background: #fff; }
+  .payment iframe {
+    border: none; }
+  .payment button {
+    background-color: #ff7300;
+    border: none;
+    padding: 10px;
+    color: #fff;
+    font-size: 20px;
+    align-self: stretch;
+    transition: background-color .1s ease-in-out;
+    border-radius: 5px;
+    margin: 10px 0; }
+    .payment button:hover {
+      background-color: #cc5c00; }
   .payment .buttons {
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center; }
-    .payment .buttons > button {
-      background-color: #ff7300;
-      border: none;
-      padding: 10px;
-      color: #fff;
-      font-size: 20px;
-      align-self: stretch;
-      transition: background-color .1s ease-in-out;
-      border-radius: 5px;
-      margin: 10px 0; }
-      .payment .buttons > button:hover {
-        background-color: #cc5c00; }
     .payment .buttons > div {
       margin: 10px 0; }
   .payment .CardForm {

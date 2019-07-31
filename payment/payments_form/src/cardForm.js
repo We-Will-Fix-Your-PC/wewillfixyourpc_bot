@@ -308,7 +308,7 @@ export default class CardForm extends Component {
                     city: "",
                     dependentLocality: "",
                     organization: "",
-                    phone: refs.phone.value,
+                    phone: refs.phone ? refs.phone.value : this.props.payment.customer.phone,
                     postalCode: "",
                     recipient: refs.name.value,
                     region: "",
@@ -326,7 +326,7 @@ export default class CardForm extends Component {
             complete: () => Promise.resolve({})
         };
         if (this.props.paymentOptions.requestPayerPhone) {
-            paymentResponse.payerPhone = refs.phone.value;
+            paymentResponse.payerPhone = refs.phone ? refs.phone.value : this.props.payment.customer.phone;
         }
         if (this.props.paymentOptions.requestPayerEmail) {
             paymentResponse.payerEmail = refs.email.value;
@@ -336,6 +336,12 @@ export default class CardForm extends Component {
 
     render() {
         let curYear = new Date().getFullYear();
+        let hasPhone = false;
+        if (this.props.payment.customer) {
+            if (this.props.payment.customer.phone) {
+                hasPhone = true;
+            }
+        }
         return <div className="CardForm">
             {this.renderCardList()}
             <form onSubmit={this.handleSubmit}>
@@ -352,7 +358,8 @@ export default class CardForm extends Component {
                 </select>
                 <input className="cvc" type="text" ref="cvc" placeholder="CVC" maxLength={4} required
                        pattern="[0-9]*"/>
-                <input className="phone" type="tel" ref="phone" placeholder="Phone number" required/>
+                {(!hasPhone) ?
+                    <input className="phone" type="tel" ref="phone" placeholder="Phone number" required/> : null}
                 {(this.props.paymentOptions.requestPayerEmail) ?
                     <input className="email" type="email" ref="email" placeholder="Email address" required/> : null}
                 <button type="submit">Submit</button>

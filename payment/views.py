@@ -1,6 +1,7 @@
-from django.http import HttpResponse, HttpResponseNotFound, HttpResponseBadRequest
+from django.http import HttpResponse, HttpResponseNotFound, HttpResponseBadRequest, HttpResponseForbidden
 from django.views.decorators.csrf import csrf_exempt
-from django.shortcuts import render, get_object_or_404, redirect
+from django.views.decorators.clickjacking import xframe_options_exempt
+from django.shortcuts import render, get_object_or_404, reverse
 from django.conf import settings
 from . import models
 from . import gpay
@@ -25,11 +26,6 @@ def fb_payment(request, payment_id):
         request.session.save()
     return render(request, "payment/fb_payment.html",
                   {"payment_id": payment_id, "accepts_header": request.META.get('HTTP_ACCEPT')})
-
-
-@csrf_exempt
-def fb_payment_3ds(request, payment_id):
-    return worldpay_handle_3ds(request, payment_id, "payment/fb_payment_3ds.html")
 
 
 def payment(request, payment_id):
@@ -63,13 +59,64 @@ def take_worldpay_payment(request, payment_id):
     if payment_o.state != payment_o.STATE_OPEN:
         return HttpResponseNotFound()
 
+@csrf_exempt
+def take_worldpay_payment(request, payment_id):
+    if not request.session.get("sess_id"):
+        request.session["sess_id"] = str(uuid.uuid4())
+        request.session.save()
+
     if request.method != "POST":
         return HttpResponseBadRequest()
+
+    try:
+        payment_o = models.Payment.objects.get(id=payment_id)
+    except models.Payment.DoesNotExist:
+        payment_o = None
 
     try:
         body = json.loads(request.body)
     except json.JSONDecodeError:
         return HttpResponseBadRequest()
+
+    def find_customer(payment_o, *args, **kwargs):
+        customer = models.Customer.objects.filter(*args, **kwargs)
+        if len(customer) > 0:
+            customer = customer[0]
+        else:
+            customer = models.Customer(*args, **kwargs)
+            customer.save()
+
+        payment_o.customer = customer
+
+    if payment_o is not None:
+        if payment_o.state != payment_o.STATE_OPEN:
+            return HttpResponseNotFound()
+    else:
+        if body.get("payment") is not None:
+            payment = body["payment"]
+            items = payment["items"]
+            payment_o = models.Payment()
+            payment_o.environment = payment["environment"]
+            payment_o.state = models.Payment.STATE_OPEN
+            payment_o.id = payment["id"]
+            if payment.get("customer"):
+                customer = payment["customer"]
+                email = customer.get("email")
+                phone = customer.get("phone")
+                name = customer.get("name")
+                find_customer(payment_o, email=email, phone=phone, name=name)
+            payment_o.save()
+
+            for item in items:
+                item_o = models.PaymentItem()
+                item_o.payment = payment_o
+                item_o.item_type = item["type"]
+                item_o.item_data = item["data"]
+                item_o.title = item["title"]
+                item_o.price = item["price"]
+                item_o.save()
+        else:
+            return HttpResponseNotFound()
 
     token = settings.WORLDPAY_LIVE_KEY if payment_o.environment == models.Payment.ENVIRONMENT_LIVE \
         else settings.WORLDPAY_TEST_KEY
@@ -86,14 +133,7 @@ def take_worldpay_payment(request, payment_id):
         email = body.get("email")
         phone = body.get("phone")
         name = body.get("payerName")
-        customer = models.Customer.objects.filter(email=email, phone=phone, name=name)
-        if len(customer) > 0:
-            customer = customer[0]
-        else:
-            customer = models.Customer(name=name, email=email, phone=phone)
-            customer.save()
-
-        payment_o.customer = customer
+        find_customer(payment_o, email=email, phone=phone, name=name)
         payment_o.save()
 
     billingAddress = {}
@@ -158,7 +198,6 @@ def take_worldpay_payment(request, payment_id):
         "Authorization": token
     }, json=order_data)
     data = r.json()
-
     print(data)
 
     if data.get("paymentStatus") is None:
@@ -172,12 +211,20 @@ def take_worldpay_payment(request, payment_id):
             "state": "SUCCESS"
         }))
     elif data["paymentStatus"] == "PRE_AUTHORIZED":
+        models.ThreeDSData.objects.filter(payment_id=payment_id).delete()
+
+        threedsData = models.ThreeDSData()
+        threedsData.orderId = data["orderCode"]
+        threedsData.redirectURL = data["redirectURL"]
+        threedsData.oneTime3DsToken = data["oneTime3DsToken"]
+        threedsData.sessionId = request.session.get("sess_id", "")
+        threedsData.payment = payment_o
+        threedsData.save()
+
+        path = reverse("payment:3ds_form", kwargs={"payment_id": payment_o.id})
         return HttpResponse(json.dumps({
             "state": "3DS",
-            "oneTime3DsToken": data["oneTime3DsToken"],
-            "redirectURL": data["redirectURL"],
-            "orderCode": data["orderCode"],
-            "sessionID": request.session.get("sess_id", "")
+            "frame": f"https://{request.get_host()}{path}"
         }))
     elif data["paymentStatus"] == "FAILED":
         return HttpResponse(json.dumps({
@@ -189,13 +236,30 @@ def take_worldpay_payment(request, payment_id):
         }))
 
 
-def worldpay_handle_3ds(request, payment_id, template):
+@xframe_options_exempt
+def threeds_form(request, payment_id):
+    threedsData = get_object_or_404(models.ThreeDSData, payment_id=payment_id)
+    path = reverse("payment:3ds_complete", kwargs={
+        "payment_id": threedsData.payment.id
+    })
+    base_url = f"https://{request.get_host()}{path}"
+    return render(request, "payment/3ds_form.html", {
+        "threeds": threedsData,
+        "redirect": f'{base_url}?sess_id={threedsData.sessionId}'
+    })
+
+
+@csrf_exempt
+@xframe_options_exempt
+def threeds_complete(request, payment_id):
     payment_o = get_object_or_404(models.Payment, id=payment_id)
     if payment_o.state != payment_o.STATE_OPEN:
         return HttpResponseNotFound()
 
     if request.method != "POST":
         return HttpResponseBadRequest()
+
+    payment_o.threedsdata_set.all().delete()
 
     order_id = request.POST["MD"]
     resp_3ds = request.POST["PaRes"]
@@ -213,14 +277,19 @@ def worldpay_handle_3ds(request, payment_id, template):
         "shopperSessionId": session_id,
     })
     data = r.json()
-    print(data)
-
     if data.get("paymentStatus") is None:
-        return render(request, template, {"payment_id": payment_id, "3ds_approved": False})
+        return render(request, "payment/3ds_complete.html", {"payment_id": payment_id, "3ds_approved": False})
 
     if data["paymentStatus"] in ["SUCCESS", "AUTHORIZED"]:
         payment_o.state = models.Payment.STATE_PAID
         payment_o.save()
-        return render(request, template, {"payment_id": payment_id, "3ds_approved": True})
+        return render(request, "payment/3ds_complete.html", {"payment_id": payment_id, "3ds_approved": True})
     else:
-        return render(request, template, {"payment_id": payment_id, "3ds_approved": False})
+        return render(request, "payment/3ds_complete.html", {"payment_id": payment_id, "3ds_approved": False})
+
+
+
+
+
+
+

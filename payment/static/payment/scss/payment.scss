@@ -32,27 +32,31 @@ $orange: #ff7300;
     background: #fff;
   }
 
+  iframe {
+    border: none;
+  }
+
+  button {
+    background-color: $orange;
+    border: none;
+    padding: 10px;
+    color: #fff;
+    font-size: 20px;
+    align-self: stretch;
+    transition: background-color .1s ease-in-out;
+    border-radius: 5px;
+    margin: 10px 0;
+
+    &:hover {
+      background-color: darken($orange, 10%);
+    }
+  }
+
   .buttons {
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
-
-    > button {
-      background-color: $orange;
-      border: none;
-      padding: 10px;
-      color: #fff;
-      font-size: 20px;
-      align-self: stretch;
-      transition: background-color .1s ease-in-out;
-      border-radius: 5px;
-      margin: 10px 0;
-
-      &:hover {
-        background-color: darken($orange, 10%);
-      }
-    }
 
 
     > div {

@@ -1,9 +1,13 @@
 import React, {Component} from 'react';
+import * as Sentry from '@sentry/browser';
 import ReactDOM from 'react-dom';
+import uuid from 'uuid';
 import loader from './loader.svg';
 import SVG from 'react-inlinesvg';
 import CardForm from './cardForm';
 import GPayButton from './gpayButton';
+
+const ROOT_URL = 'https://3f092962.eu.ngrok.io/';
 
 const basicCardInstrument = {
     supportedMethods: 'basic-card',
@@ -74,9 +78,8 @@ class PaymentForm extends Component {
             isGooglePayReady: null
         };
 
-        this.form = React.createRef();
-
         this.handleError = this.handleError.bind(this);
+        this.onComplete = this.onComplete.bind(this);
         this.updatePayment = this.updatePayment.bind(this);
         this.paymentTotal = this.paymentTotal.bind(this);
         this.paymentDetails = this.paymentDetails.bind(this);
@@ -91,66 +94,107 @@ class PaymentForm extends Component {
         this.takePayment = this.takePayment.bind(this);
         this.basicCardToWorldPayToken = this.basicCardToWorldPayToken.bind(this);
         this.handlePaymentRequest = this.handlePaymentRequest.bind(this);
+        this.handleMessage = this.handleMessage.bind(this);
+        this.handleTryAgain = this.handleTryAgain.bind(this);
     }
 
     updatePayment() {
         this.setState({
             payment: null,
+            err: null,
             selectedMethod: null,
+            threedsData: null,
             complete: false,
+            loading: false,
             canUsePaymentRequests: null,
             googlePaymentsClient: null,
             isGooglePayReady: null
-        })
-        fetch(`/payment/${this.props.paymentId}/`)
-            .then(resp => {
-                if (resp.ok) {
-                    return resp.json();
-                } else {
-                    throw new Error('Something went wrong');
-                }
-            })
-            .then(resp => {
+        });
+
+        const checkMethods = (resp) => {
+            this.canUsePaymentRequests()
+                .then(value => this.setState({
+                    canUsePaymentRequest: value
+                }))
+                .catch(err => this.handleError(err));
+            if (resp.environment === "T") {
+                const paymentsClient = new window.google.payments.api.PaymentsClient({environment: 'TEST'});
                 this.setState({
-                    payment: resp
+                    googlePaymentsClient: paymentsClient
                 });
-                this.canUsePaymentRequests()
-                    .then(value => this.setState({
-                        canUsePaymentRequest: value
-                    }))
+                const isReadyToPayRequest = Object.assign({}, googlePaymentTestBaseRequest);
+                isReadyToPayRequest.allowedPaymentMethods = [googlePayBaseCardPaymentMethod];
+                paymentsClient.isReadyToPay(isReadyToPayRequest)
+                    .then(resp => {
+                        if (resp.result) {
+                            this.setState({
+                                isGooglePayReady: true
+                            });
+                            paymentsClient.prefetchPaymentData(this.googlePaymentRequest());
+                        } else {
+                            this.setState({
+                                isGooglePayReady: false
+                            });
+                        }
+                    })
                     .catch(err => this.handleError(err));
-                if (resp.environment === "T") {
-                    const paymentsClient = new window.google.payments.api.PaymentsClient({environment: 'TEST'});
+            } else {
+                this.setState({
+                    isGooglePayReady: false,
+                });
+            }
+        };
+
+        if (this.props.paymentId) {
+            fetch(`/payment/${this.props.paymentId}/`)
+                .then(resp => {
+                    if (resp.ok) {
+                        return resp.json();
+                    } else {
+                        throw new Error('Something went wrong');
+                    }
+                })
+                .then(resp => {
+                    if (resp.state !== "O") {
+                        this.handleError();
+                        return;
+                    }
                     this.setState({
-                        googlePaymentsClient: paymentsClient
+                        payment: resp
                     });
-                    const isReadyToPayRequest = Object.assign({}, googlePaymentTestBaseRequest);
-                    isReadyToPayRequest.allowedPaymentMethods = [googlePayBaseCardPaymentMethod];
-                    paymentsClient.isReadyToPay(isReadyToPayRequest)
-                        .then(resp => {
-                            if (resp.result) {
-                                this.setState({
-                                    isGooglePayReady: true
-                                });
-                                paymentsClient.prefetchPaymentData(this.googlePaymentRequest());
-                            } else {
-                                this.setState({
-                                    isGooglePayReady: false
-                                });
-                            }
-                        })
-                        .catch(err => this.handleError(err));
-                }
-            })
-            .catch(err => this.handleError(err))
+                    checkMethods(resp);
+                })
+                .catch(err => this.handleError(err))
+        } else {
+            const payment = this.props.payment;
+            payment.id = uuid.v4();
+            payment.new = true;
+
+            if (!payment.environment) {
+                payment.environment = "T";
+            }
+
+            this.setState({
+                payment: payment
+            });
+
+            checkMethods(payment);
+        }
     }
 
     componentDidMount() {
         this.updatePayment();
+        window.addEventListener("message", this.handleMessage, false);
     }
 
     handleError(err, message) {
-        console.error(err ? err.message : null);
+        if (err) {
+            console.error(err);
+             const eventId = Sentry.captureException(err);
+             this.setState({
+                 errId: eventId
+             })
+        }
         let error_msg = (message === undefined) ? "Something went wrong" : message;
         this.setState({
             err: error_msg,
@@ -235,8 +279,11 @@ class PaymentForm extends Component {
                 })
                 .catch(err => {
                     res.complete("fail")
-                        .then(err => {
-                            this.handleError(err, `Payment failed: ${err.message}`)
+                        .then(() => {
+                            this.handleError(err, "Payment failed")
+                        })
+                        .catch(err => {
+                            this.handleError(err);
                         })
                 })
         } else if (res.methodName === "https://google.com/pay") {
@@ -335,11 +382,13 @@ class PaymentForm extends Component {
             data.payerName = res.payerName
         }
 
-        fetch(`/payment/worldpay/${this.props.paymentId}/`, {
+        if (this.state.payment.new) {
+            data.payment = this.state.payment;
+        }
+
+        fetch(`${ROOT_URL}payment/worldpay/${this.state.payment.id}/`, {
             method: "POST",
-            headers: {
-                "X-CSRFToken": document.getElementsByName('csrfmiddlewaretoken')[0].value
-            },
+            credentials: 'include',
             body: JSON.stringify(data)
         })
             .then(resp => {
@@ -353,11 +402,7 @@ class PaymentForm extends Component {
                 if (resp.state === "SUCCESS") {
                     res.complete('success')
                         .then(() => {
-                            this.setState({
-                                complete: true,
-                                loading: false,
-                            });
-                            this.props.onComplete()
+                            this.onComplete();
                         })
                         .catch(err => this.handleError(err))
                 } else if (resp.state === "3DS") {
@@ -366,9 +411,6 @@ class PaymentForm extends Component {
                             this.setState({
                                 threedsData: resp
                             });
-                            while (this.form.current === null) {
-                            }
-                            this.form.current.submit();
                         })
                         .catch(err => this.handleError(err))
                 } else if (resp.state === "FAILED") {
@@ -381,7 +423,13 @@ class PaymentForm extends Component {
                     this.handleError(null)
                 }
             })
-            .catch(err => this.handleError(err))
+            .catch(err => {
+                res.complete('fail')
+                    .then(() => {
+                        this.handleError(null, "Payment failed")
+                    })
+                    .catch(err => this.handleError(err))
+            })
     }
 
     basicCardToWorldPayToken(res) {
@@ -423,11 +471,45 @@ class PaymentForm extends Component {
         });
     }
 
+    onComplete() {
+        this.setState({
+            complete: true,
+            loading: false,
+        });
+        this.props.onComplete(this.state.payment.id)
+    }
+
+    handleMessage(event) {
+        if (this.state.threedsData !== null) {
+            if (event.data.type !== "3DS") {
+                return;
+            }
+            if (event.data.payment_id !== this.state.payment.id) {
+                this.handleError();
+            }
+            if (event.data.threeds_approved) {
+                this.onComplete();
+            } else {
+                this.handleError(null, "Payment failed");
+            }
+        }
+    }
+
+    handleTryAgain(e) {
+        e.preventDefault();
+        this.updatePayment();
+    }
+
     render() {
         if (this.state.err != null) {
             return <React.Fragment>
                 <h3>{this.state.err}</h3>
-                <a href="#" onClick={() => window.location.reload()}>Try again</a>
+                <div className="buttons">
+                    <button onClick={this.handleTryAgain}>Try again</button>
+                    {this.state.errId ? <button onClick={() => {
+                        Sentry.showReportDialog({ eventId: this.state.errId })
+                    }}>Report feedback</button> : null}
+                </div>
             </React.Fragment>;
         } else if (this.state.complete) {
             return <h3>Payment successful</h3>;
@@ -435,13 +517,7 @@ class PaymentForm extends Component {
             this.state.isGooglePayReady === null) {
             return <SVG src={loader} className="loader"/>
         } else if (this.state.threedsData !== null) {
-            return <form ref={this.form} action={this.state.threedsData.redirectURL} method="POST">
-                <input type="hidden" name="PaReq" value={this.state.threedsData.oneTime3DsToken}/>
-                <input type="hidden" name="TermUrl"
-                       value={window.location.origin + window.location.pathname + "3ds?sess_id="
-                       + this.state.threedsData.sessionID}/>
-                <input type="hidden" name="MD" value={this.state.threedsData.orderCode}/>
-            </form>
+            return <iframe src={this.state.threedsData.frame} width={390} height={400}/>
         } else {
             if ((this.state.canUsePaymentRequest || this.state.isGooglePayReady)
                 && this.state.selectedMethod !== "form") {
@@ -452,7 +528,8 @@ class PaymentForm extends Component {
                     {this.state.canUsePaymentRequest ? <button onClick={this.makePaymentRequest}>
                         Autofill from browser
                     </button> : null}
-                    <a href="#" onClick={() => {
+                    <a href="" onClick={(e) => {
+                        e.preventDefault();
                         this.setState({selectedMethod: "form"})
                     }}>
                         Enter card details manually
@@ -462,7 +539,8 @@ class PaymentForm extends Component {
                 if (!this.state.loading) {
                     const paymentOptions = this.paymentOptions();
 
-                    return <CardForm paymentOptions={paymentOptions} onSubmit={this.onFormSubmit}/>;
+                    return <CardForm paymentOptions={paymentOptions} payment={this.state.payment}
+                                     onSubmit={this.onFormSubmit}/>;
                 } else {
                     return <SVG src={loader} className="loader"/>
                 }
@@ -471,7 +549,15 @@ class PaymentForm extends Component {
     }
 }
 
+window.addEventListener("onload", () => {
+    Sentry.init({dsn: "https://3407347031614995bc8207f089a10f92@sentry.io/1518060"});
+});
+
 window.makePaymentForm = (container, payment_id, on_complete, accepts_header) => {
     ReactDOM.render(<PaymentForm acceptsHeader={accepts_header} paymentId={payment_id}
+                                 onComplete={on_complete}/>, container);
+};
+window.makePaymentFormFromData = (container, payment, on_complete, accepts_header) => {
+    ReactDOM.render(<PaymentForm acceptsHeader={accepts_header} payment={payment}
                                  onComplete={on_complete}/>, container);
 };
