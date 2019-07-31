@@ -30,8 +30,6 @@ def fb_payment(request, payment_id):
 
 def payment(request, payment_id):
     payment_o = get_object_or_404(models.Payment, id=payment_id)
-    if payment_o.state != payment_o.STATE_OPEN:
-        return HttpResponseNotFound()
 
     return HttpResponse(json.dumps({
         "id": payment_o.id,
@@ -54,10 +52,31 @@ def payment(request, payment_id):
     }))
 
 
-def take_worldpay_payment(request, payment_id):
+@csrf_exempt
+def complete_payment(request):
+    if request.method != "POST":
+        return HttpResponseBadRequest()
+
+    token = request.META.get('HTTP_AUTHORIZATION')
+
+    try:
+        models.PaymentToken.objects.get(token=token)
+    except models.PaymentToken.DoesNotExist:
+        return HttpResponseForbidden()
+
+    payment_id = request.POST.get("order_id")
     payment_o = get_object_or_404(models.Payment, id=payment_id)
-    if payment_o.state != payment_o.STATE_OPEN:
+
+    if payment_o.state != payment_o.STATE_PAID:
         return HttpResponseNotFound()
+
+    payment_o.state = models.Payment.STATE_COMPLETE
+    payment_o.save()
+
+    return HttpResponse(json.dumps({
+        "status": "OK"
+    }))
+
 
 @csrf_exempt
 def take_worldpay_payment(request, payment_id):

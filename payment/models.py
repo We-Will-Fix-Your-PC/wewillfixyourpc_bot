@@ -1,6 +1,19 @@
 from django.db import models
 from phonenumber_field.modelfields import PhoneNumberField
 import uuid
+import secrets
+
+
+def make_token():
+    return secrets.token_hex(32)
+
+
+class PaymentToken(models.Model):
+    name = models.CharField(max_length=255)
+    token = models.CharField(max_length=255, default=make_token, editable=False, primary_key=True)
+
+    def __str__(self):
+        return self.name
 
 
 class Customer(models.Model):
@@ -15,9 +28,11 @@ class Customer(models.Model):
 class Payment(models.Model):
     STATE_OPEN = "O"
     STATE_PAID = "P"
+    STATE_COMPLETE = "C"
     STATES = (
         (STATE_OPEN, "Opened"),
         (STATE_PAID, "Paid"),
+        (STATE_COMPLETE, "Complete"),
     )
 
     ENVIRONMENT_TEST = "T"
@@ -46,3 +61,13 @@ class PaymentItem(models.Model):
 
     def __str__(self):
         return f"{self.payment.id}: {self.title}"
+
+
+class ThreeDSData(models.Model):
+    payment = models.ForeignKey(Payment, on_delete=models.CASCADE)
+    oneTime3DsToken = models.TextField()
+    redirectURL = models.TextField()
+    orderId = models.TextField()
+    sessionId = models.CharField(max_length=255)
+    timestamp = models.DateTimeField(auto_now_add=True)
+
