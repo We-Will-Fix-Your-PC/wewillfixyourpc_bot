@@ -78,6 +78,16 @@ def handle_text(conversation, text):
                     message.save()
                     payment_message = PaymentMessage(message=message, payment_id=payment_id)
                     payment_message.save()
+                elif event_type == "human_needed":
+                    conversation.agent_responding = False
+                    conversation.save()
+
+                    operator_interface.tasks.send_message_notifications.delay({
+                        "type": "alert",
+                        "name": conversation.customer_name,
+                        "text": "Human needed!"
+                    })
+                    continue
                 else:
                     continue
             else:

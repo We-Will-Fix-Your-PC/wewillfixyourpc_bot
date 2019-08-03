@@ -8,6 +8,8 @@ import pytz
 import time
 import json
 import inflect
+import fuzzywuzzy.process
+import fuzzywuzzy.utils
 import dateutil.parser
 import rasa_sdk.events
 from rasa_sdk import Action, Tracker
@@ -537,6 +539,23 @@ class UnlockForm(FormAction):
             return {"imei": None}
 
         return {"imei": value}
+
+    def validate_brand(self, value: Text, dispatcher: CollectingDispatcher, tracker: Tracker,
+                      domain: Dict[Text, Any]) -> Optional[Dict[Text, Any]]:
+        brand = models.Brand.objects.all()
+        top_choice = fuzzywuzzy.process.extractOne(
+            value.lower(), brand, lambda v: fuzzywuzzy.utils.full_process(getattr(v, "name", v))
+        )
+
+        if not top_choice:
+            dispatcher.utter_message("Hmmm 🤔, I don't recognise that brand")
+            return {"brand": None}
+        elif top_choice[1] > 70:
+            return {"brand": top_choice[0].name}
+        else:
+            dispatcher.utter_message(f"Hmmm 🤔, I don't recognise that brand, did you mean "
+                                     f"{top_choice[0].display_name}?")
+            return {"brand": None}
 
     def submit(self, dispatcher: CollectingDispatcher, tracker: Tracker, domain: Dict[Text, Any]) -> List[Dict]:
         dispatcher.utter_template('utter_looking_up', tracker)
