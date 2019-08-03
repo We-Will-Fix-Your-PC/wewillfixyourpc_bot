@@ -19,3 +19,5 @@ pywebpush
 sentry-sdk
 inflect
 cryptography
+rasa_sdk
+fuzzywuzzy

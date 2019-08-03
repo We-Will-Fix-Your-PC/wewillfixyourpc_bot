@@ -1,0 +1,127 @@
+[
+  {
+    "id": "a540e934-23bd-4cd1-8795-a276f1c9cf4c",
+    "data": [
+      {
+        "text": "can you answer me what does the fox say",
+        "userDefined": false
+      }
+    ],
+    "isTemplate": false,
+    "count": 0,
+    "updated": 0
+  },
+  {
+    "id": "a89682d1-322a-4214-9d94-e05e455ac994",
+    "data": [
+      {
+        "text": "can you show me what does the ",
+        "userDefined": false
+      },
+      {
+        "text": "fox say",
+        "meta": "@sys.ignore",
+        "userDefined": false
+      }
+    ],
+    "isTemplate": false,
+    "count": 0,
+    "updated": 0
+  },
+  {
+    "id": "b49f8da3-b53a-4156-8589-74d6641f9364",
+    "data": [
+      {
+        "text": "find out what sound does a fox make",
+        "userDefined": false
+      }
+    ],
+    "isTemplate": false,
+    "count": 0,
+    "updated": 0
+  },
+  {
+    "id": "f017cedd-5c5b-4e94-8ec0-8782bb03e307",
+    "data": [
+      {
+        "text": "what does the fox say",
+        "userDefined": false
+      }
+    ],
+    "isTemplate": false,
+    "count": 0,
+    "updated": 0
+  },
+  {
+    "id": "eb93ba98-a706-4ca6-9755-c2f4e3e5737e",
+    "data": [
+      {
+        "text": "do you have an idea what does the fox say",
+        "userDefined": false
+      }
+    ],
+    "isTemplate": false,
+    "count": 0,
+    "updated": 0
+  },
+  {
+    "id": "baa69ee5-b051-40f6-a215-6661581d24a0",
+    "data": [
+      {
+        "text": "what sounds does a fox make",
+        "userDefined": false
+      }
+    ],
+    "isTemplate": false,
+    "count": 0,
+    "updated": 0
+  },
+  {
+    "id": "f169b7fc-0a49-4851-8105-678b7c1d2f55",
+    "data": [
+      {
+        "text": "what sound does a fox make",
+        "userDefined": false
+      }
+    ],
+    "isTemplate": false,
+    "count": 1,
+    "updated": 0
+  },
+  {
+    "id": "c3362fb4-9242-440f-a63e-bac24a686a48",
+    "data": [
+      {
+        "text": "do you know what does the fox say",
+        "userDefined": false
+      }
+    ],
+    "isTemplate": false,
+    "count": 1,
+    "updated": 0
+  },
+  {
+    "id": "4fecefd7-e21a-4646-b45e-ca236a8b23b7",
+    "data": [
+      {
+        "text": "can you tell me what does the fox say",
+        "userDefined": false
+      }
+    ],
+    "isTemplate": false,
+    "count": 0,
+    "updated": 0
+  },
+  {
+    "id": "cdd07695-768a-4c5c-af26-d38d2d371752",
+    "data": [
+      {
+        "text": "fox says",
+        "userDefined": false
+      }
+    ],
+    "isTemplate": false,
+    "count": 0,
+    "updated": 0
+  }
+]

@@ -1,0 +1,38 @@
+{
+  "id": "d2a44615-6771-4088-84fd-1bebfcd50763",
+  "parentId": "b248ee34-ceb8-4785-9704-f8929acf10e3",
+  "rootParentId": "0907cc6f-ed31-4a43-8ffc-cdc594d1fdbd",
+  "name": "Fallback request human - yes",
+  "auto": true,
+  "contexts": [
+    "Fallbackrequesthuman-followup"
+  ],
+  "responses": [
+    {
+      "resetContexts": false,
+      "action": "human_needed",
+      "affectedContexts": [
+        {
+          "name": "human-needed",
+          "parameters": {},
+          "lifespan": 1
+        }
+      ],
+      "parameters": [],
+      "messages": [
+        {
+          "type": 0,
+          "lang": "en",
+          "speech": []
+        }
+      ],
+      "defaultResponsePlatforms": {},
+      "speech": []
+    }
+  ],
+  "priority": 500000,
+  "webhookUsed": false,
+  "webhookForSlotFilling": false,
+  "fallbackIntent": false,
+  "events": []
+}

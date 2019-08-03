@@ -74,3 +74,43 @@ class IPadRepair(models.Model):
 
     def __str__(self):
         return f"{self.name} {self.repair_name}"
+
+
+class Network(models.Model):
+    name = models.CharField(max_length=255)
+    display_name = models.CharField(max_length=255)
+
+    def __str__(self):
+        return self.name
+
+
+class NetworkAlternativeName(models.Model):
+    network = models.ForeignKey(Network, on_delete=models.CASCADE)
+    name = models.CharField(max_length=255)
+    display_name = models.CharField(max_length=255)
+
+    def __str__(self):
+        return self.name
+
+
+class Brand(models.Model):
+    name = models.CharField(max_length=255)
+    display_name = models.CharField(max_length=255)
+
+    def __str__(self):
+        return self.name
+
+
+class PhoneUnlock(models.Model):
+    brand = models.ForeignKey(Brand, on_delete=models.CASCADE)
+    network = models.ForeignKey(Network, on_delete=models.CASCADE)
+    device = models.CharField(max_length=255, blank=True, null=True)
+    price = models.DecimalField(decimal_places=2, max_digits=10)
+    time = models.CharField(max_length=255)
+
+    @property
+    def device_name(self):
+        return self.device if self.device else ""
+
+    def __str__(self):
+        return f"{self.brand} {self.device_name} on {self.network}"

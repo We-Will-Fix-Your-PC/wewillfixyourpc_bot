@@ -1,0 +1,30 @@
+[
+  {
+    "value": "battery",
+    "synonyms": [
+      "battery",
+      "not charging",
+      "not holding charge"
+    ]
+  },
+  {
+    "value": "charging port",
+    "synonyms": [
+      "charge",
+      "charger",
+      "charger port",
+      "charging dock",
+      "charging port",
+      "dock"
+    ]
+  },
+  {
+    "value": "screen",
+    "synonyms": [
+      "digitiser",
+      "glass",
+      "lcd",
+      "screen"
+    ]
+  }
+]

@@ -14,8 +14,12 @@ class UserAdmin(BaseUserAdmin):
     inlines = (UserProfileInline,)
 
 
+@admin.register(models.ConversationRating)
+class ConversationRatingAdmin(admin.ModelAdmin):
+    readonly_fields = ('time',)
+
+
 admin.site.unregister(User)
 admin.site.register(User, UserAdmin)
 admin.site.register(models.Conversation)
-admin.site.register(models.ConversationRating)
 admin.site.register(models.Message)

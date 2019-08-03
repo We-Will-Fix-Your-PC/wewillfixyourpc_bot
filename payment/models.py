@@ -19,10 +19,20 @@ class PaymentToken(models.Model):
 class Customer(models.Model):
     name = models.CharField(max_length=255)
     email = models.EmailField()
-    phone = PhoneNumberField()
+    phone = models.CharField(max_length=255)
 
     def __str__(self):
         return self.name
+
+    @classmethod
+    def find_customer(cls, *args, **kwargs):
+        customer = cls.objects.filter(*args, **kwargs)
+        if len(customer) > 0:
+            customer = customer[0]
+        else:
+            customer = cls(*args, **kwargs)
+            customer.save()
+        return customer
 
 
 class Payment(models.Model):

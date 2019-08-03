@@ -1,0 +1,169 @@
+[
+  {
+    "id": "243f9a71-b440-4bc5-96ab-43ede0f41b31",
+    "data": [
+      {
+        "text": "unlock ",
+        "userDefined": false
+      },
+      {
+        "text": "nokia",
+        "alias": "brand",
+        "meta": "@brand",
+        "userDefined": false
+      },
+      {
+        "text": " 7 plus from ",
+        "userDefined": false
+      },
+      {
+        "text": "ee",
+        "alias": "network",
+        "meta": "@network",
+        "userDefined": false
+      }
+    ],
+    "isTemplate": false,
+    "count": 2,
+    "updated": 0
+  },
+  {
+    "id": "c16b782d-f8bd-4888-bad1-cbf0cfdbe555",
+    "data": [
+      {
+        "text": "unlock",
+        "userDefined": false
+      }
+    ],
+    "isTemplate": false,
+    "count": 1,
+    "updated": 0
+  },
+  {
+    "id": "ba06c8d7-3cf6-4f61-ae29-fc34e733a45e",
+    "data": [
+      {
+        "text": "unlock from ",
+        "userDefined": false
+      },
+      {
+        "text": "VOXI",
+        "alias": "network",
+        "meta": "@network",
+        "userDefined": false
+      }
+    ],
+    "isTemplate": false,
+    "count": 0,
+    "updated": 0
+  },
+  {
+    "id": "f9e817fc-525b-4537-9dae-3ad576fd0ada",
+    "data": [
+      {
+        "text": "unlock ",
+        "userDefined": false
+      },
+      {
+        "text": "nokia",
+        "alias": "brand",
+        "meta": "@brand",
+        "userDefined": false
+      },
+      {
+        "text": " ",
+        "userDefined": false
+      },
+      {
+        "text": "7 plus",
+        "meta": "@sys.ignore",
+        "userDefined": false
+      },
+      {
+        "text": " from ",
+        "userDefined": false
+      },
+      {
+        "text": "ee",
+        "alias": "network",
+        "meta": "@network",
+        "userDefined": false
+      }
+    ],
+    "isTemplate": false,
+    "count": 0,
+    "updated": 0
+  },
+  {
+    "id": "0439aa4d-c125-4b3a-8587-1e15c21443b5",
+    "data": [
+      {
+        "text": "can you unlock my phone from ",
+        "userDefined": false
+      },
+      {
+        "text": "VOXI",
+        "alias": "network",
+        "meta": "@network",
+        "userDefined": false
+      },
+      {
+        "text": "?",
+        "userDefined": false
+      }
+    ],
+    "isTemplate": false,
+    "count": 0,
+    "updated": 0
+  },
+  {
+    "id": "5158720b-78ae-49c0-a510-b82f79d84abb",
+    "data": [
+      {
+        "text": "unlock my ",
+        "userDefined": false
+      },
+      {
+        "text": "iphone",
+        "alias": "brand",
+        "meta": "@brand",
+        "userDefined": true
+      },
+      {
+        "text": " ",
+        "userDefined": false
+      },
+      {
+        "text": "xr",
+        "alias": "iphone-model",
+        "meta": "@iphone-models",
+        "userDefined": true
+      },
+      {
+        "text": " from ",
+        "userDefined": false
+      },
+      {
+        "text": "ee",
+        "alias": "network",
+        "meta": "@network",
+        "userDefined": true
+      }
+    ],
+    "isTemplate": false,
+    "count": 0,
+    "updated": 0
+  },
+  {
+    "id": "e56fd29b-11d9-4419-8d5e-34cafdd8912a",
+    "data": [
+      {
+        "text": "unlock my phone",
+        "userDefined": false
+      }
+    ],
+    "isTemplate": false,
+    "count": 0,
+    "updated": 0
+  }
+]

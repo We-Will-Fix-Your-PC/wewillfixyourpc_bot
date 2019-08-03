@@ -7,13 +7,13 @@ import SVG from 'react-inlinesvg';
 import CardForm from './cardForm';
 import GPayButton from './gpayButton';
 
-const ROOT_URL = 'https://3f092962.eu.ngrok.io/';
+const ROOT_URL = 'https://8fb28af2.eu.ngrok.io/';
 
 const basicCardInstrument = {
     supportedMethods: 'basic-card',
     data: {
         supportedNetworks: [
-            'visa', 'mastercard', 'amex', 'diners', 'jcb', 'cartebancaire'
+            'visa', 'mastercard', 'amex'
         ]
     }
 };
@@ -21,7 +21,7 @@ const basicCardInstrument = {
 const worldPayTestKey = "T_C_52bc5b16-562d-4198-95d4-00b91f30fe2c";
 const worldPayLiveKey = "L_C_4a900284-cafb-41fd-a544-8478429f539b";
 
-const allowedCardNetworks = ["AMEX", "DISCOVER", "INTERAC", "JCB", "MASTERCARD", "VISA"];
+const allowedCardNetworks = ["AMEX", "MASTERCARD", "VISA"];
 const allowedCardAuthMethods = ["PAN_ONLY"];
 const testTokenizationSpecification = {
     type: 'DIRECT',

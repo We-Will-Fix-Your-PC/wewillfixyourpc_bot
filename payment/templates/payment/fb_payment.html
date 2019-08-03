@@ -8,15 +8,32 @@
     <link rel="stylesheet" href="{% static 'payment/css/payment.css' %}">
 </head>
 <body>
-    <div id="payment" class="payment"></div>
+<div id="payment" class="payment"></div>
 </body>
 <script src="https://pay.google.com/gp/p/js/pay.js"></script>
 <script src="{% static 'payment/js/payment.js' %}"></script>
 <script>
-    if (window.makePaymentForm) {
-        window.makePaymentForm(document.getElementById("payment"), "{{ payment_id }}", () => {
-            console.log("aaaa");
-        }, "{{ accepts_header }}");
-    }
+    (function (d, s, id) {
+        var js, fjs = d.getElementsByTagName(s)[0];
+        if (d.getElementById(id)) {
+            return;
+        }
+        js = d.createElement(s);
+        js.id = id;
+        js.src = "https://connect.facebook.net/en_US/messenger.Extensions.js";
+        fjs.parentNode.insertBefore(js, fjs);
+    }(document, 'script', 'Messenger'));
+
+    window.onload = function () {
+        if (window.makePaymentForm) {
+            window.makePaymentForm(document.getElementById("payment"), "{{ payment_id }}", () => {
+                MessengerExtensions.requestCloseBrowser(function success() {
+                    console.log("Closing payment window");
+                }, function error(err) {
+                    console.error(err);
+                });
+            }, "{{ accepts_header }}");
+        }
+    };
 </script>
 </html>

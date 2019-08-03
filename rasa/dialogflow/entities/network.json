@@ -1,0 +1,9 @@
+{
+  "id": "5a143b46-28c5-4d34-b08e-15748223745a",
+  "name": "network",
+  "isOverridable": true,
+  "isEnum": false,
+  "isRegexp": false,
+  "automatedExpansion": true,
+  "allowFuzzyExtraction": false
+}

@@ -1,0 +1,1815 @@
+[
+  {
+    "id": "f7515e01-eb06-4505-b061-e72de570a7fe",
+    "data": [
+      {
+        "text": "iphone",
+        "alias": "brand",
+        "meta": "@brand",
+        "userDefined": true
+      },
+      {
+        "text": " ",
+        "userDefined": false
+      },
+      {
+        "text": "se",
+        "alias": "iphone-model",
+        "meta": "@iphone-models",
+        "userDefined": true
+      },
+      {
+        "text": " ",
+        "userDefined": false
+      },
+      {
+        "text": "screen",
+        "alias": "iphone-repair",
+        "meta": "@iphone-repairs",
+        "userDefined": true
+      }
+    ],
+    "isTemplate": false,
+    "count": 3,
+    "updated": 0
+  },
+  {
+    "id": "9916d926-2b8d-4a43-b7bb-9e7de185de75",
+    "data": [
+      {
+        "text": "iphone",
+        "alias": "brand",
+        "meta": "@brand",
+        "userDefined": true
+      },
+      {
+        "text": " ",
+        "userDefined": false
+      },
+      {
+        "text": "6s",
+        "alias": "iphone-model",
+        "meta": "@iphone-models",
+        "userDefined": true
+      },
+      {
+        "text": " ",
+        "userDefined": false
+      },
+      {
+        "text": "screen",
+        "alias": "iphone-repair",
+        "meta": "@iphone-repairs",
+        "userDefined": false
+      }
+    ],
+    "isTemplate": false,
+    "count": 1,
+    "updated": 0
+  },
+  {
+    "id": "2aa300c4-a46e-4dd5-8afe-e9abab0bd66b",
+    "data": [
+      {
+        "text": "ipad",
+        "alias": "brand",
+        "meta": "@brand",
+        "userDefined": true
+      },
+      {
+        "text": " ",
+        "userDefined": false
+      },
+      {
+        "text": "5",
+        "alias": "ipad-model",
+        "meta": "@ipad-model",
+        "userDefined": true
+      },
+      {
+        "text": " ",
+        "userDefined": false
+      },
+      {
+        "text": "battery",
+        "alias": "iphone-repair",
+        "meta": "@iphone-repairs",
+        "userDefined": false
+      }
+    ],
+    "isTemplate": false,
+    "count": 2,
+    "updated": 0
+  },
+  {
+    "id": "cb984559-ffdc-4885-92f8-a5df49bdcd9a",
+    "data": [
+      {
+        "text": "ipad",
+        "alias": "brand",
+        "meta": "@brand",
+        "userDefined": true
+      },
+      {
+        "text": " ",
+        "userDefined": false
+      },
+      {
+        "text": "6",
+        "alias": "ipad-model",
+        "meta": "@ipad-model",
+        "userDefined": true
+      },
+      {
+        "text": " ",
+        "userDefined": false
+      },
+      {
+        "text": "battery",
+        "alias": "iphone-repair",
+        "meta": "@iphone-repairs",
+        "userDefined": false
+      }
+    ],
+    "isTemplate": false,
+    "count": 0,
+    "updated": 0
+  },
+  {
+    "id": "2822e71f-2f1c-4fa0-aea6-099d2eb683c7",
+    "data": [
+      {
+        "text": "and how much to fix an ",
+        "userDefined": false
+      },
+      {
+        "text": "iPhone",
+        "alias": "brand",
+        "meta": "@brand",
+        "userDefined": false
+      },
+      {
+        "text": " ",
+        "userDefined": false
+      },
+      {
+        "text": "7",
+        "alias": "iphone-model",
+        "meta": "@iphone-models",
+        "userDefined": false
+      },
+      {
+        "text": " ",
+        "userDefined": false
+      },
+      {
+        "text": "screen",
+        "alias": "iphone-repair",
+        "meta": "@iphone-repairs",
+        "userDefined": false
+      },
+      {
+        "text": " that\u0027s smashed and non responsive",
+        "userDefined": false
+      }
+    ],
+    "isTemplate": false,
+    "count": 4,
+    "updated": 0
+  },
+  {
+    "id": "e8ebe6de-860a-4908-b5d8-ef8bd79bcb61",
+    "data": [
+      {
+        "text": "iPhone",
+        "alias": "brand",
+        "meta": "@brand",
+        "userDefined": true
+      },
+      {
+        "text": " ",
+        "userDefined": false
+      },
+      {
+        "text": "6S+",
+        "alias": "iphone-model",
+        "meta": "@iphone-models",
+        "userDefined": true
+      },
+      {
+        "text": " ",
+        "userDefined": false
+      },
+      {
+        "text": "battery",
+        "alias": "iphone-repair",
+        "meta": "@iphone-repairs",
+        "userDefined": false
+      }
+    ],
+    "isTemplate": false,
+    "count": 0,
+    "updated": 0
+  },
+  {
+    "id": "43cde96e-fc04-4882-896c-845b83320737",
+    "data": [
+      {
+        "text": "my ",
+        "userDefined": false
+      },
+      {
+        "text": "iphone",
+        "alias": "brand",
+        "meta": "@brand",
+        "userDefined": true
+      },
+      {
+        "text": " ",
+        "userDefined": false
+      },
+      {
+        "text": "6+",
+        "alias": "iphone-model",
+        "meta": "@iphone-models",
+        "userDefined": true
+      },
+      {
+        "text": " won\u0027t ",
+        "userDefined": false
+      },
+      {
+        "text": "charge",
+        "alias": "iphone-repair",
+        "meta": "@iphone-repairs",
+        "userDefined": true
+      }
+    ],
+    "isTemplate": false,
+    "count": 1,
+    "updated": 0
+  },
+  {
+    "id": "cb296fc8-9108-4f22-b4ff-91b5c0566a5f",
+    "data": [
+      {
+        "text": "can you fix my ",
+        "userDefined": false
+      },
+      {
+        "text": "bot",
+        "alias": "brand",
+        "meta": "@brand",
+        "userDefined": true
+      }
+    ],
+    "isTemplate": false,
+    "count": 0,
+    "updated": 0
+  },
+  {
+    "id": "8a6e1418-7e5b-49f4-9f57-9eca0a516404",
+    "data": [
+      {
+        "text": "can you fix my ",
+        "userDefined": false
+      },
+      {
+        "text": "oneplus",
+        "alias": "brand",
+        "meta": "@brand",
+        "userDefined": false
+      },
+      {
+        "text": "?",
+        "userDefined": false
+      }
+    ],
+    "isTemplate": false,
+    "count": 1,
+    "updated": 0
+  },
+  {
+    "id": "abaadbca-1165-4647-8cda-486edbffb2e6",
+    "data": [
+      {
+        "text": "Hi my son has smashed the ",
+        "userDefined": false
+      },
+      {
+        "text": "screen",
+        "alias": "iphone-repair",
+        "meta": "@iphone-repairs",
+        "userDefined": false
+      },
+      {
+        "text": " on his ",
+        "userDefined": false
+      },
+      {
+        "text": "huaweii",
+        "alias": "brand",
+        "meta": "@brand",
+        "userDefined": true
+      },
+      {
+        "text": " honour and I want to know if you can fix this type of phone please?",
+        "userDefined": false
+      }
+    ],
+    "isTemplate": false,
+    "count": 0,
+    "updated": 0
+  },
+  {
+    "id": "6a45e4e7-1b7e-488a-8989-6f9697db4cc9",
+    "data": [
+      {
+        "text": "Huaweii",
+        "alias": "brand",
+        "meta": "@brand",
+        "userDefined": true
+      }
+    ],
+    "isTemplate": false,
+    "count": 0,
+    "updated": 0
+  },
+  {
+    "id": "aab2927e-559c-4166-a9f8-cf6f14848e16",
+    "data": [
+      {
+        "text": "It’s a ",
+        "userDefined": false
+      },
+      {
+        "text": "Huaweii",
+        "alias": "brand",
+        "meta": "@brand",
+        "userDefined": true
+      },
+      {
+        "text": " honour",
+        "userDefined": false
+      }
+    ],
+    "isTemplate": false,
+    "count": 0,
+    "updated": 0
+  },
+  {
+    "id": "94bf733a-e02a-41a9-8dde-ae5fc011cc82",
+    "data": [
+      {
+        "text": "how much for an ",
+        "userDefined": false
+      },
+      {
+        "text": "iphone",
+        "alias": "brand",
+        "meta": "@brand",
+        "userDefined": true
+      },
+      {
+        "text": " ",
+        "userDefined": false
+      },
+      {
+        "text": "6",
+        "alias": "iphone-model",
+        "meta": "@iphone-models",
+        "userDefined": true
+      },
+      {
+        "text": "?",
+        "userDefined": false
+      }
+    ],
+    "isTemplate": false,
+    "count": 0,
+    "updated": 0
+  },
+  {
+    "id": "896ee61f-7203-4c05-83ac-6c23cf645d86",
+    "data": [
+      {
+        "text": "can you fix my ",
+        "userDefined": false
+      },
+      {
+        "text": "samsuung",
+        "meta": "@sys.ignore",
+        "userDefined": true
+      },
+      {
+        "text": "?",
+        "userDefined": false
+      }
+    ],
+    "isTemplate": false,
+    "count": 0,
+    "updated": 0
+  },
+  {
+    "id": "70883d8c-bf76-4b99-ae2b-379db8b3c37d",
+    "data": [
+      {
+        "text": "can you fix my ",
+        "userDefined": false
+      },
+      {
+        "text": "samsung",
+        "alias": "brand",
+        "meta": "@brand",
+        "userDefined": false
+      },
+      {
+        "text": "?",
+        "userDefined": false
+      }
+    ],
+    "isTemplate": false,
+    "count": 4,
+    "updated": 0
+  },
+  {
+    "id": "014ace8e-1b72-44bb-b59c-b06f4118971c",
+    "data": [
+      {
+        "text": "5S",
+        "alias": "iphone-model",
+        "meta": "@iphone-models",
+        "userDefined": false
+      },
+      {
+        "text": " ",
+        "userDefined": false
+      },
+      {
+        "text": "Screen",
+        "alias": "iphone-repair",
+        "meta": "@iphone-repairs",
+        "userDefined": false
+      }
+    ],
+    "isTemplate": false,
+    "count": 3,
+    "updated": 0
+  },
+  {
+    "id": "f84bdd7a-38f0-4cc0-b284-5806ff0eb1a5",
+    "data": [
+      {
+        "text": "can you fix my ",
+        "userDefined": false
+      },
+      {
+        "text": "iphone",
+        "alias": "brand",
+        "meta": "@brand",
+        "userDefined": false
+      },
+      {
+        "text": "?",
+        "userDefined": false
+      }
+    ],
+    "isTemplate": false,
+    "count": 7,
+    "updated": 0
+  },
+  {
+    "id": "20288785-d210-4e02-90f1-08c93f8301e9",
+    "data": [
+      {
+        "text": "battery",
+        "alias": "iphone-repair",
+        "meta": "@iphone-repairs",
+        "userDefined": true
+      }
+    ],
+    "isTemplate": false,
+    "count": 2,
+    "updated": 0
+  },
+  {
+    "id": "2dfa3a70-65e6-4dbf-9c42-4f98209ae98e",
+    "data": [
+      {
+        "text": "can you fix my ",
+        "userDefined": false
+      },
+      {
+        "text": "iphone",
+        "alias": "brand",
+        "meta": "@brand",
+        "userDefined": false
+      },
+      {
+        "text": " ",
+        "userDefined": false
+      },
+      {
+        "text": "6s",
+        "alias": "iphone-model",
+        "meta": "@iphone-models",
+        "userDefined": false
+      },
+      {
+        "text": " ",
+        "userDefined": false
+      },
+      {
+        "text": "battery",
+        "alias": "iphone-repair",
+        "meta": "@iphone-repairs",
+        "userDefined": false
+      },
+      {
+        "text": "?",
+        "userDefined": false
+      }
+    ],
+    "isTemplate": false,
+    "count": 1,
+    "updated": 0
+  },
+  {
+    "id": "4518bd3b-c700-491d-a1ee-7af35fdb212e",
+    "data": [
+      {
+        "text": "can you fix my ",
+        "userDefined": false
+      },
+      {
+        "text": "iphone",
+        "alias": "brand",
+        "meta": "@brand",
+        "userDefined": false
+      },
+      {
+        "text": " ",
+        "userDefined": false
+      },
+      {
+        "text": "xr",
+        "alias": "iphone-model",
+        "meta": "@iphone-models",
+        "userDefined": false
+      },
+      {
+        "text": " ",
+        "userDefined": false
+      },
+      {
+        "text": "battery",
+        "alias": "iphone-repair",
+        "meta": "@iphone-repairs",
+        "userDefined": false
+      }
+    ],
+    "isTemplate": false,
+    "count": 0,
+    "updated": 0
+  },
+  {
+    "id": "1b363577-ab0f-44d1-9698-9276cd05f793",
+    "data": [
+      {
+        "text": "xr",
+        "alias": "iphone-model",
+        "meta": "@iphone-models",
+        "userDefined": false
+      },
+      {
+        "text": " ",
+        "userDefined": false
+      },
+      {
+        "text": "battery",
+        "alias": "iphone-repair",
+        "meta": "@iphone-repairs",
+        "userDefined": false
+      }
+    ],
+    "isTemplate": false,
+    "count": 0,
+    "updated": 0
+  },
+  {
+    "id": "794aae81-0900-4488-94cb-ba0b44bae6fd",
+    "data": [
+      {
+        "text": "iphone",
+        "alias": "brand",
+        "meta": "@brand",
+        "userDefined": false
+      },
+      {
+        "text": " ",
+        "userDefined": false
+      },
+      {
+        "text": "battery",
+        "alias": "iphone-repair",
+        "meta": "@iphone-repairs",
+        "userDefined": false
+      }
+    ],
+    "isTemplate": false,
+    "count": 7,
+    "updated": 0
+  },
+  {
+    "id": "73d4eb8b-a4bb-4337-8510-b3dc635f0c09",
+    "data": [
+      {
+        "text": "7",
+        "alias": "iphone-model",
+        "meta": "@iphone-models",
+        "userDefined": true
+      }
+    ],
+    "isTemplate": false,
+    "count": 1,
+    "updated": 0
+  },
+  {
+    "id": "98926efa-89dd-447e-b298-bae7f2b46ef7",
+    "data": [
+      {
+        "text": "iphone",
+        "alias": "brand",
+        "meta": "@brand",
+        "userDefined": true
+      },
+      {
+        "text": " ",
+        "userDefined": false
+      },
+      {
+        "text": "7",
+        "alias": "iphone-model",
+        "meta": "@iphone-models",
+        "userDefined": true
+      }
+    ],
+    "isTemplate": false,
+    "count": 6,
+    "updated": 0
+  },
+  {
+    "id": "e0e832e5-dee1-4b85-83e0-1a01e5dc5abc",
+    "data": [
+      {
+        "text": "iphone",
+        "alias": "brand",
+        "meta": "@brand",
+        "userDefined": true
+      },
+      {
+        "text": " ",
+        "userDefined": false
+      },
+      {
+        "text": "6s",
+        "alias": "iphone-model",
+        "meta": "@iphone-models",
+        "userDefined": true
+      },
+      {
+        "text": " ",
+        "userDefined": false
+      },
+      {
+        "text": "battery",
+        "alias": "iphone-repair",
+        "meta": "@iphone-repairs",
+        "userDefined": false
+      }
+    ],
+    "isTemplate": false,
+    "count": 1,
+    "updated": 0
+  },
+  {
+    "id": "46b5d760-7761-49bc-9da5-75f10bb3f99b",
+    "data": [
+      {
+        "text": "How much is an ",
+        "userDefined": false
+      },
+      {
+        "text": "iPhone",
+        "alias": "brand",
+        "meta": "@brand",
+        "userDefined": true
+      },
+      {
+        "text": " ",
+        "userDefined": false
+      },
+      {
+        "text": "6S",
+        "alias": "iphone-model",
+        "meta": "@iphone-models",
+        "userDefined": true
+      },
+      {
+        "text": " ",
+        "userDefined": false
+      },
+      {
+        "text": "screen",
+        "alias": "iphone-repair",
+        "meta": "@iphone-repairs",
+        "userDefined": false
+      },
+      {
+        "text": "?",
+        "userDefined": false
+      }
+    ],
+    "isTemplate": false,
+    "count": 1,
+    "updated": 0
+  },
+  {
+    "id": "b1d4a281-06c5-4f53-8768-4143fb288b00",
+    "data": [
+      {
+        "text": "how much for an ",
+        "userDefined": false
+      },
+      {
+        "text": "ipad",
+        "alias": "brand",
+        "meta": "@brand",
+        "userDefined": false
+      },
+      {
+        "text": " ",
+        "userDefined": false
+      },
+      {
+        "text": "pro",
+        "alias": "ipad-model",
+        "meta": "@ipad-model",
+        "userDefined": false
+      },
+      {
+        "text": " ",
+        "userDefined": false
+      },
+      {
+        "text": "screen",
+        "alias": "iphone-repair",
+        "meta": "@iphone-repairs",
+        "userDefined": false
+      },
+      {
+        "text": "?",
+        "userDefined": false
+      }
+    ],
+    "isTemplate": false,
+    "count": 2,
+    "updated": 0
+  },
+  {
+    "id": "a3e19ffd-b37e-483c-9d6f-dbbd13188e76",
+    "data": [
+      {
+        "text": "ipad",
+        "alias": "brand",
+        "meta": "@brand",
+        "userDefined": true
+      },
+      {
+        "text": " ",
+        "userDefined": false
+      },
+      {
+        "text": "pro 9.7in",
+        "alias": "ipad-model",
+        "meta": "@ipad-model",
+        "userDefined": true
+      },
+      {
+        "text": " ",
+        "userDefined": false
+      },
+      {
+        "text": "battery",
+        "alias": "iphone-repair",
+        "meta": "@iphone-repairs",
+        "userDefined": false
+      }
+    ],
+    "isTemplate": false,
+    "count": 0,
+    "updated": 0
+  },
+  {
+    "id": "8f57d38f-799a-4db5-985d-7723ae4f157b",
+    "data": [
+      {
+        "text": "can you fix my phone?",
+        "userDefined": false
+      }
+    ],
+    "isTemplate": false,
+    "count": 1,
+    "updated": 0
+  },
+  {
+    "id": "7726d54c-f0ef-4498-ba11-b2feb5b3f0a8",
+    "data": [
+      {
+        "text": "can you fix my ",
+        "userDefined": false
+      },
+      {
+        "text": "screen",
+        "alias": "iphone-repair",
+        "meta": "@iphone-repairs",
+        "userDefined": false
+      },
+      {
+        "text": "?",
+        "userDefined": false
+      }
+    ],
+    "isTemplate": false,
+    "count": 4,
+    "updated": 0
+  },
+  {
+    "id": "1a3c1ac6-73db-41cb-969f-8271a01f458b",
+    "data": [
+      {
+        "text": "can you fit a ",
+        "userDefined": false
+      },
+      {
+        "text": "battery",
+        "alias": "iphone-repair",
+        "meta": "@iphone-repairs",
+        "userDefined": false
+      }
+    ],
+    "isTemplate": false,
+    "count": 3,
+    "updated": 0
+  },
+  {
+    "id": "5adfda3e-2c5b-41c3-b4bf-556907948a85",
+    "data": [
+      {
+        "text": "iphone",
+        "alias": "brand",
+        "meta": "@brand",
+        "userDefined": false
+      }
+    ],
+    "isTemplate": false,
+    "count": 1,
+    "updated": 0
+  },
+  {
+    "id": "98f53638-e175-410a-8925-ab45ccc415c2",
+    "data": [
+      {
+        "text": "screen",
+        "alias": "iphone-repair",
+        "meta": "@iphone-repairs",
+        "userDefined": false
+      }
+    ],
+    "isTemplate": false,
+    "count": 6,
+    "updated": 0
+  },
+  {
+    "id": "aaa1c658-2990-4772-a3b8-611def981576",
+    "data": [
+      {
+        "text": "iphone 6",
+        "alias": "iphone-model",
+        "meta": "@iphone-models",
+        "userDefined": true
+      }
+    ],
+    "isTemplate": false,
+    "count": 0,
+    "updated": 0
+  },
+  {
+    "id": "bd36e9ef-18ce-4ce8-bdc4-6a1f998a9ba2",
+    "data": [
+      {
+        "text": "can you fix a ",
+        "userDefined": false
+      },
+      {
+        "text": "screen",
+        "alias": "iphone-repair",
+        "meta": "@iphone-repairs",
+        "userDefined": false
+      },
+      {
+        "text": "?",
+        "userDefined": false
+      }
+    ],
+    "isTemplate": false,
+    "count": 0,
+    "updated": 0
+  },
+  {
+    "id": "42d6bb62-ca77-4ef8-bd90-660731e7b915",
+    "data": [
+      {
+        "text": "can you fix my ",
+        "userDefined": false
+      },
+      {
+        "text": "iphone",
+        "alias": "brand",
+        "meta": "@brand",
+        "userDefined": false
+      },
+      {
+        "text": " ",
+        "userDefined": false
+      },
+      {
+        "text": "screen",
+        "alias": "iphone-repair",
+        "meta": "@iphone-repairs",
+        "userDefined": false
+      },
+      {
+        "text": "?",
+        "userDefined": false
+      }
+    ],
+    "isTemplate": false,
+    "count": 1,
+    "updated": 0
+  },
+  {
+    "id": "bfb85120-221f-4148-888a-0a1d72e12436",
+    "data": [
+      {
+        "text": "hello how much is an ",
+        "userDefined": false
+      },
+      {
+        "text": "iphone",
+        "alias": "brand",
+        "meta": "@brand",
+        "userDefined": false
+      },
+      {
+        "text": " ",
+        "userDefined": false
+      },
+      {
+        "text": "6",
+        "alias": "iphone-model",
+        "meta": "@iphone-models",
+        "userDefined": false
+      },
+      {
+        "text": " ",
+        "userDefined": false
+      },
+      {
+        "text": "screen",
+        "alias": "iphone-repair",
+        "meta": "@iphone-repairs",
+        "userDefined": false
+      },
+      {
+        "text": " please",
+        "userDefined": false
+      }
+    ],
+    "isTemplate": false,
+    "count": 0,
+    "updated": 0
+  },
+  {
+    "id": "3cbbb929-35cc-4588-a8e8-f33733e6eacc",
+    "data": [
+      {
+        "text": "iphone 6",
+        "alias": "iphone-model",
+        "meta": "@iphone-models",
+        "userDefined": false
+      },
+      {
+        "text": " ",
+        "userDefined": false
+      },
+      {
+        "text": "screen",
+        "alias": "iphone-repair",
+        "meta": "@iphone-repairs",
+        "userDefined": false
+      }
+    ],
+    "isTemplate": false,
+    "count": 0,
+    "updated": 0
+  },
+  {
+    "id": "e0b2cffa-c65e-42e4-9bbc-32a693c6483e",
+    "data": [
+      {
+        "text": "4s",
+        "alias": "duration",
+        "meta": "@sys.duration",
+        "userDefined": false
+      },
+      {
+        "text": " ",
+        "userDefined": false
+      },
+      {
+        "text": "screen",
+        "alias": "iphone-repair",
+        "meta": "@iphone-repairs",
+        "userDefined": false
+      }
+    ],
+    "isTemplate": false,
+    "count": 0,
+    "updated": 0
+  },
+  {
+    "id": "3da3f514-6e61-4075-bd52-c25970f6420e",
+    "data": [
+      {
+        "text": "can you tell me what the cost of an ",
+        "userDefined": false
+      },
+      {
+        "text": "iphone",
+        "alias": "brand",
+        "meta": "@brand",
+        "userDefined": false
+      },
+      {
+        "text": " repair is",
+        "userDefined": false
+      }
+    ],
+    "isTemplate": false,
+    "count": 0,
+    "updated": 0
+  },
+  {
+    "id": "267be876-5950-476f-886f-d3ff5a3caa08",
+    "data": [
+      {
+        "text": "i have an ",
+        "userDefined": false
+      },
+      {
+        "text": "iphone",
+        "alias": "brand",
+        "meta": "@brand",
+        "userDefined": false
+      },
+      {
+        "text": " ",
+        "userDefined": false
+      },
+      {
+        "text": "7",
+        "alias": "iphone-model",
+        "meta": "@iphone-models",
+        "userDefined": false
+      }
+    ],
+    "isTemplate": false,
+    "count": 0,
+    "updated": 0
+  },
+  {
+    "id": "7f2c137d-327f-4a59-910c-1c77a16143d0",
+    "data": [
+      {
+        "text": "screen",
+        "alias": "iphone-repair",
+        "meta": "@iphone-repairs",
+        "userDefined": false
+      },
+      {
+        "text": " cost",
+        "userDefined": false
+      }
+    ],
+    "isTemplate": false,
+    "count": 0,
+    "updated": 0
+  },
+  {
+    "id": "c0bd827f-0769-45b1-8df0-9f258bdfcf82",
+    "data": [
+      {
+        "text": "what is the cost of a ",
+        "userDefined": false
+      },
+      {
+        "text": "iphone",
+        "alias": "brand",
+        "meta": "@brand",
+        "userDefined": false
+      },
+      {
+        "text": " ",
+        "userDefined": false
+      },
+      {
+        "text": "7",
+        "alias": "iphone-model",
+        "meta": "@iphone-models",
+        "userDefined": false
+      },
+      {
+        "text": " ",
+        "userDefined": false
+      },
+      {
+        "text": "screen",
+        "alias": "iphone-repair",
+        "meta": "@iphone-repairs",
+        "userDefined": false
+      }
+    ],
+    "isTemplate": false,
+    "count": 0,
+    "updated": 0
+  },
+  {
+    "id": "29959c55-ad61-490a-97f8-ddc2acbc0b52",
+    "data": [
+      {
+        "text": "do you have in stock?",
+        "userDefined": false
+      }
+    ],
+    "isTemplate": false,
+    "count": 0,
+    "updated": 0
+  },
+  {
+    "id": "834e726a-330e-4230-8987-f511d92b79ce",
+    "data": [
+      {
+        "text": "how much to fix an ",
+        "userDefined": false
+      },
+      {
+        "text": "iphone",
+        "alias": "brand",
+        "meta": "@brand",
+        "userDefined": false
+      },
+      {
+        "text": " ",
+        "userDefined": false
+      },
+      {
+        "text": "5",
+        "alias": "iphone-model",
+        "meta": "@iphone-models",
+        "userDefined": false
+      },
+      {
+        "text": " ",
+        "userDefined": false
+      },
+      {
+        "text": "screen",
+        "alias": "iphone-repair",
+        "meta": "@iphone-repairs",
+        "userDefined": false
+      },
+      {
+        "text": "?",
+        "userDefined": false
+      }
+    ],
+    "isTemplate": false,
+    "count": 0,
+    "updated": 0
+  },
+  {
+    "id": "673c4110-eb1b-43e2-9cba-b8483ebafdfe",
+    "data": [
+      {
+        "text": "How much to fix an ",
+        "userDefined": false
+      },
+      {
+        "text": "iphone",
+        "alias": "brand",
+        "meta": "@brand",
+        "userDefined": false
+      },
+      {
+        "text": " ",
+        "userDefined": false
+      },
+      {
+        "text": "5s",
+        "alias": "iphone-model",
+        "meta": "@iphone-models",
+        "userDefined": false
+      },
+      {
+        "text": " ",
+        "userDefined": false
+      },
+      {
+        "text": "screen",
+        "alias": "iphone-repair",
+        "meta": "@iphone-repairs",
+        "userDefined": false
+      },
+      {
+        "text": "?",
+        "userDefined": false
+      }
+    ],
+    "isTemplate": false,
+    "count": 0,
+    "updated": 0
+  },
+  {
+    "id": "475a77d2-1458-4a0f-abb7-8d5cae23daa6",
+    "data": [
+      {
+        "text": "how much to fix an ",
+        "userDefined": false
+      },
+      {
+        "text": "iphone",
+        "alias": "brand",
+        "meta": "@brand",
+        "userDefined": false
+      },
+      {
+        "text": " ",
+        "userDefined": false
+      },
+      {
+        "text": "screen",
+        "alias": "iphone-repair",
+        "meta": "@iphone-repairs",
+        "userDefined": false
+      },
+      {
+        "text": "?",
+        "userDefined": false
+      }
+    ],
+    "isTemplate": false,
+    "count": 0,
+    "updated": 0
+  },
+  {
+    "id": "f1a295b2-b485-4662-9a1c-9a65972050a4",
+    "data": [
+      {
+        "text": "can you fix my ",
+        "userDefined": false
+      },
+      {
+        "text": "iphone",
+        "alias": "brand",
+        "meta": "@brand",
+        "userDefined": false
+      },
+      {
+        "text": " ",
+        "userDefined": false
+      },
+      {
+        "text": "5c",
+        "alias": "iphone-model",
+        "meta": "@iphone-models",
+        "userDefined": false
+      },
+      {
+        "text": " ",
+        "userDefined": false
+      },
+      {
+        "text": "screen",
+        "alias": "iphone-repair",
+        "meta": "@iphone-repairs",
+        "userDefined": false
+      }
+    ],
+    "isTemplate": false,
+    "count": 0,
+    "updated": 0
+  },
+  {
+    "id": "0e8cafde-7b7e-4956-bb16-8a13d640bc4f",
+    "data": [
+      {
+        "text": "can you fix an ",
+        "userDefined": false
+      },
+      {
+        "text": "iphone",
+        "alias": "brand",
+        "meta": "@brand",
+        "userDefined": false
+      },
+      {
+        "text": " ",
+        "userDefined": false
+      },
+      {
+        "text": "5",
+        "alias": "iphone-model",
+        "meta": "@iphone-models",
+        "userDefined": false
+      },
+      {
+        "text": " ",
+        "userDefined": false
+      },
+      {
+        "text": "battery",
+        "alias": "iphone-repair",
+        "meta": "@iphone-repairs",
+        "userDefined": false
+      }
+    ],
+    "isTemplate": false,
+    "count": 0,
+    "updated": 0
+  },
+  {
+    "id": "200bad08-9aca-44e5-b9c8-44d724fab65d",
+    "data": [
+      {
+        "text": "can you fix my ",
+        "userDefined": false
+      },
+      {
+        "text": "iphone",
+        "alias": "brand",
+        "meta": "@brand",
+        "userDefined": false
+      },
+      {
+        "text": " ",
+        "userDefined": false
+      },
+      {
+        "text": "5c",
+        "alias": "iphone-model",
+        "meta": "@iphone-models",
+        "userDefined": false
+      },
+      {
+        "text": " ",
+        "userDefined": false
+      },
+      {
+        "text": "screen",
+        "alias": "iphone-repair",
+        "meta": "@iphone-repairs",
+        "userDefined": false
+      },
+      {
+        "text": "?",
+        "userDefined": false
+      }
+    ],
+    "isTemplate": false,
+    "count": 0,
+    "updated": 0
+  },
+  {
+    "id": "350f2db7-dc65-4c80-9b10-90c8508ee991",
+    "data": [
+      {
+        "text": "can you fix my ",
+        "userDefined": false
+      },
+      {
+        "text": "iphone",
+        "alias": "brand",
+        "meta": "@brand",
+        "userDefined": false
+      },
+      {
+        "text": " ",
+        "userDefined": false
+      },
+      {
+        "text": "5",
+        "alias": "iphone-model",
+        "meta": "@iphone-models",
+        "userDefined": false
+      }
+    ],
+    "isTemplate": false,
+    "count": 0,
+    "updated": 0
+  },
+  {
+    "id": "e3263d0b-f605-4a7a-b723-eff8b741fb74",
+    "data": [
+      {
+        "text": "can you fit an ",
+        "userDefined": false
+      },
+      {
+        "text": "iphone",
+        "alias": "brand",
+        "meta": "@brand",
+        "userDefined": false
+      },
+      {
+        "text": " ",
+        "userDefined": false
+      },
+      {
+        "text": "battery",
+        "alias": "iphone-repair",
+        "meta": "@iphone-repairs",
+        "userDefined": false
+      },
+      {
+        "text": " for a ",
+        "userDefined": false
+      },
+      {
+        "text": "7",
+        "alias": "iphone-model",
+        "meta": "@iphone-models",
+        "userDefined": true
+      }
+    ],
+    "isTemplate": false,
+    "count": 0,
+    "updated": 0
+  },
+  {
+    "id": "07b5e0f0-8dc5-4c9c-b3fd-5a91d046a9af",
+    "data": [
+      {
+        "text": "cn u fix my ",
+        "userDefined": false
+      },
+      {
+        "text": "iphone",
+        "alias": "brand",
+        "meta": "@brand",
+        "userDefined": false
+      }
+    ],
+    "isTemplate": false,
+    "count": 0,
+    "updated": 0
+  },
+  {
+    "id": "2671be80-61e8-47f4-81ec-dd2dd3311667",
+    "data": [
+      {
+        "text": "iphone",
+        "alias": "brand",
+        "meta": "@brand",
+        "userDefined": true
+      },
+      {
+        "text": "5s",
+        "alias": "iphone-model",
+        "meta": "@iphone-models",
+        "userDefined": true
+      }
+    ],
+    "isTemplate": false,
+    "count": 0,
+    "updated": 0
+  },
+  {
+    "id": "1bc0f912-e4cf-4557-8516-9cb9b5c62055",
+    "data": [
+      {
+        "text": "mini 5",
+        "alias": "ipad-model",
+        "meta": "@ipad-model",
+        "userDefined": false
+      },
+      {
+        "text": " ",
+        "userDefined": false
+      },
+      {
+        "text": "battery",
+        "alias": "iphone-repair",
+        "meta": "@iphone-repairs",
+        "userDefined": false
+      }
+    ],
+    "isTemplate": false,
+    "count": 0,
+    "updated": 0
+  },
+  {
+    "id": "f4d28079-9806-47bb-89e7-44518da5e437",
+    "data": [
+      {
+        "text": "can you fix my ",
+        "userDefined": false
+      },
+      {
+        "text": "ipad",
+        "alias": "brand",
+        "meta": "@brand",
+        "userDefined": false
+      },
+      {
+        "text": "?",
+        "userDefined": false
+      }
+    ],
+    "isTemplate": false,
+    "count": 0,
+    "updated": 0
+  },
+  {
+    "id": "b5ae87cc-6646-45d3-b554-4556991f290a",
+    "data": [
+      {
+        "text": "how much for an ",
+        "userDefined": false
+      },
+      {
+        "text": "ipad",
+        "alias": "brand",
+        "meta": "@brand",
+        "userDefined": false
+      },
+      {
+        "text": " ",
+        "userDefined": false
+      },
+      {
+        "text": "2018",
+        "alias": "ipad-model",
+        "meta": "@ipad-model",
+        "userDefined": false
+      },
+      {
+        "text": " ",
+        "userDefined": false
+      },
+      {
+        "text": "screen",
+        "alias": "iphone-repair",
+        "meta": "@iphone-repairs",
+        "userDefined": false
+      },
+      {
+        "text": "?",
+        "userDefined": false
+      }
+    ],
+    "isTemplate": false,
+    "count": 0,
+    "updated": 0
+  },
+  {
+    "id": "413fe3ef-b2ae-4ef9-804e-69c63ab646ab",
+    "data": [
+      {
+        "text": "ipad",
+        "alias": "brand",
+        "meta": "@brand",
+        "userDefined": true
+      },
+      {
+        "text": " ",
+        "userDefined": false
+      },
+      {
+        "text": "pro",
+        "alias": "ipad-model",
+        "meta": "@ipad-model",
+        "userDefined": true
+      },
+      {
+        "text": " ",
+        "userDefined": false
+      },
+      {
+        "text": "battery",
+        "alias": "iphone-repair",
+        "meta": "@iphone-repairs",
+        "userDefined": false
+      }
+    ],
+    "isTemplate": false,
+    "count": 0,
+    "updated": 0
+  },
+  {
+    "id": "83ef4a90-5bb5-4d2d-81d9-c0ed3d808a93",
+    "data": [
+      {
+        "text": "6s",
+        "alias": "iphone-model",
+        "meta": "@iphone-models",
+        "userDefined": false
+      },
+      {
+        "text": " ",
+        "userDefined": false
+      },
+      {
+        "text": "screen",
+        "alias": "iphone-repair",
+        "meta": "@iphone-repairs",
+        "userDefined": false
+      }
+    ],
+    "isTemplate": false,
+    "count": 0,
+    "updated": 0
+  },
+  {
+    "id": "750b571b-0743-42d5-8190-8776e9aa1f2e",
+    "data": [
+      {
+        "text": "What is the price of an ",
+        "userDefined": false
+      },
+      {
+        "text": "iPhone",
+        "alias": "brand",
+        "meta": "@brand",
+        "userDefined": false
+      },
+      {
+        "text": " repair?",
+        "userDefined": false
+      }
+    ],
+    "isTemplate": false,
+    "count": 0,
+    "updated": 0
+  },
+  {
+    "id": "e46333cd-3e05-41c0-9aaf-5bb45d4f1c60",
+    "data": [
+      {
+        "text": "how much is a ",
+        "userDefined": false
+      },
+      {
+        "text": "iphone",
+        "alias": "brand",
+        "meta": "@brand",
+        "userDefined": true
+      },
+      {
+        "text": " ",
+        "userDefined": false
+      },
+      {
+        "text": "6s",
+        "alias": "iphone-model",
+        "meta": "@iphone-models",
+        "userDefined": true
+      },
+      {
+        "text": " ",
+        "userDefined": false
+      },
+      {
+        "text": "battery",
+        "alias": "iphone-repair",
+        "meta": "@iphone-repairs",
+        "userDefined": false
+      },
+      {
+        "text": "?",
+        "userDefined": false
+      }
+    ],
+    "isTemplate": false,
+    "count": 0,
+    "updated": 0
+  },
+  {
+    "id": "17f595c9-fcf7-44c7-940b-323e595c202f",
+    "data": [
+      {
+        "text": "can you fix my ",
+        "userDefined": false
+      },
+      {
+        "text": "iphone",
+        "alias": "brand",
+        "meta": "@brand",
+        "userDefined": true
+      },
+      {
+        "text": " ",
+        "userDefined": false
+      },
+      {
+        "text": "xs",
+        "alias": "iphone-model",
+        "meta": "@iphone-models",
+        "userDefined": true
+      },
+      {
+        "text": " ",
+        "userDefined": false
+      },
+      {
+        "text": "screen",
+        "alias": "iphone-repair",
+        "meta": "@iphone-repairs",
+        "userDefined": false
+      },
+      {
+        "text": "?",
+        "userDefined": false
+      }
+    ],
+    "isTemplate": false,
+    "count": 0,
+    "updated": 0
+  },
+  {
+    "id": "ef30a12b-f830-4d40-8615-36998bbed31d",
+    "data": [
+      {
+        "text": "will you fix my ",
+        "userDefined": false
+      },
+      {
+        "text": "samsung",
+        "alias": "brand",
+        "meta": "@brand",
+        "userDefined": true
+      },
+      {
+        "text": "?",
+        "userDefined": false
+      }
+    ],
+    "isTemplate": false,
+    "count": 0,
+    "updated": 0
+  },
+  {
+    "id": "bb59a783-8a71-4b2c-b27d-4826c5e29664",
+    "data": [
+      {
+        "text": "what do you fix?",
+        "userDefined": false
+      }
+    ],
+    "isTemplate": false,
+    "count": 0,
+    "updated": 0
+  },
+  {
+    "id": "e5a96b35-4fca-47d1-9174-a26664c38a75",
+    "data": [
+      {
+        "text": "Do you fix ",
+        "userDefined": false
+      },
+      {
+        "text": "iPhones",
+        "alias": "brand",
+        "meta": "@brand",
+        "userDefined": true
+      },
+      {
+        "text": "?",
+        "userDefined": false
+      }
+    ],
+    "isTemplate": false,
+    "count": 0,
+    "updated": 0
+  }
+]

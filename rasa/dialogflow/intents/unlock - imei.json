@@ -1,0 +1,145 @@
+{
+  "id": "16c436dd-dac4-4be1-8094-1742a8aa9d18",
+  "name": "unlock - imei",
+  "auto": true,
+  "contexts": [
+    "unlock"
+  ],
+  "responses": [
+    {
+      "resetContexts": false,
+      "action": "unlock.imei",
+      "affectedContexts": [
+        {
+          "name": "unlock",
+          "parameters": {},
+          "lifespan": 2
+        }
+      ],
+      "parameters": [
+        {
+          "id": "704882eb-6aad-4e02-9b24-1000a36fffa1",
+          "required": true,
+          "dataType": "@sys.number-integer",
+          "name": "imei",
+          "value": "$imei",
+          "prompts": [
+            {
+              "lang": "en",
+              "value": "What\u0027s the phones IMEI? (this can be foudn by dialing *#06#)"
+            }
+          ],
+          "promptMessages": [],
+          "noMatchPromptMessages": [],
+          "noInputPromptMessages": [],
+          "outputDialogContexts": [],
+          "defaultValue": "#unlock.imei",
+          "isList": false
+        },
+        {
+          "id": "c533acf3-35de-4894-b1c6-3aa7321f5187",
+          "required": false,
+          "dataType": "@sys.any",
+          "name": "brand",
+          "value": "#unlock.brand",
+          "promptMessages": [],
+          "noMatchPromptMessages": [],
+          "noInputPromptMessages": [],
+          "outputDialogContexts": [],
+          "isList": false
+        },
+        {
+          "id": "79f7a392-877b-41c5-99aa-e614e0343260",
+          "required": false,
+          "dataType": "@sys.any",
+          "name": "iphone-model",
+          "value": "#unlock.iphone-model",
+          "promptMessages": [],
+          "noMatchPromptMessages": [],
+          "noInputPromptMessages": [],
+          "outputDialogContexts": [],
+          "isList": false
+        },
+        {
+          "id": "ec895208-7280-4a66-b242-6789757159bd",
+          "required": false,
+          "dataType": "@sys.any",
+          "name": "network",
+          "value": "#unlock.network",
+          "promptMessages": [],
+          "noMatchPromptMessages": [],
+          "noInputPromptMessages": [],
+          "outputDialogContexts": [],
+          "isList": false
+        },
+        {
+          "id": "e64ded6d-63d5-4c34-a3e5-db0a7a2850d9",
+          "required": false,
+          "dataType": "@sys.any",
+          "name": "name",
+          "value": "#unlock.name",
+          "promptMessages": [],
+          "noMatchPromptMessages": [],
+          "noInputPromptMessages": [],
+          "outputDialogContexts": [],
+          "isList": false
+        },
+        {
+          "id": "b698f1d4-3d13-464c-9ad2-76cecf695cd9",
+          "required": false,
+          "dataType": "@sys.any",
+          "name": "phone-number",
+          "value": "#unlock.phone-number",
+          "promptMessages": [],
+          "noMatchPromptMessages": [],
+          "noInputPromptMessages": [],
+          "outputDialogContexts": [],
+          "isList": false
+        },
+        {
+          "id": "737ea678-9c77-402b-81b9-3b58541ba812",
+          "required": false,
+          "dataType": "@sys.any",
+          "name": "email",
+          "value": "#unlock.email",
+          "promptMessages": [],
+          "noMatchPromptMessages": [],
+          "noInputPromptMessages": [],
+          "outputDialogContexts": [],
+          "isList": false
+        },
+        {
+          "id": "8e8c824a-be06-4c65-9103-0d7a8b723ab8",
+          "required": false,
+          "dataType": "",
+          "name": "network-original",
+          "value": "#unlock.network-original",
+          "promptMessages": [],
+          "noMatchPromptMessages": [],
+          "noInputPromptMessages": [],
+          "outputDialogContexts": [],
+          "defaultValue": "#unlock.network.original",
+          "isList": false
+        }
+      ],
+      "messages": [
+        {
+          "type": 0,
+          "lang": "en",
+          "speech": []
+        }
+      ],
+      "defaultResponsePlatforms": {},
+      "speech": []
+    }
+  ],
+  "priority": 500000,
+  "webhookUsed": true,
+  "webhookForSlotFilling": false,
+  "fallbackIntent": false,
+  "events": [
+    {
+      "name": "unlock-imei"
+    }
+  ]
+}

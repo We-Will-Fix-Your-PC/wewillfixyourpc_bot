@@ -1,0 +1,142 @@
+[
+  {
+    "id": "4008f2fd-4d1a-4339-b94d-5de0adbbf4e1",
+    "data": [
+      {
+        "text": "10",
+        "alias": "rating",
+        "meta": "@num-1-to-10",
+        "userDefined": false
+      }
+    ],
+    "isTemplate": false,
+    "count": 1,
+    "updated": 0
+  },
+  {
+    "id": "baaabdaa-7158-46da-90f4-fe64079431f2",
+    "data": [
+      {
+        "text": "9",
+        "alias": "rating",
+        "meta": "@num-1-to-10",
+        "userDefined": false
+      }
+    ],
+    "isTemplate": false,
+    "count": 1,
+    "updated": 0
+  },
+  {
+    "id": "c0b380e0-0a41-4828-baf5-ccb29be8139d",
+    "data": [
+      {
+        "text": "8",
+        "alias": "rating",
+        "meta": "@num-1-to-10",
+        "userDefined": false
+      }
+    ],
+    "isTemplate": false,
+    "count": 0,
+    "updated": 0
+  },
+  {
+    "id": "a041716f-5ed2-47c8-ba3f-8917ce75f44c",
+    "data": [
+      {
+        "text": "7",
+        "alias": "rating",
+        "meta": "@num-1-to-10",
+        "userDefined": false
+      }
+    ],
+    "isTemplate": false,
+    "count": 0,
+    "updated": 0
+  },
+  {
+    "id": "4c5b787d-668a-4899-90e0-1b240393c899",
+    "data": [
+      {
+        "text": "6",
+        "alias": "rating",
+        "meta": "@num-1-to-10",
+        "userDefined": false
+      }
+    ],
+    "isTemplate": false,
+    "count": 0,
+    "updated": 0
+  },
+  {
+    "id": "d3de8ffb-20d9-4db9-b137-f6dd22a82a0b",
+    "data": [
+      {
+        "text": "5",
+        "alias": "rating",
+        "meta": "@num-1-to-10",
+        "userDefined": false
+      }
+    ],
+    "isTemplate": false,
+    "count": 0,
+    "updated": 0
+  },
+  {
+    "id": "e4b52385-6cb4-41b0-95d7-7e8743838e0e",
+    "data": [
+      {
+        "text": "4",
+        "alias": "rating",
+        "meta": "@num-1-to-10",
+        "userDefined": false
+      }
+    ],
+    "isTemplate": false,
+    "count": 0,
+    "updated": 0
+  },
+  {
+    "id": "ba51eceb-bec0-43ea-97b7-09e7ffa9d287",
+    "data": [
+      {
+        "text": "3",
+        "alias": "rating",
+        "meta": "@num-1-to-10",
+        "userDefined": false
+      }
+    ],
+    "isTemplate": false,
+    "count": 0,
+    "updated": 0
+  },
+  {
+    "id": "e55195c4-a4e9-427a-b45f-0ed25463444c",
+    "data": [
+      {
+        "text": "2",
+        "alias": "rating",
+        "meta": "@num-1-to-10",
+        "userDefined": false
+      }
+    ],
+    "isTemplate": false,
+    "count": 0,
+    "updated": 0
+  },
+  {
+    "id": "4cac2a74-b94f-467c-9e48-3e3a35edf039",
+    "data": [
+      {
+        "text": "1",
+        "alias": "rating",
+        "meta": "@num-1-to-10",
+        "userDefined": false
+      }
+    ],
+    "isTemplate": false,
+    "count": 0,
+    "updated": 0
+  }
+]

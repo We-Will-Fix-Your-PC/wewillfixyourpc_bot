@@ -1,6 +1,5 @@
 from django.db import models
 from django.utils import timezone
-import secrets
 import json
 from django.contrib.auth.models import User
 
@@ -34,7 +33,6 @@ class Conversation(models.Model):
 
     platform = models.CharField(max_length=2, choices=PLATFORM_CHOICES)
     platform_id = models.CharField(max_length=255)
-    noonce = models.CharField(max_length=255)
     agent_responding = models.BooleanField(default=True)
     timezone = models.CharField(max_length=255, blank=True, null=True, default=None)
     customer_name = models.CharField(max_length=255, blank=True, null=True)
@@ -60,24 +58,23 @@ class Conversation(models.Model):
             conv.save()
             return conv
         except cls.DoesNotExist:
-            conv = cls(platform=platform, platform_id=platform_id, noonce=secrets.token_urlsafe(10),
-                       customer_name=customer_name, customer_username=customer_username, customer_pic=None)
+            conv = cls(platform=platform, platform_id=platform_id, customer_name=customer_name,
+                       customer_username=customer_username, customer_pic=None)
             conv.save()
             return conv
 
     def reset(self):
-        self.noonce = secrets.token_urlsafe(10)
         self.agent_responding = True
         self.save()
 
 
 class ConversationRating(models.Model):
-    conversation = models.ForeignKey(Conversation, on_delete=models.CASCADE)
+    sender_id = models.CharField(max_length=255)
     time = models.DateTimeField(auto_now_add=True)
     rating = models.PositiveSmallIntegerField()
 
     def __str__(self):
-        return str(self.conversation)
+        return str(self.sender_id)
 
 
 class Message(models.Model):
@@ -116,3 +113,11 @@ class MessageSuggestion(models.Model):
 
     def __str__(self):
         return self.suggested_response
+
+
+class PaymentMessage(models.Model):
+    message = models.OneToOneField(Message, on_delete=models.CASCADE)
+    payment_id = models.CharField(max_length=255)
+
+    def __str__(self):
+        return self.payment_id

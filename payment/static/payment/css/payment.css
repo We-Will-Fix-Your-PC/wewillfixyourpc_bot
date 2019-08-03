@@ -1,4 +1,7 @@
 @import url("https://fonts.googleapis.com/css?family=Roboto&display=swap");
+* {
+  box-sizing: border-box; }
+
 .payment {
   display: flex;
   flex-direction: column;
@@ -19,7 +22,8 @@
     font-size: 20px;
     align-self: stretch;
     border-radius: 5px;
-    background: #fff; }
+    background: #fff;
+    width: 100%; }
   .payment iframe {
     border: none; }
   .payment button {

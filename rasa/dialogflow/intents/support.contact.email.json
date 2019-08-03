@@ -1,0 +1,37 @@
+{
+  "id": "4c962ca1-cedc-471a-b586-b9a6acf9ea2e",
+  "name": "support.contact.email",
+  "auto": true,
+  "contexts": [],
+  "responses": [
+    {
+      "resetContexts": false,
+      "action": "support.contact.email",
+      "affectedContexts": [
+        {
+          "name": "additional-help-question",
+          "parameters": {},
+          "lifespan": 2
+        }
+      ],
+      "parameters": [],
+      "messages": [
+        {
+          "type": 0,
+          "lang": "en",
+          "speech": [
+            "Our email is $email.\n\nDo you need help with anything else?",
+            "You may contact us at $email.\n\nDo you need help with anything else?"
+          ]
+        }
+      ],
+      "defaultResponsePlatforms": {},
+      "speech": []
+    }
+  ],
+  "priority": 500000,
+  "webhookUsed": true,
+  "webhookForSlotFilling": false,
+  "fallbackIntent": false,
+  "events": []
+}

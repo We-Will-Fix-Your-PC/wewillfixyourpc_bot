@@ -1,0 +1,50 @@
+[
+  {
+    "id": "352441c4-8973-472b-ac96-cdc8d38b60f0",
+    "data": [
+      {
+        "text": "What\u0027s your number?",
+        "userDefined": false
+      }
+    ],
+    "isTemplate": false,
+    "count": 0,
+    "updated": 0
+  },
+  {
+    "id": "a0586fa6-9cdb-4f72-a869-4da77d2b81ae",
+    "data": [
+      {
+        "text": "whats your number",
+        "userDefined": false
+      }
+    ],
+    "isTemplate": false,
+    "count": 0,
+    "updated": 0
+  },
+  {
+    "id": "bfc70490-906a-484c-b0a0-9ad48aea7583",
+    "data": [
+      {
+        "text": "Can I contact you by phone?",
+        "userDefined": false
+      }
+    ],
+    "isTemplate": false,
+    "count": 0,
+    "updated": 0
+  },
+  {
+    "id": "38bc94f9-e551-482a-8766-e4729f44036e",
+    "data": [
+      {
+        "text": "What\u0027s your phone number?",
+        "userDefined": false
+      }
+    ],
+    "isTemplate": false,
+    "count": 0,
+    "updated": 0
+  }
+]

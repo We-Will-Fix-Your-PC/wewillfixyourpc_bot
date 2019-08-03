@@ -1,0 +1,75 @@
+{
+  "id": "e667d3d3-e04f-496d-b576-b01794d3a562",
+  "name": "repair - repair.iphone",
+  "auto": true,
+  "contexts": [
+    "repair-iphone"
+  ],
+  "responses": [
+    {
+      "resetContexts": false,
+      "action": "repair.iphone",
+      "affectedContexts": [
+        {
+          "name": "repair-iphone",
+          "parameters": {},
+          "lifespan": 2
+        }
+      ],
+      "parameters": [
+        {
+          "id": "86dbc549-4c5c-415d-aed8-e5801b4e2bf4",
+          "required": true,
+          "dataType": "@iphone-models",
+          "name": "iphone-model",
+          "value": "$iphone-model",
+          "prompts": [
+            {
+              "lang": "en",
+              "value": "What model is it?"
+            }
+          ],
+          "promptMessages": [],
+          "noMatchPromptMessages": [],
+          "noInputPromptMessages": [],
+          "outputDialogContexts": [],
+          "defaultValue": "#repair.iphone-model",
+          "isList": false
+        },
+        {
+          "id": "e9c8a5c9-f0a8-4920-aff0-1324ed270698",
+          "required": true,
+          "dataType": "@iphone-repairs",
+          "name": "iphone-repair",
+          "value": "$iphone-repair",
+          "prompts": [
+            {
+              "lang": "en",
+              "value": "What needs fixing?"
+            }
+          ],
+          "promptMessages": [],
+          "noMatchPromptMessages": [],
+          "noInputPromptMessages": [],
+          "outputDialogContexts": [],
+          "defaultValue": "#repair.iphone-repair",
+          "isList": false
+        }
+      ],
+      "messages": [
+        {
+          "type": 0,
+          "lang": "en",
+          "speech": []
+        }
+      ],
+      "defaultResponsePlatforms": {},
+      "speech": []
+    }
+  ],
+  "priority": 500000,
+  "webhookUsed": true,
+  "webhookForSlotFilling": false,
+  "fallbackIntent": false,
+  "events": []
+}

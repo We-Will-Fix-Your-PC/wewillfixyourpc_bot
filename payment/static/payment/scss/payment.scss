@@ -2,6 +2,10 @@
 
 $orange: #ff7300;
 
+* {
+  box-sizing: border-box;
+}
+
 .payment {
   display: flex;
   flex-direction: column;
@@ -30,6 +34,7 @@ $orange: #ff7300;
     align-self: stretch;
     border-radius: 5px;
     background: #fff;
+    width: 100%;
   }
 
   iframe {

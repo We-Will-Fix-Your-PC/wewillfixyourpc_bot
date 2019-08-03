@@ -1,0 +1,280 @@
+[
+  {
+    "value": "iPad 1",
+    "synonyms": [
+      "1",
+      "1st",
+      "1st gen",
+      "iPad 1",
+      "iPad 1st",
+      "iPad 1st gen"
+    ]
+  },
+  {
+    "value": "iPad 2",
+    "synonyms": [
+      "2",
+      "2nd",
+      "2nd gen",
+      "iPad 2",
+      "iPad 2nd",
+      "iPad 2nd gen"
+    ]
+  },
+  {
+    "value": "iPad 3",
+    "synonyms": [
+      "3",
+      "3rd",
+      "3rd gen",
+      "iPad 3",
+      "iPad 3rd",
+      "iPad 3rd gen"
+    ]
+  },
+  {
+    "value": "iPad 4",
+    "synonyms": [
+      "4",
+      "4th",
+      "4th gen",
+      "iPad 4",
+      "iPad 4th",
+      "iPad 4th gen"
+    ]
+  },
+  {
+    "value": "iPad 5",
+    "synonyms": [
+      "2017",
+      "2017 iPad",
+      "5",
+      "5th",
+      "5th gen",
+      "iPad 5",
+      "iPad 5th",
+      "iPad 5th gen"
+    ]
+  },
+  {
+    "value": "iPad 6",
+    "synonyms": [
+      "2018",
+      "2018 iPad",
+      "6",
+      "6th",
+      "6th gen",
+      "iPad",
+      "iPad 6",
+      "iPad 6th",
+      "iPad 6th gen"
+    ]
+  },
+  {
+    "value": "iPad air",
+    "synonyms": [
+      "air",
+      "air 1",
+      "air 1st",
+      "air 1st gen",
+      "iPad air",
+      "iPad air 1",
+      "iPad air 1st",
+      "iPad air 1st gen"
+    ]
+  },
+  {
+    "value": "iPad air 2",
+    "synonyms": [
+      "air 2",
+      "air 2nd",
+      "air 2nd gen",
+      "iPad air 2",
+      "iPad air 2nd",
+      "iPad air 2nd gen"
+    ]
+  },
+  {
+    "value": "iPad mini",
+    "synonyms": [
+      "iPad mini",
+      "iPad mini 2019",
+      "iPad mini 5",
+      "iPad mini 5th",
+      "iPad mini 5th gen",
+      "mini",
+      "mini 2019",
+      "mini 5",
+      "mini 5th",
+      "mini 5th gen"
+    ]
+  },
+  {
+    "value": "iPad mini 1",
+    "synonyms": [
+      "iPad mini 1",
+      "iPad mini 1st",
+      "iPad mini 1st gen",
+      "mini 1",
+      "mini 1st",
+      "mini 1st gen"
+    ]
+  },
+  {
+    "value": "iPad mini 2",
+    "synonyms": [
+      "iPad mini 2",
+      "iPad mini 2nd",
+      "iPad mini 2nd gen",
+      "mini 2",
+      "mini 2nd",
+      "mini 2nd gen"
+    ]
+  },
+  {
+    "value": "iPad mini 3",
+    "synonyms": [
+      "iPad mini 3",
+      "iPad mini 3rd",
+      "iPad mini 3rd gen",
+      "mini 3",
+      "mini 3rd",
+      "mini 3rd gen"
+    ]
+  },
+  {
+    "value": "iPad mini 4",
+    "synonyms": [
+      "iPad mini 4",
+      "iPad mini 4th",
+      "iPad mini 4th gen",
+      "mini 4",
+      "mini 4th",
+      "mini 4th gen"
+    ]
+  },
+  {
+    "value": "iPad pro 10.5in",
+    "synonyms": [
+      "iPad pro 1 10.5",
+      "iPad pro 1 10.5in",
+      "iPad pro 10.5",
+      "iPad pro 10.5in",
+      "iPad pro 1st 10.5",
+      "iPad pro 1st 10.5in",
+      "iPad pro 1st gen 10.5",
+      "iPad pro 1st gen 10.5in",
+      "pro 1 10.5",
+      "pro 1 10.5in",
+      "pro 10.5",
+      "pro 10.5in",
+      "pro 1st 10.5",
+      "pro 1st 10.5in",
+      "pro 1st gen 10.5",
+      "pro 1st gen 10.5in"
+    ]
+  },
+  {
+    "value": "iPad pro 11in",
+    "synonyms": [
+      "iPad pro 11",
+      "iPad pro 11in",
+      "iPad pro 3 11",
+      "iPad pro 3 11in",
+      "iPad pro 3rd 11",
+      "iPad pro 3rd 11in",
+      "iPad pro 3rd gen 11",
+      "iPad pro 3rd gen 11in",
+      "pro 11",
+      "pro 11in",
+      "pro 3 11",
+      "pro 3 11in",
+      "pro 3rd 11",
+      "pro 3rd 11in",
+      "pro 3rd gen 11",
+      "pro 3rd gen 11in"
+    ]
+  },
+  {
+    "value": "iPad pro 12.9in",
+    "synonyms": [
+      "iPad pro",
+      "iPad pro 12.9",
+      "iPad pro 12.9in",
+      "iPad pro 3",
+      "iPad pro 3 12.9",
+      "iPad pro 3 12.9in",
+      "pro",
+      "pro 12.9",
+      "pro 12.9in",
+      "pro 3",
+      "pro 3 12.9",
+      "pro 3 12.9in"
+    ]
+  },
+  {
+    "value": "iPad pro 12.9in 1st gen",
+    "synonyms": [
+      ".pro 1",
+      "iPad pro 1",
+      "iPad pro 12.9 1",
+      "iPad pro 12.9 1st",
+      "iPad pro 12.9 1st gen",
+      "iPad pro 12.9in 1",
+      "iPad pro 12.9in 1st",
+      "iPad pro 12.9in 1st gen",
+      "iPad pro 1st",
+      "pro 12.9 1",
+      "pro 12.9 1st",
+      "pro 12.9 1st gen",
+      "pro 12.9in 1",
+      "pro 12.9in 1st",
+      "pro 12.9in 1st gen",
+      "pro 1st"
+    ]
+  },
+  {
+    "value": "iPad pro 12.9in 2nd gen",
+    "synonyms": [
+      "iPad pro 12.9 1",
+      "iPad pro 12.9 1st",
+      "iPad pro 12.9 1st gen",
+      "iPad pro 12.9 2nd gen",
+      "iPad pro 12.9in 2",
+      "iPad pro 12.9in 2nd",
+      "iPad pro 2",
+      "iPad pro 2nd",
+      "iPad pro 2nd gen",
+      "pro 12.9 2",
+      "pro 12.9 2nd",
+      "pro 12.9 2nd gen",
+      "pro 12.9in 2",
+      "pro 12.9in 2nd",
+      "pro 12.9in 2nd gen",
+      "pro 2",
+      "pro 2nd",
+      "pro 2nd gen"
+    ]
+  },
+  {
+    "value": "iPad pro 9.7in",
+    "synonyms": [
+      "iPad pro 1 9.7",
+      "iPad pro 1 9.7in",
+      "iPad pro 1st 9.7",
+      "iPad pro 1st 9.7in",
+      "iPad pro 1st gen 9.7",
+      "iPad pro 1st gen 9.7in",
+      "iPad pro 9.7",
+      "iPad pro 9.7in",
+      "pro 1 9.7",
+      "pro 1 9.7in",
+      "pro 1st 9.7",
+      "pro 1st 9.7in",
+      "pro 1st gen 9.7",
+      "pro 1st gen 9.7in",
+      "pro 9.7",
+      "pro 9.7in"
+    ]
+  }
+]

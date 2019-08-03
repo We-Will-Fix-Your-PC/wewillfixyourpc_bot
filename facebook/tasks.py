@@ -165,7 +165,8 @@ def send_facebook_message(mid):
 
     urls = re.findall("(http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*(),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+)", message.text)
 
-    if len(urls) == 1:
+    try:
+        payment_message = message.paymentmessage
         request_body["message"]["attachment"] = {
             "type": "template",
             "payload": {
@@ -174,15 +175,36 @@ def send_facebook_message(mid):
                 "buttons": [
                     {
                         "type": "web_url",
-                        "url": urls[0],
-                        "title": "Open",
-                        "webview_height_ratio": "full"
+                        "url": settings.EXTERNAL_URL_BASE + reverse(
+                            "payment:fb_payment", kwargs={"payment_id": payment_message.payment_id}
+                        ),
+                        "title": "Pay",
+                        "webview_height_ratio": "compact",
+                        "messenger_extensions": True,
+                        "webview_share_button": "hide",
                     }
                 ]
             }
         }
-    else:
-        request_body["message"]["text"] = message.text
+    except Message.paymentmessage.RelatedObjectDoesNotExist:
+        if len(urls) == 1:
+            request_body["message"]["attachment"] = {
+                "type": "template",
+                "payload": {
+                    "template_type": "button",
+                    "text": message.text,
+                    "buttons": [
+                        {
+                            "type": "web_url",
+                            "url": urls[0],
+                            "title": "Open",
+                            "webview_height_ratio": "full"
+                        }
+                    ]
+                }
+            }
+        else:
+            request_body["message"]["text"] = message.text
 
     r = requests.post("https://graph.facebook.com/me/messages",
                       params={"access_token": settings.FACEBOOK_ACCESS_TOKEN}, json=request_body)
