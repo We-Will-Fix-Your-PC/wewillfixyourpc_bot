@@ -5,4 +5,5 @@ app_name = 'rasa_api'
 urlpatterns = [
     path('webhook/', views.webhook),
     path('nlg/', views.nlg),
+    path('model/<environment_id>', views.model),
 ]

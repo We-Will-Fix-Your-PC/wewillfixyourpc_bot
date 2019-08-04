@@ -59,3 +59,10 @@ def nlg(request):
             "payload": b.payload
         }, utterance.utterancebutton_set.all()))
     }), content_type='application/json')
+
+
+def model(request, environment_id):
+    environment = get_object_or_404(models.EnvironmentModel, name=environment_id)
+
+    file = environment.rasa_model.open()
+    return HttpResponse(file)
