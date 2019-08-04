@@ -2,6 +2,7 @@ from celery import shared_task
 from django.conf import settings
 from pywebpush import webpush
 import rasa_api.tasks
+import dialogflow_client.tasks
 import facebook.tasks
 import twitter.tasks
 import pika
@@ -60,7 +61,7 @@ def process_message(mid):
 
     if message.direction == models.Message.FROM_CUSTOMER:
         if conversation.agent_responding:
-            rasa_api.tasks.handle_message(mid)
+            dialogflow_client.tasks.handle_message(mid)
         else:
             send_message_notifications({
                 "type": "message",
@@ -75,7 +76,7 @@ def process_message(mid):
 
 @shared_task
 def process_event(cid, event):
-    rasa_api.tasks.handle_event(cid, event)
+    dialogflow_client.tasks.handle_event(cid, event)
 
 
 @shared_task
