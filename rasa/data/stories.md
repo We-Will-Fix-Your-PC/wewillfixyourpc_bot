@@ -252,9 +252,9 @@
 
 ## interactive_story_3
 * greet
-    - utter_greet
+    - greet
 * greet
-    - utter_greet
+    - greet
 * support_location
     - support_location
     - utter_anything_else
@@ -410,7 +410,7 @@
 
 ## interactive_story_1
 * greet
-    - utter_greet
+    - greet
 * support_opening_hours
     - support_opening_hours
     - utter_anything_else

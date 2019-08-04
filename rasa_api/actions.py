@@ -1,7 +1,9 @@
 from fulfillment import models
+import rasa_api.models
 import operator_interface.models
 import payment.models
 import datetime
+import random
 import collections
 from django.utils import timezone
 from django.conf import settings
@@ -72,6 +74,33 @@ class ActionRequestHuman(Action):
         dispatcher.utter_custom_json({
             "type": "request_human"
         })
+        return []
+
+
+class ActionGreet(Action):
+    def name(self) -> Text:
+        return "greet"
+
+    def run(self, dispatcher: CollectingDispatcher, tracker: Tracker, domain: Dict[Text, Any]) -> List[Dict[Text, Any]]:
+        utterance = rasa_api.models.Utterance.objects.get(name="utter_greet")
+        utterance_choice = random.choice(utterance.utteranceresponse_set.all())  \
+            # type: rasa_api.models.UtteranceResponse
+
+        dispatcher.utter_message(utterance_choice.text)
+
+        sender_id = tracker.sender_id.split(":")
+        if len(sender_id) >= 2:
+            platform = sender_id[0]
+            platform_id = sender_id[1]
+            try:
+                conversation = operator_interface.models.Conversation.objects.get(
+                    platform=platform, platform_id=platform_id
+                )
+
+                return [rasa_sdk.events.SlotSet("name", conversation.customer_name)]
+            except operator_interface.models.Conversation.DoesNotExist:
+                pass
+
         return []
 
 

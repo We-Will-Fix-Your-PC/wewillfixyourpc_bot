@@ -4,6 +4,7 @@ actions:
 - action_default_ask_affirmation
 - rate_slot
 - repair
+- greet
 - request_human
 - support_contact
 - support_contact_email
@@ -23,7 +24,6 @@ actions:
 - utter_fox_sounds
 - utter_good_value
 - utter_goodbye
-- utter_greet
 - utter_happy
 - utter_history
 - utter_meaning_of_life
