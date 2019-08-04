@@ -88,9 +88,11 @@ class Message(models.Model):
     conversation = models.ForeignKey(Conversation, on_delete=models.CASCADE)
     message_id = models.CharField(max_length=255)
     direction = models.CharField(max_length=1, choices=DIRECTION_CHOICES)
-    text = models.TextField()
+    text = models.TextField(blank=True, default="")
     timestamp = models.DateTimeField(default=timezone.now)
     user = models.ForeignKey(User, blank=True, null=True, on_delete=models.SET_NULL)
+    read = models.BooleanField(default=False)
+    image = models.ImageField(blank=True, null=True)
 
     class Meta:
         ordering = ('timestamp',)
