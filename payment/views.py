@@ -46,8 +46,12 @@ def fb_payment(request, payment_id):
     if not request.session.get("sess_id"):
         request.session["sess_id"] = str(uuid.uuid4())
         request.session.save()
+
+    payment_o = get_object_or_404(models.Payment, id=payment_id)
+
     return render(request, "payment/fb_payment.html",
-                  {"payment_id": payment_id, "accepts_header": request.META.get('HTTP_ACCEPT')})
+                  {"payment_id": payment_id, "accepts_header": request.META.get('HTTP_ACCEPT'),
+                   "is_open_payment": payment_o.state == models.Payment.STATE_OPEN})
 
 
 def payment(request, payment_id):
