@@ -559,6 +559,25 @@ class UnlockForm(FormAction):
                                      f"{top_choice[0].display_name}?")
             return {"brand": None}
 
+    def validate_network(self, value: Text, dispatcher: CollectingDispatcher, tracker: Tracker,
+                      domain: Dict[Text, Any]) -> Optional[Dict[Text, Any]]:
+        networks = models.Network.objects.all()
+        alt_networks = models.NetworkAlternativeName.objects.all()
+        networks = [(n.name, n) for n in networks]
+        networks.extend([(n.name, n.network) for n in alt_networks])
+
+        top_choice = fuzzywuzzy.process.extractOne((value.lower(), None), networks, lambda v: v[0])
+
+        if not top_choice:
+            dispatcher.utter_message("Hmmm 🤔, I don't recognise that network")
+            return {"network": None}
+        elif top_choice[1] > 70:
+            return {"network": top_choice[0][0]}
+        else:
+            dispatcher.utter_message(f"Hmmm 🤔, I don't recognise that network, did you mean "
+                                     f"{top_choice[0][1].display_name}?")
+            return {"network": None}
+
     def validate_phone_number(self, value: Text, dispatcher: CollectingDispatcher, tracker: Tracker,
                       domain: Dict[Text, Any]) -> Optional[Dict[Text, Any]]:
         try:
