@@ -981,8 +981,10 @@
 - o2
 - three
 - vodaphone
+- vodafone
 - VOXI
 - Vodaphone
+- vodafone
 - Three
 - iD
 - iD mobile
