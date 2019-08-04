@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     'operator_interface',
     'dialogflow_client',
     'payment',
+    'rasa_api'
     'corsheaders',
 ]
 
