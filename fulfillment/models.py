@@ -81,7 +81,7 @@ class Network(models.Model):
     display_name = models.CharField(max_length=255)
 
     def __str__(self):
-        return self.name
+        return self.display_name
 
 
 class NetworkAlternativeName(models.Model):
@@ -90,7 +90,7 @@ class NetworkAlternativeName(models.Model):
     display_name = models.CharField(max_length=255)
 
     def __str__(self):
-        return self.name
+        return self.display_name
 
 
 class Brand(models.Model):
@@ -98,7 +98,7 @@ class Brand(models.Model):
     display_name = models.CharField(max_length=255)
 
     def __str__(self):
-        return self.name
+        return self.display_name
 
 
 class PhoneUnlock(models.Model):
