@@ -6,6 +6,7 @@ from . import actions
 
 logger = logging.getLogger(__name__)
 
+
 @csrf_exempt
 def webhook(request):
     try:

@@ -1,14 +1,35 @@
-from django.http import HttpResponse, HttpResponseNotFound, HttpResponseBadRequest, HttpResponseForbidden
+from django.http import HttpResponse, Http404
+from django.core.exceptions import PermissionDenied, SuspiciousOperation
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.clickjacking import xframe_options_exempt
 from django.shortcuts import render, get_object_or_404, reverse
 from django.conf import settings
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 from . import models
 from . import gpay
+import operator_interface.models
+import operator_interface.tasks
 import json
 import decimal
 import requests
 import uuid
+
+
+@receiver(post_save, sender=models.Payment)
+def payment_saved(sender, instance: models.Payment, **kwargs):
+    if instance.state == models.Payment.STATE_PAID:
+        try:
+            message = operator_interface.models.Message.objects.get(paymentmessage__payment_id=instance.id)
+            conversation = message.conversation
+
+            message = operator_interface.models.Message(
+                conversation=conversation, direction=operator_interface.models.Message.TO_CUSTOMER,
+                message_id=uuid.uuid4(), text="Payment complete 💸, thanks!")
+            message.save()
+            operator_interface.tasks.process_message.delay(message.id)
+        except operator_interface.models.Message.DoesNotExist:
+            return
 
 
 def get_client_ip(request):
@@ -20,12 +41,17 @@ def get_client_ip(request):
     return ip
 
 
+@xframe_options_exempt
 def fb_payment(request, payment_id):
     if not request.session.get("sess_id"):
         request.session["sess_id"] = str(uuid.uuid4())
         request.session.save()
+
+    payment_o = get_object_or_404(models.Payment, id=payment_id)
+
     return render(request, "payment/fb_payment.html",
-                  {"payment_id": payment_id, "accepts_header": request.META.get('HTTP_ACCEPT')})
+                  {"payment_id": payment_id, "accepts_header": request.META.get('HTTP_ACCEPT'),
+                   "is_open_payment": payment_o.state == models.Payment.STATE_OPEN})
 
 
 def payment(request, payment_id):
@@ -40,7 +66,7 @@ def payment(request, payment_id):
             "id": payment_o.customer.id,
             "name": payment_o.customer.name,
             "email": payment_o.customer.email,
-            "phone": payment_o.customer.phone.as_e164
+            "phone": payment_o.customer.phone
         },
         "items": list(map(lambda i: {
             "id": i.id,
@@ -55,20 +81,20 @@ def payment(request, payment_id):
 @csrf_exempt
 def complete_payment(request):
     if request.method != "POST":
-        return HttpResponseBadRequest()
+        raise SuspiciousOperation()
 
     token = request.META.get('HTTP_AUTHORIZATION')
 
     try:
         models.PaymentToken.objects.get(token=token)
     except models.PaymentToken.DoesNotExist:
-        return HttpResponseForbidden()
+        raise PermissionDenied()
 
     payment_id = request.POST.get("order_id")
     payment_o = get_object_or_404(models.Payment, id=payment_id)
 
     if payment_o.state != payment_o.STATE_PAID:
-        return HttpResponseNotFound()
+        raise Http404()
 
     payment_o.state = models.Payment.STATE_COMPLETE
     payment_o.save()
@@ -85,7 +111,7 @@ def take_worldpay_payment(request, payment_id):
         request.session.save()
 
     if request.method != "POST":
-        return HttpResponseBadRequest()
+        raise SuspiciousOperation()
 
     try:
         payment_o = models.Payment.objects.get(id=payment_id)
@@ -95,21 +121,11 @@ def take_worldpay_payment(request, payment_id):
     try:
         body = json.loads(request.body)
     except json.JSONDecodeError:
-        return HttpResponseBadRequest()
-
-    def find_customer(payment_o, *args, **kwargs):
-        customer = models.Customer.objects.filter(*args, **kwargs)
-        if len(customer) > 0:
-            customer = customer[0]
-        else:
-            customer = models.Customer(*args, **kwargs)
-            customer.save()
-
-        payment_o.customer = customer
+        raise SuspiciousOperation()
 
     if payment_o is not None:
         if payment_o.state != payment_o.STATE_OPEN:
-            return HttpResponseNotFound()
+            raise Http404()
     else:
         if body.get("payment") is not None:
             payment = body["payment"]
@@ -123,7 +139,7 @@ def take_worldpay_payment(request, payment_id):
                 email = customer.get("email")
                 phone = customer.get("phone")
                 name = customer.get("name")
-                find_customer(payment_o, email=email, phone=phone, name=name)
+                payment_o.customer = models.Customer.find_customer(email=email, phone=phone, name=name)
             payment_o.save()
 
             for item in items:
@@ -135,7 +151,7 @@ def take_worldpay_payment(request, payment_id):
                 item_o.price = item["price"]
                 item_o.save()
         else:
-            return HttpResponseNotFound()
+            raise Http404()
 
     token = settings.WORLDPAY_LIVE_KEY if payment_o.environment == models.Payment.ENVIRONMENT_LIVE \
         else settings.WORLDPAY_TEST_KEY
@@ -152,7 +168,7 @@ def take_worldpay_payment(request, payment_id):
         email = body.get("email")
         phone = body.get("phone")
         name = body.get("payerName")
-        find_customer(payment_o, email=email, phone=phone, name=name)
+        payment_o.customer = models.Customer.find_customer(email=email, phone=phone, name=name)
         payment_o.save()
 
     billingAddress = {}
@@ -192,15 +208,15 @@ def take_worldpay_payment(request, payment_id):
         try:
             message = gpay.unseal_google_token(body["googleData"],
                                                test=payment_o.environment != models.Payment.ENVIRONMENT_LIVE)
-        except gpay.GPayError as e:
-            return HttpResponseBadRequest()
+        except gpay.GPayError:
+            raise SuspiciousOperation()
 
         if message["paymentMethod"] != "CARD":
-            return HttpResponseBadRequest()
+            raise SuspiciousOperation()
 
         card_details = message["paymentMethodDetails"]
         if card_details["authMethod"] != "PAN_ONLY":
-            return HttpResponseBadRequest()
+            raise SuspiciousOperation()
 
         order_data = dict(paymentMethod={
             "name": body.get("name"),
@@ -211,7 +227,7 @@ def take_worldpay_payment(request, payment_id):
         }, **order_data)
 
     else:
-        return HttpResponseBadRequest()
+        raise SuspiciousOperation()
 
     r = requests.post("https://api.worldpay.com/v1/orders", headers={
         "Authorization": token
@@ -273,10 +289,10 @@ def threeds_form(request, payment_id):
 def threeds_complete(request, payment_id):
     payment_o = get_object_or_404(models.Payment, id=payment_id)
     if payment_o.state != payment_o.STATE_OPEN:
-        return HttpResponseNotFound()
+        raise Http404()
 
     if request.method != "POST":
-        return HttpResponseBadRequest()
+        raise SuspiciousOperation()
 
     payment_o.threedsdata_set.all().delete()
 

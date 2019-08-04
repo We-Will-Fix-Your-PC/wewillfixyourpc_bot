@@ -46,12 +46,14 @@ INSTALLED_APPS = [
     'operator_interface',
     'dialogflow_client',
     'payment',
+    'rasa_api',
     'corsheaders',
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.http.ConditionalGetMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -129,13 +131,13 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/2.1/howto/static-files/
 
-STATIC_URL = 'https://3f092962.eu.ngrok.io/static/'
+STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 
-MEDIA_URL = 'https://3f092962.eu.ngrok.io/media/'
+MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
-EXTERNAL_URL_BASE = "https://3f092962.eu.ngrok.io/"
+EXTERNAL_URL_BASE = "https://8fb28af2.eu.ngrok.io/"
 
 PHONENUMBER_DEFAULT_REGION = "GB"
 
@@ -171,6 +173,8 @@ GPAY_TEST_PRIVATE_KEYS = [gpay_priv_key_test]
 GOOGLE_CREDENTIALS_FILE = "WeWillFixYourPC.json"
 GOOGLE_PROJECT_ID = "wewillfixyourpc-8df73"
 
+RASA_HTTP_URL = "http://localhost:5005"
+
 CORS_ORIGIN_ALLOW_ALL = True
 CORS_ALLOW_CREDENTIALS = True
 
@@ -204,7 +208,11 @@ LOGGING = {
             'handlers': ['console'],
             'level': 'DEBUG',
         },
-        'fulfillment_client': {
+        'rasa_api': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+        },
+        'fulfillment': {
             'handlers': ['console'],
             'level': 'DEBUG',
         },

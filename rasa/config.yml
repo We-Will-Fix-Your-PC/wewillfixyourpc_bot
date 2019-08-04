@@ -1,0 +1,33 @@
+# Configuration for Rasa NLU.
+# https://rasa.com/docs/rasa/nlu/components/
+language: en
+num_threads: 1000
+pipeline:
+  - name: "WhitespaceTokenizer"
+  - name: "CRFEntityExtractor"
+  - name: "DucklingHTTPExtractor"
+    url: "http://localhost:8001"
+    dimensions: ["time", "number", "ordinal", "amount-of-money", "phone-number", "email", "url"]
+    locale: "en_GB"
+    timezone: "Europe/London"
+  - name: "EntitySynonymMapper"
+  - name: "CountVectorsFeaturizer"
+  - name: "intent_classifier_tensorflow_embedding"
+
+# Configuration for Rasa Core.
+# https://rasa.com/docs/rasa/core/policies/
+policies:
+  - name: TwoStageFallbackPolicy
+    nlu_threshold: 0.4
+    core_threshold: 0.3
+    fallback_core_action_name: "request_human"
+    fallback_nlu_action_name: "request_human"
+    deny_suggestion_intent_name: "out_of_scope"
+  - name: FormPolicy
+  - name: MemoizationPolicy
+  - name: KerasPolicy
+    tf_config:
+      device_count:
+        GPU: 0
+  - name: MappingPolicy
+

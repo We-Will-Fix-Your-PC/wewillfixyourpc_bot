@@ -1,0 +1,35 @@
+{
+  "id": "61a3f35b-084b-4639-bab2-ea302e804ca2",
+  "name": "additional-help - no",
+  "auto": true,
+  "contexts": [
+    "additional-help-question"
+  ],
+  "responses": [
+    {
+      "resetContexts": false,
+      "affectedContexts": [
+        {
+          "name": "end",
+          "parameters": {},
+          "lifespan": 2
+        }
+      ],
+      "parameters": [],
+      "messages": [
+        {
+          "type": 0,
+          "lang": "en",
+          "speech": "Alright. Goodbye!\n\nOn a scale on 1-10 how would you rate your experience with us today?"
+        }
+      ],
+      "defaultResponsePlatforms": {},
+      "speech": []
+    }
+  ],
+  "priority": 500000,
+  "webhookUsed": true,
+  "webhookForSlotFilling": false,
+  "fallbackIntent": false,
+  "events": []
+}

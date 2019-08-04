@@ -1,0 +1,113 @@
+%YAML 1.1
+---
+actions:
+- action_default_ask_affirmation
+- rate_slot
+- repair
+- greet
+- request_human
+- support_contact
+- support_contact_email
+- support_contact_phone
+- support_location
+- support_opening_hours
+- unlock_lookup
+- unlock_clear
+- unlock_order
+- utter_anything_else
+- utter_ask_continue
+- utter_ask_order
+- utter_can_do
+- utter_cant_help
+- utter_cheer_up
+- utter_explain_whatspossible
+- utter_fox_sounds
+- utter_good_value
+- utter_goodbye
+- utter_happy
+- utter_history
+- utter_meaning_of_life
+- utter_mood
+- utter_positive_feedback_reaction
+- utter_respond_insult
+- utter_thanks_end
+- utter_weather
+- utter_why_chicken_cross_road
+- utter_woodchuck
+- utter_unlock_explain
+entities:
+- brand
+- date
+- imei
+- ipad_model
+- iphone_model
+- iphone_repair
+- network
+- price
+- rating
+forms:
+- rate_form
+- repair_form
+- unlock_form
+intents:
+- repair
+- deny
+- greet
+- support_opening_hours
+- rate
+- imei
+- phone_number
+- network
+- name
+- affirm
+- support_contact_phone
+- support_location
+- ask_mood
+- ipad_model
+- end
+- support_contact_email
+- iphone_model
+- out_of_scope
+- opinion+positive
+- opinion+negative
+- acknowledge
+- insult
+- support_contact
+- easteregg_meaning_of_life
+- easteregg_fox_sounds
+- easteregg_why_chicken_cross_road
+- easteregg_woodchuck
+- ask_whatspossible
+- request_human
+- unlock
+- stop
+- ask_weather
+- ask_history
+- brand
+- iphone_repair
+slots:
+  brand:
+    type: unfeaturized
+  email:
+    type: unfeaturized
+  imei:
+    type: unfeaturized
+  ipad_model:
+    type: unfeaturized
+  iphone_model:
+    type: unfeaturized
+  iphone_repair:
+    type: unfeaturized
+  name:
+    type: unfeaturized
+  network:
+    type: unfeaturized
+  phone_number:
+    type: unfeaturized
+  rating:
+    auto_fill: false
+    type: unfeaturized
+  requested_slot:
+    type: unfeaturized
+  unlockable:
+    type: bool

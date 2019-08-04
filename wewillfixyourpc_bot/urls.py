@@ -23,6 +23,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('accounts/', include('django.contrib.auth.urls')),
     path('fulfillment/', include('fulfillment.urls', namespace='fulfillment')),
+    path('rasa/', include('rasa_api.urls', namespace='rasa')),
     path('twitter/', include('twitter.urls', namespace='twitter')),
     path('facebook/', include('facebook.urls', namespace='facebook')),
     path('payment/', include('payment.urls', namespace='payment')),

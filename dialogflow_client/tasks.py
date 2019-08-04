@@ -59,7 +59,7 @@ def handle_response(conversation, query_input):
 
     session = session_client.environment_session_path(settings.GOOGLE_PROJECT_ID, environment,
                                                       f"{conversation.platform}:{conversation.platform_id}",
-                                                      conversation.noonce)
+                                                      "")
     response = session_client.detect_intent(session=session, query_input=query_input, query_params=query_parameters)
 
     for context in response.query_result.output_contexts:

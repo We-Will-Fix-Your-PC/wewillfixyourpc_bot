@@ -20,7 +20,7 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('name', models.CharField(max_length=255)),
                 ('email', models.EmailField(max_length=254)),
-                ('phone', phonenumber_field.modelfields.PhoneNumberField(max_length=128, region=None)),
+                ('phone', phonenumber_field.modelfields.PhoneNumberField(max_length=128)),
             ],
         ),
         migrations.CreateModel(

@@ -202,19 +202,23 @@ LOGGING = {
         },
         'twitter': {
             'handlers': ['console'],
-            'level': 'DEBUG',
+            'level': 'INFO',
         },
         'facebook': {
             'handlers': ['console'],
-            'level': 'DEBUG',
+            'level': 'INFO',
         },
         'dialogflow_client': {
             'handlers': ['console'],
-            'level': 'DEBUG',
+            'level': 'INFO',
         },
-        'fulfillment_client': {
+        'rasa_api': {
             'handlers': ['console'],
-            'level': 'DEBUG',
+            'level': 'INFO',
+        },
+        'fulfillment': {
+            'handlers': ['console'],
+            'level': 'INFO',
         },
     },
 }

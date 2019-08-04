@@ -1,0 +1,78 @@
+[
+  {
+    "value": "Blackberry",
+    "synonyms": [
+      "Blackberry"
+    ]
+  },
+  {
+    "value": "Google",
+    "synonyms": [
+      "Google",
+      "Pixel"
+    ]
+  },
+  {
+    "value": "HTC",
+    "synonyms": [
+      "HTC"
+    ]
+  },
+  {
+    "value": "Huawei",
+    "synonyms": [
+      "Honor",
+      "Huawei"
+    ]
+  },
+  {
+    "value": "LG",
+    "synonyms": [
+      "LG"
+    ]
+  },
+  {
+    "value": "Motorola",
+    "synonyms": [
+      "Motorola"
+    ]
+  },
+  {
+    "value": "Nokia",
+    "synonyms": [
+      "Nokia"
+    ]
+  },
+  {
+    "value": "OnePlus",
+    "synonyms": [
+      "OnePlus",
+      "oneplus"
+    ]
+  },
+  {
+    "value": "Razer",
+    "synonyms": [
+      "Razer"
+    ]
+  },
+  {
+    "value": "Samsung",
+    "synonyms": [
+      "Samsung"
+    ]
+  },
+  {
+    "value": "iPad",
+    "synonyms": [
+      "iPad"
+    ]
+  },
+  {
+    "value": "iPhone",
+    "synonyms": [
+      "Apple",
+      "iPhone"
+    ]
+  }
+]

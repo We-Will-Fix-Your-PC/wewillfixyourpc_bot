@@ -1,0 +1,9 @@
+{
+  "id": "11fb9dcf-3bd2-4478-9905-b69365d25230",
+  "name": "ipad-model",
+  "isOverridable": true,
+  "isEnum": false,
+  "isRegexp": false,
+  "automatedExpansion": false,
+  "allowFuzzyExtraction": false
+}

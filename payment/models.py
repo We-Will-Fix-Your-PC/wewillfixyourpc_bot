@@ -24,6 +24,16 @@ class Customer(models.Model):
     def __str__(self):
         return self.name
 
+    @classmethod
+    def find_customer(cls, *args, **kwargs):
+        customer = cls.objects.filter(*args, **kwargs)
+        if len(customer) > 0:
+            customer = customer[0]
+        else:
+            customer = cls(*args, **kwargs)
+            customer.save()
+        return customer
+
 
 class Payment(models.Model):
     STATE_OPEN = "O"

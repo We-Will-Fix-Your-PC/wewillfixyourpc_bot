@@ -1,0 +1,62 @@
+{
+  "id": "2214aa1c-3d1b-476d-8145-aa166d600da2",
+  "name": "end",
+  "auto": true,
+  "contexts": [],
+  "responses": [
+    {
+      "resetContexts": false,
+      "affectedContexts": [
+        {
+          "name": "end",
+          "parameters": {},
+          "lifespan": 2
+        },
+        {
+          "name": "takeover",
+          "parameters": {},
+          "lifespan": 1
+        }
+      ],
+      "parameters": [],
+      "messages": [
+        {
+          "type": 2,
+          "platform": "facebook",
+          "lang": "en",
+          "title": "",
+          "replies": [
+            "10",
+            "9",
+            "8",
+            "7",
+            "6",
+            "5",
+            "4",
+            "3",
+            "2",
+            "1"
+          ]
+        },
+        {
+          "type": 0,
+          "lang": "en",
+          "speech": [
+            "Bye!\n\nOn a scale on 1-10 how would you rate your experience with us today?",
+            "Goodbye!\n\nOn a scale on 1-10 how would you rate your experience with us today?",
+            "Glad I could be of assistance, bye!\n\nOn a scale on 1-10 how would you rate your experience with us today?"
+          ]
+        }
+      ],
+      "defaultResponsePlatforms": {
+        "facebook": true
+      },
+      "speech": []
+    }
+  ],
+  "priority": 500000,
+  "webhookUsed": false,
+  "webhookForSlotFilling": false,
+  "fallbackIntent": false,
+  "events": []
+}

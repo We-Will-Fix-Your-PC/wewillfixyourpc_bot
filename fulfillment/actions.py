@@ -88,7 +88,7 @@ def opening_hours(params, *_):
                 if hours is None:
                     return f"We are closed today.\n\nDo you need help with anything else?"
                 return f"Today we are open {format_hours(hours)}.\n\n" \
-                    f"Do you need help with anything else?"
+                       f"Do you need help with anything else?"
             else:
                 next_of_weekday = datetime.date.today() + dateutil.relativedelta.relativedelta(weekday=weekday)
                 is_next_of_weekday = want_date == next_of_weekday
@@ -96,15 +96,15 @@ def opening_hours(params, *_):
                 if is_next_of_weekday:
                     if hours is None:
                         return f"We are closed {want_date.strftime('%A')}.\n\n" \
-                            f"Do you need help with anything else?"
+                               f"Do you need help with anything else?"
                     return f"{want_date.strftime('%A')} we are open {format_hours(hours)}.\n\n" \
-                        f"Do you need help with anything else?"
+                           f"Do you need help with anything else?"
                 else:
                     if hours is None:
                         return f"On {want_date.strftime('%A %B')} the {p.ordinal(want_date.day)} we are closed.\n\n" \
-                            f"Do you need help with anything else?"
+                               f"Do you need help with anything else?"
                     return f"On {want_date.strftime('%A %B')} the {p.ordinal(want_date.day)} we are open" \
-                        f" {format_hours(hours)}.\n\nDo you need help with anything else?"
+                           f" {format_hours(hours)}.\n\nDo you need help with anything else?"
 
         days = [("Monday", "Monday", opening_hours_defs["monday"]),
                 ("Tuesday", "Tuesday", opening_hours_defs["tuesday"]),
@@ -135,7 +135,8 @@ def opening_hours(params, *_):
 
             future_overrides = filter(lambda f: f.day.weekday() in day_ids_in_period, future_overrides)
             future_overrides_txt = map(lambda d: f"\nOn {d.day.strftime('%A %B')} the {p.ordinal(d.day.day)} we will be"
-            f" {'closed' if d.closed else f'open {format_hours(d)}'}", future_overrides)
+                                                 f" {'closed' if d.closed else f'open {format_hours(d)}'}",
+                                       future_overrides)
             future_overrides_txt = "".join(future_overrides_txt)
 
             return f"Our opening hours are:\n{days}{future_overrides_txt}\n\nDo you need help with anything else?"
@@ -145,7 +146,8 @@ def opening_hours(params, *_):
         days = "\n".join(days)
 
         future_overrides_txt = map(lambda d: f"\nOn {d.day.strftime('%A %B')} the {p.ordinal(d.day.day)} we will be"
-        f" {'closed' if d.closed else f'open {format_hours(d)}'}", future_overrides)
+                                             f" {'closed' if d.closed else f'open {format_hours(d)}'}",
+                                   future_overrides)
         future_overrides_txt = "".join(future_overrides_txt)
         return f"Our opening hours are:\n{days}{future_overrides_txt}\n\nDo you need help with anything else?"
 
@@ -374,16 +376,8 @@ def generic_repair(model_o, brand_name, model, repair_name, session):
 
 def rate(params, _, data):
     session = data.get("session")
-    session = session.split("/")[-1]
-    session_parts = session.split(":")
-    if len(session_parts) == 3:
-        platform, platform_id, _ = session_parts
-
-        conversation = operator_interface.models.Conversation.objects.get(platform=platform, platform_id=platform_id)
-
-        rating = operator_interface.models.ConversationRating(conversation=conversation, rating=int(params["rating"]))
-        rating.save()
-
+    rating = operator_interface.models.ConversationRating(sender_id=session, rating=int(params["rating"]))
+    rating.save()
     return {}
 
 
@@ -428,8 +422,90 @@ def human_needed(params, text, _):
     else:
         return {
             "fulfillmentText": f"{text}We're currently closed but this conversation has been flagged and someone"
-            f" will be here to help you as soon as we're open again"
+                               f" will be here to help you as soon as we're open again"
         }
+
+
+def unlock(params, text, data):
+    query = data.get('queryResult')
+    outputContexts = query.get('outputContexts')
+
+    if not params.get("brand"):
+        return {
+            "fulfillmentText": text
+        }
+    elif params.get("brand") == "iPhone" and not params.get("iphone-model"):
+        outputContexts.append({
+            "name": f"{data.get('session')}/contexts/unlock-iphone-model",
+            "lifespanCount": 1,
+            "parameters": params
+        })
+        return {
+            "fulfillmentText": "What model is it?",
+            "outputContexts": outputContexts
+        }
+    elif not params.get("network") or not params.get("name") or not params.get("phone-number")\
+            or not params.get("email"):
+        return {
+            "fulfillmentText": text
+        }
+    else:
+        return {
+            "followupEventInput": {
+                "name": "unlock-imei",
+                "parameters": params
+            }
+        }
+
+
+def unlock_iphone_model(params, _, data):
+    return {
+        "followupEventInput": {
+            "name": "unlock",
+            "parameters": params
+        }
+    }
+
+
+def luhn_checksum(number):
+    def digits_of(n):
+        return [int(d) for d in str(n)]
+    digits = digits_of(number)
+    odd_digits = digits[-1::-2]
+    even_digits = digits[-2::-2]
+    checksum = 0
+    checksum += sum(odd_digits)
+    for d in even_digits:
+        checksum += sum(digits_of(d*2))
+    return checksum % 10
+
+
+def unlock_imei(params, _, data):
+    imei = int(params.get("imei"))
+
+    if not luhn_checksum(imei) or len(str(imei)) != 15:
+        return {
+            "fulfillmentText": "Hmmm, that doesn't look like an IMEI, try again...",
+            "outputContexts": [{
+                "name": f"{data.get('session')}/contexts/unlock",
+                "lifespanCount": 2,
+                "parameters": params
+            }]
+        }
+    else:
+        network = models.Network.objects.filter(name=params.get("network"))
+        if not len(network):
+            return {
+                "fulfillmentText": f"Sorry we can't unlock from {params.get('network-original')}"
+            }
+        network = network[0]
+
+        brand = models.Brand.objects.filter(name=params.get("brand"))
+        if not len(network):
+            return {
+                "fulfillmentText": f"Sorry we can't unlock {params.get('brand')} phones"
+            }
+        brand = brand[0]
 
 
 ACTIONS = {
@@ -442,5 +518,8 @@ ACTIONS = {
     'repair.iphone': repair_iphone,
     'repair.ipad': repair_ipad,
     'rate': rate,
-    'human_needed': human_needed
+    'human_needed': human_needed,
+    'unlock': unlock,
+    'unlock.iphone-model': unlock_iphone_model,
+    'unlock.imei': unlock_imei,
 }

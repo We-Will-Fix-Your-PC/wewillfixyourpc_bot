@@ -1,0 +1,46 @@
+{
+  "id": "2e564ebe-88a0-4853-9750-4c9caa918aa0",
+  "parentId": "61a3f35b-084b-4639-bab2-ea302e804ca2",
+  "rootParentId": "61a3f35b-084b-4639-bab2-ea302e804ca2",
+  "name": "additional-help - yes",
+  "auto": true,
+  "contexts": [
+    "additional-help-question"
+  ],
+  "responses": [
+    {
+      "resetContexts": false,
+      "action": "additional-help-no.additional-help-no-yes",
+      "affectedContexts": [],
+      "parameters": [],
+      "messages": [
+        {
+          "type": 2,
+          "platform": "facebook",
+          "lang": "en",
+          "title": "",
+          "replies": [
+            "When are you open",
+            "Where are you",
+            "Unlock my phone",
+            "What\u0027s your number"
+          ]
+        },
+        {
+          "type": 0,
+          "lang": "en",
+          "speech": "How can I help?"
+        }
+      ],
+      "defaultResponsePlatforms": {
+        "facebook": true
+      },
+      "speech": []
+    }
+  ],
+  "priority": 500000,
+  "webhookUsed": false,
+  "webhookForSlotFilling": false,
+  "fallbackIntent": false,
+  "events": []
+}
