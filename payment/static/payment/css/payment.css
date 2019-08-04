@@ -10,6 +10,8 @@
   font-family: Roboto, sans-serif; }
   .payment .loader {
     max-width: 100px; }
+  .payment h3 {
+    text-align: center; }
   .payment a {
     color: #444;
     margin: 10px 0;
