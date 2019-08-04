@@ -4,10 +4,12 @@ import payment.models
 import datetime
 import collections
 from django.utils import timezone
+from django.conf import settings
 import pytz
 import time
 import json
 import inflect
+import phonenumbers
 import fuzzywuzzy.process
 import fuzzywuzzy.utils
 import dateutil.parser
@@ -556,6 +558,20 @@ class UnlockForm(FormAction):
             dispatcher.utter_message(f"Hmmm 🤔, I don't recognise that brand, did you mean "
                                      f"{top_choice[0].display_name}?")
             return {"brand": None}
+
+    def validate_phone_number(self, value: Text, dispatcher: CollectingDispatcher, tracker: Tracker,
+                      domain: Dict[Text, Any]) -> Optional[Dict[Text, Any]]:
+        try:
+            phone = phonenumbers.parse(value, settings.PHONENUMBER_DEFAULT_REGION)
+        except phonenumbers.phonenumberutil.NumberParseException:
+            dispatcher.utter_message("Hmmm 🤔, that's doesn't look like a valid phone number ☎️ to me")
+            return {"phone_number": None}
+
+        if not phonenumbers.is_valid_number(phone):
+            dispatcher.utter_message("Hmmm 🤔, that's doesn't look like a valid phone number ☎️ to me")
+            return {"phone_number": None}
+        else:
+            return {"phone_number": phonenumbers.format_number(phone, phonenumbers.PhoneNumberFormat.E164)}
 
     def submit(self, dispatcher: CollectingDispatcher, tracker: Tracker, domain: Dict[Text, Any]) -> List[Dict]:
         dispatcher.utter_template('utter_looking_up', tracker)
