@@ -21,3 +21,8 @@ inflect
 cryptography
 rasa_sdk
 fuzzywuzzy
+channels
+gunicorn
+channels_redis
+psycopg2-binary
+daphne

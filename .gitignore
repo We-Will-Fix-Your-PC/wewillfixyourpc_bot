@@ -225,5 +225,4 @@ private_key.pem
 public_key.pem
 PUSH_PRIV_KEY
 worldpay.json
-static
 gpay-key-test.pem

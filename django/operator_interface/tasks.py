@@ -1,34 +1,21 @@
 from celery import shared_task
 from django.conf import settings
+from asgiref.sync import async_to_sync
+from channels.layers import get_channel_layer
 from pywebpush import webpush
 import rasa_api.tasks
 import dialogflow_client.tasks
 import facebook.tasks
 import twitter.tasks
-import pika
 import json
 from . import models
 
-_channel = None
-
-
-def get_channel():
-    global _channel
-    if _channel is not None:
-        return _channel
-    rmq = pika.BlockingConnection(
-        pika.ConnectionParameters(host='localhost'))
-    channel = rmq.channel()
-    channel.exchange_declare(exchange='bot_messages', exchange_type='fanout')
-    _channel = channel
-    return channel
+channel_layer = get_channel_layer()
 
 
 @shared_task
 def send_message_to_interface(mid):
-    get_channel().basic_publish(exchange='bot_messages', routing_key='', body=json.dumps({
-        "mid": mid
-    }))
+    async_to_sync(channel_layer.group_send)("operator_interface", {"mid": mid})
 
 
 @shared_task

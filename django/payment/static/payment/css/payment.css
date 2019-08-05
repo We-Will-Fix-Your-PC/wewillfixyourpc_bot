@@ -1,0 +1,83 @@
+@import url("https://fonts.googleapis.com/css?family=Roboto&display=swap");
+* {
+  box-sizing: border-box; }
+
+.payment {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  font-family: Roboto, sans-serif; }
+  .payment .loader {
+    max-width: 100px; }
+  .payment h3 {
+    text-align: center; }
+  .payment a {
+    color: #444;
+    margin: 10px 0;
+    transition: color .1s ease-in-out; }
+    .payment a:hover {
+      color: #000; }
+  .payment input, .payment select {
+    border: #aaa 1px solid;
+    padding: 10px;
+    font-size: 20px;
+    align-self: stretch;
+    border-radius: 5px;
+    background: #fff;
+    width: 100%; }
+  .payment iframe {
+    border: none; }
+  .payment button {
+    background-color: #ff7300;
+    border: none;
+    padding: 10px;
+    color: #fff;
+    font-size: 20px;
+    align-self: stretch;
+    transition: background-color .1s ease-in-out;
+    border-radius: 5px;
+    margin: 10px 0; }
+    .payment button:hover {
+      background-color: #cc5c00; }
+  .payment .buttons {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center; }
+    .payment .buttons > div {
+      margin: 10px 0; }
+  .payment .CardForm {
+    align-self: stretch; }
+    .payment .CardForm .card-list {
+      display: flex;
+      justify-content: center; }
+      .payment .CardForm .card-list svg {
+        margin: 10px;
+        color: #aaa; }
+        .payment .CardForm .card-list svg.active {
+          color: #444; }
+    .payment .CardForm form {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      grid-template-rows: repeat(3, 1fr);
+      grid-gap: 20px; }
+      .payment .CardForm form .card-name {
+        grid-column: 1 / 4;
+        grid-row: 1; }
+      .payment .CardForm form .card-number {
+        grid-column: 1 / 4;
+        grid-row: 2; }
+      .payment .CardForm form .exp-month {
+        grid-column: 1;
+        grid-row: 3; }
+      .payment .CardForm form .exp-year {
+        grid-column: 2;
+        grid-row: 3; }
+      .payment .CardForm form .cvc {
+        grid-column: 3;
+        grid-row: 3; }
+      .payment .CardForm form .phone, .payment .CardForm form .email, .payment .CardForm form button, .payment .CardForm form .address {
+        grid-column: 1 / 4; }
+
+/*# sourceMappingURL=payment.css.map */

@@ -6,7 +6,7 @@ pipeline:
   - name: "WhitespaceTokenizer"
   - name: "CRFEntityExtractor"
   - name: "DucklingHTTPExtractor"
-    url: "http://localhost:8001"
+    url: "http://duckling:8001"
     dimensions: ["time", "number", "ordinal", "amount-of-money", "phone-number", "email", "url"]
     locale: "en_GB"
     timezone: "Europe/London"

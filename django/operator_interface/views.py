@@ -1,32 +1,16 @@
 from django.shortcuts import render, get_object_or_404
-from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import csrf_exempt
 from django.http import HttpResponse, HttpResponseBadRequest
 from django.contrib.auth.models import User
-from django.views.decorators.clickjacking import xframe_options_exempt
 from PIL import Image
-import datetime
 import json
-import jwt
 from . import models
 
 
 @login_required
 def index(request):
     return render(request, "operator_interface/build/index.html")
-
-
-@login_required
-@xframe_options_exempt
-def token(request):
-    key = jwt.jwk.OctetJWK(settings.SECRET_KEY.encode())
-    jwt_i = jwt.JWT()
-    compact_jws = jwt_i.encode({
-        'sub': request.user.id,
-        'iat': datetime.datetime.now().timestamp(),
-    }, key, 'HS256')
-    return HttpResponse(compact_jws)
 
 
 @csrf_exempt

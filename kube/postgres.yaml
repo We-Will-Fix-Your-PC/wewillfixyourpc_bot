@@ -1,30 +1,35 @@
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: rabbitmq
-  namespace: rabbitmq
+  name: postgres
+  namespace: postgres
   labels:
-    app: rabbitmq
+    app: postgres
 spec:
-  serviceName: rabbitmq
+  serviceName: postgres
   replicas: 1
   selector:
     matchLabels:
-      app: rabbitmq
+      app: postgres
   template:
     metadata:
       labels:
-        app: rabbitmq
+        app: postgres
     spec:
       containers:
-        - name: rabbitmq
-          image: rabbitmq:management
+        - name: postgres
+          image: postgres
           ports:
-            - containerPort: 5462
-            - containerPort: 15672
+            - containerPort: 5432
           volumeMounts:
-            - mountPath: /var/lib/rabbitmq
+            - mountPath: /var/lib/postgresql/data
               name: data
+          env:
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: pass
+                  name: postgres-pass
   volumeClaimTemplates:
     - metadata:
         name: data
@@ -38,29 +43,55 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  namespace: rabbitmq
-  name: rabbitmq
+  namespace: postgres
+  name: postgres
   labels:
-    app: rabbitmq
+    app: postgres
 spec:
   selector:
-    app: rabbitmq
+    app: postgres
   ports:
-    - port: 5462
-      targetPort: 5462
-      name: rabbitmq
+    - port: 5432
+      targetPort: 5432
+      name: postgres
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: adminer
+  namespace: postgres
+  labels:
+    app: adminer
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: adminer
+  template:
+    metadata:
+      labels:
+        app: adminer
+    spec:
+      containers:
+        - name: adminer
+          image: adminer
+          ports:
+            - containerPort: 8080
+          env:
+            - name: ADMINER_DEFAULT_SERVER
+              value: postgres
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  namespace: rabbitmq
-  name: rabbitmq-management
+  namespace: postgres
+  name: adminer
   labels:
-    app: rabbitmq
+    app: adminer
 spec:
   selector:
-    app: rabbitmq
+    app: adminer
   ports:
-    - port: 15672
-      targetPort: 15672
-      name: rabbitmq-management
+    - port: 80
+      targetPort: 8080
+      name: adminer
