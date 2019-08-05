@@ -10,7 +10,7 @@ from . import models
 
 @login_required
 def index(request):
-    return render(request, "operator_interface/build/index.html")
+    return render(request, "operator_interface/index.html")
 
 
 @csrf_exempt

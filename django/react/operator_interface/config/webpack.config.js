@@ -497,6 +497,7 @@ module.exports = function(webpackEnv) {
                   minifyCSS: true,
                   minifyURLs: true,
                 },
+                filename: "../../../templates/operator_interface/index.html"
               }
             : undefined
         )
