@@ -144,7 +144,7 @@ USE_TZ = True
 
 SENTRY_ENVIRONMENT = os.getenv("SENTRY_ENVIRONMENT", "dev")
 
-EXTERNAL_URL_BASE = os.getenv("EXTERNAL_URL", "https://bot.cardifftec.uk/")
+EXTERNAL_URL_BASE = os.getenv("EXTERNAL_URL", f"https://{ALLOWED_HOSTS[0]}/")
 
 STATIC_URL = f'{EXTERNAL_URL_BASE}static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
