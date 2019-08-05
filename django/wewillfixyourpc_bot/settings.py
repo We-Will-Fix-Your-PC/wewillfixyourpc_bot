@@ -26,7 +26,7 @@ SECRET_KEY = os.getenv("SECRET_KEY", "")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = ["bot.cardifftec.uk"]
+ALLOWED_HOSTS = [os.getenv("HOST", "bot.cardifftec.uk")]
 
 # Application definition
 INSTALLED_APPS = [
