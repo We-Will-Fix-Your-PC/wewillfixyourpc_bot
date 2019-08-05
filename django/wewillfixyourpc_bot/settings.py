@@ -179,6 +179,8 @@ GPAY_TEST_PRIVATE_KEYS = [gpay_priv_key_test]
 
 PUSH_PRIV_KEY = os.getenv("PUSH_PRIV_KEY")
 
+RASA_HTTP_URL = os.getenv("RASA_HTTP_URL", "http://localhost:5005")
+
 CORS_ORIGIN_ALLOW_ALL = True
 CORS_ALLOW_CREDENTIALS = True
 SESSION_COOKIE_SAMESITE = None
