@@ -21,7 +21,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # See https://docs.djangoproject.com/en/2.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-with open(os.path.join(BASE_DIR, "SECRET_KEY")) as f:
+with open(os.path.join(BASE_DIR, "secrets/SECRET_KEY")) as f:
     SECRET_KEY = f.read()
 
 # SECURITY WARNING: don't run with debug turned on in production!
@@ -45,7 +45,6 @@ INSTALLED_APPS = [
     'facebook',
     'twitter',
     'operator_interface',
-    'dialogflow_client',
     'payment',
     'rasa_api',
     'corsheaders',
@@ -158,13 +157,13 @@ CELERY_BROKER_URL = "pyamqp://"
 CELERY_TASK_SERIALIZER = "json"
 CELERY_ACCEPT_CONTENT = ["json"]
 
-with open(os.path.join(BASE_DIR, "facebook.json")) as f:
+with open(os.path.join(BASE_DIR, "secrets/facebook.json")) as f:
     facebook_conf = json.load(f)
-with open(os.path.join(BASE_DIR, "twitter.json")) as f:
+with open(os.path.join(BASE_DIR, "secrets/twitter.json")) as f:
     twitter_conf = json.load(f)
-with open(os.path.join(BASE_DIR, "worldpay.json")) as f:
+with open(os.path.join(BASE_DIR, "secrets/worldpay.json")) as f:
     worldpay_conf = json.load(f)
-with open(os.path.join(BASE_DIR, 'gpay-key-test.pem'), 'rb') as f:
+with open(os.path.join(BASE_DIR, 'secrets/gpay-key-test.pem'), 'rb') as f:
     gpay_priv_key_test = f.read()
 
 FACEBOOK_VERIFY_TOKEN = facebook_conf["verify_token"]
@@ -182,7 +181,7 @@ WORLDPAY_LIVE_KEY = worldpay_conf["live_key"]
 
 GPAY_TEST_PRIVATE_KEYS = [gpay_priv_key_test]
 
-GOOGLE_CREDENTIALS_FILE = "WeWillFixYourPC.json"
+GOOGLE_CREDENTIALS_FILE = "secrets/WeWillFixYourPC.json"
 GOOGLE_PROJECT_ID = "wewillfixyourpc-8df73"
 
 RASA_HTTP_URL = "http://localhost:5005"
@@ -190,7 +189,7 @@ RASA_HTTP_URL = "http://localhost:5005"
 CORS_ORIGIN_ALLOW_ALL = True
 CORS_ALLOW_CREDENTIALS = True
 
-with open(os.path.join(BASE_DIR, "PUSH_PRIV_KEY")) as f:
+with open(os.path.join(BASE_DIR, "secrets/PUSH_PRIV_KEY")) as f:
     PUSH_PRIV_KEY = f.read()
 
 LOGGING = {

@@ -65,4 +65,4 @@ def model(request, environment_id):
     environment = get_object_or_404(models.EnvironmentModel, name=environment_id)
 
     file = environment.rasa_model.open()
-    return HttpResponse(file)
+    return HttpResponse(file, content_type='application/gzip')

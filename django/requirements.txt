@@ -10,7 +10,6 @@ celery
 pika
 requests
 requests_oauthlib
-dialogflow
 Pillow
 redis
 pytz
@@ -26,3 +25,4 @@ gunicorn
 channels_redis
 psycopg2-binary
 daphne
+python-Levenshtein

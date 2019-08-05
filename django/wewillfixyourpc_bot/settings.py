@@ -43,7 +43,6 @@ INSTALLED_APPS = [
     'facebook',
     'twitter',
     'operator_interface',
-    'dialogflow_client',
     'payment',
     'rasa_api',
     'corsheaders',
@@ -52,6 +51,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.http.ConditionalGetMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -176,9 +176,6 @@ WORLDPAY_TEST_KEY = os.getenv("WORLDPAY_TEST_KEY")
 WORLDPAY_LIVE_KEY = os.getenv("WORLDPAY_LIVE_KEY")
 
 GPAY_TEST_PRIVATE_KEYS = [gpay_priv_key_test]
-
-GOOGLE_CREDENTIALS_FILE = "/dialogflow-secret/WeWillFixYourPC.json"
-GOOGLE_PROJECT_ID = "wewillfixyourpc-8df73"
 
 PUSH_PRIV_KEY = os.getenv("PUSH_PRIV_KEY")
 
