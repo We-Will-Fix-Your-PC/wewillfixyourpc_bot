@@ -1,0 +1,27 @@
+{
+  "name": "payments_form",
+  "version": "1.0.0",
+  "author": "Q <q@misell.cymru>",
+  "dependencies": {
+    "@babel/core": "^7.5.5",
+    "@babel/preset-env": "^7.5.5",
+    "@babel/preset-react": "^7.0.0",
+    "@fortawesome/fontawesome-svg-core": "^1.2.20",
+    "@fortawesome/free-brands-svg-icons": "^5.10.0",
+    "@fortawesome/react-fontawesome": "^0.1.4",
+    "@sentry/browser": "^5.5.0",
+    "babel-loader": "^8.0.6",
+    "payment": "^2.3.0",
+    "react": "^16.8.6",
+    "react-dom": "^16.8.6",
+    "react-fontawesome": "^1.6.1",
+    "react-inlinesvg": "^1.1.4",
+    "svg-inline-loader": "^0.8.0",
+    "uuid": "^3.3.2",
+    "webpack": "^4.38.0",
+    "webpack-merge": "^4.2.1"
+  },
+  "devDependencies": {
+    "webpack-cli": "^3.3.6"
+  }
+}

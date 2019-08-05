@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rasa
+  labels:
+    app: rasa
+    namespace: chatbot-staging
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: rasa
+  template:
+    metadata:
+      labels:
+        app: rasa
+    spec:
+      volumes:
+        - name: secrets
+          secret:
+            secretName: rasa-secrets
+      containers:
+        - name: rasa
+          image: rasa/rasa:latest-full
+          args: ["run", "--endpoints", "/secrets/endpoints.yml", "--credentials", "/secrets/credentials.yml"]
+          ports:
+            - containerPort: 5002
+          volumeMounts:
+            - name: secrets
+              mountPath: "/secrets"
+              readOnly: true

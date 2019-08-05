@@ -1,0 +1,58 @@
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: rabbitmq-data
+  namespace: chatbot-staging
+  annotations:
+    volume.beta.kubernetes.io/storage-class: "managed-nfs-storage"
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rabbitmq
+  namespace: chatbot-staging
+  labels:
+    app: rabbitmq
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: rabbitmq
+  template:
+    metadata:
+      labels:
+        app: rabbitmq
+    spec:
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: rabbitmq-data
+      containers:
+        - name: rabbitmq
+          image: rabbitmq
+          ports:
+            - containerPort: 5462
+          volumeMounts:
+            - mountPath: /var/lib/rabbitmq
+              name: data
+---
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: chatbot-staging
+  name: rabbitmq
+  labels:
+    app: rabbitmq
+spec:
+  selector:
+    app: rabbitmq
+  ports:
+    - port: 5462
+      targetPort: 5462
+      name: rabbitmq
