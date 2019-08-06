@@ -54,6 +54,25 @@
 - Yes
 - Yes
 
+## intent:mood_unhappy
+- my day was horrible
+- I am sad
+- I don't feel very well
+- I am disappointed
+- super sad
+- I'm so sad
+- sad
+- very sad
+- unhappy
+- not so good
+- not very good
+- extremly sad
+- so saad
+- so sad
+- cheer me up
+- show me cute things
+- cats
+
 ## intent:ask_history
 - can you share your boss with me?
 - i want to get to know your owner

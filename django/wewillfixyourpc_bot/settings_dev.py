@@ -142,13 +142,13 @@ USE_TZ = True
 
 SENTRY_ENVIRONMENT = "dev"
 
-STATIC_URL = '/static/'
+EXTERNAL_URL_BASE = "https://wewillfixyourpc-bot.eu.ngrok.io/"
+
+STATIC_URL = f'{EXTERNAL_URL_BASE}static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 
-MEDIA_URL = '/media/'
+MEDIA_URL = f'{EXTERNAL_URL_BASE}media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
-
-EXTERNAL_URL_BASE = "https://8fb28af2.eu.ngrok.io/"
 
 PHONENUMBER_DEFAULT_REGION = "GB"
 

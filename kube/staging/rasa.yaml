@@ -21,11 +21,26 @@ spec:
             secretName: rasa-secrets
       containers:
         - name: rasa
-          image: rasa/rasa:latest-full
-          args: ["run", "--endpoints", "/secrets/endpoints.yml", "--credentials", "/secrets/credentials.yml"]
+          image: theenbyperor/rasa
+          args: ["run", "--endpoints", "/secrets/endpoints.yml", "--credentials", "/secrets/credentials.yml", "-v"]
           ports:
-            - containerPort: 5002
+            - containerPort: 5005
           volumeMounts:
             - name: secrets
               mountPath: "/secrets"
               readOnly: true
+---
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: chatbot-staging
+  name: rasa
+  labels:
+    app: rasa
+spec:
+  selector:
+    app: rasa
+  ports:
+    - port: 5005
+      targetPort: 5005
+      name: nginx

@@ -1,7 +1,7 @@
 # This file contains the different endpoints your bot can use.
 
 models:
-  url: http://localhost:8000/rasa/model/testing
+  url: http://172.30.0.13:8000/rasa/model/testing
   wait_time_between_pulls: 10
 
 action_endpoint:

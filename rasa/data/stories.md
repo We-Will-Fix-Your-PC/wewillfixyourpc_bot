@@ -11,6 +11,10 @@
 * opinion+positive OR acknowledge
   - utter_positive_feedback_reaction
 
+## cheer up
+* mood_unhappy
+  - utter_cheer_up
+
 ## next question no
 > anything_else
     - utter_anything_else

@@ -217,6 +217,8 @@ fabric.properties
 
 # End of https://www.gitignore.io/api/django,pycharm
 
+node_modules
+
 facebook.json
 twitter.json
 WeWillFixYourPC.json

@@ -1,3 +1,31 @@
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: django-static
+  namespace: chatbot-staging
+  annotations:
+    volume.beta.kubernetes.io/storage-class: "managed-nfs-storage"
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 1Gi
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: django-media
+  namespace: chatbot-staging
+  annotations:
+    volume.beta.kubernetes.io/storage-class: "managed-nfs-storage"
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 1Gi
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -16,33 +44,43 @@ spec:
         app: django
     spec:
       volumes:
-        - name: dialogflow-secret
-          secret:
-            secretName: dialogflow-secret
         - name: gpay-keys
           secret:
             secretName: gpay-keys
-      containers:
-        - name: django-gunicorn
-          image: theenbyperor/wewillfixyourpcbot_django:latest
+        - name: static
+          persistentVolumeClaim:
+            claimName: django-static
+        - name: media
+          persistentVolumeClaim:
+            claimName: django-media
+      initContainers:
+        - name: django
+          image: theenbyperor/wewillfixyourpcbot_django:(version)
           imagePullPolicy: Always
-          command: ["gunicorn", "-w", "4", "-b", "0.0.0.0:80", "--forwarded-allow-ips", "*", "--access-logfile", "-", "wewillfixyourpc_bot.wsgi:application"]
+          command: ["sh", "-c", "python3 manage.py collectstatic --noinput && python3 manage.py migrate"]
           ports:
-            - containerPort: 80
+            - containerPort: 8000
           volumeMounts:
-            - mountPath: "/dialogflow-secret/"
-              name: dialogflow-secret
-              readOnly: true
             - mountPath: "/gpay-keys/"
               name: gpay-keys
               readOnly: true
+            - mountPath: "/app/static/"
+              name: static
+            - mountPath: "/app/media/"
+              name: media
           env:
+            - name: HOST
+              value: staging.bot.cardifftec.uk
             - name: DJANGO_SETTINGS_MODULE
               value: wewillfixyourpc_bot.settings
             - name: EXTERNAL_URL
               value: "https://staging.bot.cardifftec.uk/"
             - name: CELERY_RESULT_BACKEND
               value: "redis://redis"
+            - name: RASA_HTTP_URL
+              value: "http://rasa:5005"
+            - name: SENTRY_ENVIRONMENT
+              value: "staging"
             - name: DB_HOST
               valueFrom:
                 configMapKeyRef:
@@ -118,3 +156,355 @@ spec:
                 secretKeyRef:
                   key: access-token-secret
                   name: twitter-secrets
+      containers:
+        - name: gunicorn
+          image: theenbyperor/wewillfixyourpcbot_django:(version)
+          imagePullPolicy: Always
+          command: ["gunicorn", "-w", "4", "-b", "0.0.0.0:8000", "--forwarded-allow-ips", "*", "--access-logfile", "-", "wewillfixyourpc_bot.wsgi:application"]
+          ports:
+            - containerPort: 8000
+          volumeMounts:
+            - mountPath: "/gpay-keys/"
+              name: gpay-keys
+              readOnly: true
+            - mountPath: "/app/static/"
+              name: static
+            - mountPath: "/app/media/"
+              name: media
+          env:
+            - name: HOST
+              value: staging.bot.cardifftec.uk
+            - name: DJANGO_SETTINGS_MODULE
+              value: wewillfixyourpc_bot.settings
+            - name: EXTERNAL_URL
+              value: "https://staging.bot.cardifftec.uk/"
+            - name: CELERY_RESULT_BACKEND
+              value: "redis://redis"
+            - name: SETNY_ENVIRONMENT
+              value: "staging"
+            - name: DB_HOST
+              valueFrom:
+                configMapKeyRef:
+                  key: db-host
+                  name: db-conf
+            - name: DB_NAME
+              valueFrom:
+                configMapKeyRef:
+                  key: db-name
+                  name: db-conf
+            - name: DB_USER
+              valueFrom:
+                secretKeyRef:
+                  key: db-user
+                  name: db-creds
+            - name: DB_PASS
+              valueFrom:
+                secretKeyRef:
+                  key: db-pass
+                  name: db-creds
+            - name: CELERY_BROKER_URL
+              valueFrom:
+                secretKeyRef:
+                  key: url
+                  name: rabbitmq-user
+            - name: SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  key: secret-key
+                  name: django-secret
+            - name: PUSH_PRIV_KEY
+              valueFrom:
+                secretKeyRef:
+                  key: push-priv-key
+                  name: webpush-secrets
+            - name: WORLDPAY_TEST_KEY
+              valueFrom:
+                secretKeyRef:
+                  key: test-key
+                  name: worldpay-keys
+            - name: WORLDPAY_LIVE_KEY
+              valueFrom:
+                secretKeyRef:
+                  key: live-key
+                  name: worldpay-keys
+            - name: FACEBOOK_VERIFY_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  key: verify-token
+                  name: facebook-secrets
+            - name: FACEBOOK_ACCESS_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  key: access-token
+                  name: facebook-secrets
+            - name: TWITTER_CONSUMER_KEY
+              valueFrom:
+                secretKeyRef:
+                  key: consumer-key
+                  name: twitter-secrets
+            - name: TWITTER_CONSUMER_SECRET
+              valueFrom:
+                secretKeyRef:
+                  key: consumer-secret
+                  name: twitter-secrets
+            - name: TWITTER_ACCESS_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  key: access-token
+                  name: twitter-secrets
+            - name: TWITTER_ACCESS_TOKEN_SECRET
+              valueFrom:
+                secretKeyRef:
+                  key: access-token-secret
+                  name: twitter-secrets
+        - name: daphne
+          image: theenbyperor/wewillfixyourpcbot_django:(version)
+          imagePullPolicy: Always
+          command: ["daphne", "-b", "0.0.0.0", "-p", "8001", "--proxy-headers", "--access-log", "-", "wewillfixyourpc_bot.asgi:application"]
+          ports:
+            - containerPort: 8001
+          volumeMounts:
+            - mountPath: "/gpay-keys/"
+              name: gpay-keys
+              readOnly: true
+            - mountPath: "/app/static/"
+              name: static
+            - mountPath: "/app/media/"
+              name: media
+          env:
+            - name: HOST
+              value: staging.bot.cardifftec.uk
+            - name: DJANGO_SETTINGS_MODULE
+              value: wewillfixyourpc_bot.settings
+            - name: EXTERNAL_URL
+              value: "https://staging.bot.cardifftec.uk/"
+            - name: CELERY_RESULT_BACKEND
+              value: "redis://redis"
+            - name: RASA_HTTP_URL
+              value: "http://rasa:5005"
+            - name: SETNY_ENVIRONMENT
+              value: "staging"
+            - name: DB_HOST
+              valueFrom:
+                configMapKeyRef:
+                  key: db-host
+                  name: db-conf
+            - name: DB_NAME
+              valueFrom:
+                configMapKeyRef:
+                  key: db-name
+                  name: db-conf
+            - name: DB_USER
+              valueFrom:
+                secretKeyRef:
+                  key: db-user
+                  name: db-creds
+            - name: DB_PASS
+              valueFrom:
+                secretKeyRef:
+                  key: db-pass
+                  name: db-creds
+            - name: CELERY_BROKER_URL
+              valueFrom:
+                secretKeyRef:
+                  key: url
+                  name: rabbitmq-user
+            - name: SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  key: secret-key
+                  name: django-secret
+            - name: PUSH_PRIV_KEY
+              valueFrom:
+                secretKeyRef:
+                  key: push-priv-key
+                  name: webpush-secrets
+            - name: WORLDPAY_TEST_KEY
+              valueFrom:
+                secretKeyRef:
+                  key: test-key
+                  name: worldpay-keys
+            - name: WORLDPAY_LIVE_KEY
+              valueFrom:
+                secretKeyRef:
+                  key: live-key
+                  name: worldpay-keys
+            - name: FACEBOOK_VERIFY_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  key: verify-token
+                  name: facebook-secrets
+            - name: FACEBOOK_ACCESS_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  key: access-token
+                  name: facebook-secrets
+            - name: TWITTER_CONSUMER_KEY
+              valueFrom:
+                secretKeyRef:
+                  key: consumer-key
+                  name: twitter-secrets
+            - name: TWITTER_CONSUMER_SECRET
+              valueFrom:
+                secretKeyRef:
+                  key: consumer-secret
+                  name: twitter-secrets
+            - name: TWITTER_ACCESS_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  key: access-token
+                  name: twitter-secrets
+            - name: TWITTER_ACCESS_TOKEN_SECRET
+              valueFrom:
+                secretKeyRef:
+                  key: access-token-secret
+                  name: twitter-secrets
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: celery
+  namespace: chatbot-staging
+  labels:
+    app: celery
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: celery
+  template:
+    metadata:
+      labels:
+        app: celery
+    spec:
+      volumes:
+        - name: gpay-keys
+          secret:
+            secretName: gpay-keys
+        - name: static
+          persistentVolumeClaim:
+            claimName: django-static
+        - name: media
+          persistentVolumeClaim:
+            claimName: django-media
+      containers:
+        - name: celery
+          image: theenbyperor/wewillfixyourpcbot_django:(version)
+          imagePullPolicy: Always
+          command: ["celery", "worker", "-A", "wewillfixyourpc_bot", "--loglevel=INFO", "-c", "32"]
+          ports:
+            - containerPort: 8000
+          volumeMounts:
+            - mountPath: "/gpay-keys/"
+              name: gpay-keys
+              readOnly: true
+            - mountPath: "/app/static/"
+              name: static
+            - mountPath: "/app/media/"
+              name: media
+          env:
+            - name: HOST
+              value: staging.bot.cardifftec.uk
+            - name: DJANGO_SETTINGS_MODULE
+              value: wewillfixyourpc_bot.settings
+            - name: EXTERNAL_URL
+              value: "https://staging.bot.cardifftec.uk/"
+            - name: CELERY_RESULT_BACKEND
+              value: "redis://redis"
+            - name: RASA_HTTP_URL
+              value: "http://rasa:5005"
+            - name: SETNY_ENVIRONMENT
+              value: "staging"
+            - name: DB_HOST
+              valueFrom:
+                configMapKeyRef:
+                  key: db-host
+                  name: db-conf
+            - name: DB_NAME
+              valueFrom:
+                configMapKeyRef:
+                  key: db-name
+                  name: db-conf
+            - name: DB_USER
+              valueFrom:
+                secretKeyRef:
+                  key: db-user
+                  name: db-creds
+            - name: DB_PASS
+              valueFrom:
+                secretKeyRef:
+                  key: db-pass
+                  name: db-creds
+            - name: CELERY_BROKER_URL
+              valueFrom:
+                secretKeyRef:
+                  key: url
+                  name: rabbitmq-user
+            - name: SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  key: secret-key
+                  name: django-secret
+            - name: PUSH_PRIV_KEY
+              valueFrom:
+                secretKeyRef:
+                  key: push-priv-key
+                  name: webpush-secrets
+            - name: WORLDPAY_TEST_KEY
+              valueFrom:
+                secretKeyRef:
+                  key: test-key
+                  name: worldpay-keys
+            - name: WORLDPAY_LIVE_KEY
+              valueFrom:
+                secretKeyRef:
+                  key: live-key
+                  name: worldpay-keys
+            - name: FACEBOOK_VERIFY_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  key: verify-token
+                  name: facebook-secrets
+            - name: FACEBOOK_ACCESS_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  key: access-token
+                  name: facebook-secrets
+            - name: TWITTER_CONSUMER_KEY
+              valueFrom:
+                secretKeyRef:
+                  key: consumer-key
+                  name: twitter-secrets
+            - name: TWITTER_CONSUMER_SECRET
+              valueFrom:
+                secretKeyRef:
+                  key: consumer-secret
+                  name: twitter-secrets
+            - name: TWITTER_ACCESS_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  key: access-token
+                  name: twitter-secrets
+            - name: TWITTER_ACCESS_TOKEN_SECRET
+              valueFrom:
+                secretKeyRef:
+                  key: access-token-secret
+                  name: twitter-secrets
+---
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: chatbot-staging
+  name: django
+  labels:
+    app: django
+spec:
+  selector:
+    app: django
+  ports:
+    - port: 8000
+      targetPort: 8000
+      name: gunicorn
+    - port: 8001
+      targetPort: 8001
+      name: daphne
