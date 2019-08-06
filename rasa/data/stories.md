@@ -140,7 +140,6 @@
 
 ## unlock
 * unlock
-    - unlock_clear
     - utter_unlock_explain
     - unlock_form
     - form{"name": "repair_form"}
@@ -154,6 +153,7 @@
     - utter_ask_order
 * affirm
     - unlock_order
+    - unlock_clear
 
 ## unlockable
 > unlockable
@@ -433,3 +433,42 @@
     - utter_anything_else
 * deny
     - utter_goodbye
+
+## interactive_story_1
+* unlock{"brand": "Nokia", "network": "ee"}
+    - slot{"brand": "Nokia"}
+    - slot{"network": "ee"}
+    - utter_unlock_explain
+    - unlock_form
+    - form{"name": "unlock_form"}
+    - slot{"brand": "nokia"}
+    - slot{"network": "ee"}
+    - slot{"brand": "nokia"}
+    - slot{"network": "ee"}
+    - slot{"requested_slot": "name"}
+* form: name{"name": "Q"}
+    - slot{"name": "Q"}
+    - form: unlock_form
+    - slot{"name": "Q"}
+    - slot{"requested_slot": "phone_number"}
+* form: phone_number{"phone": "07495627911", "phone-number": "07495627911", "number": "7495627911"}
+    - form: unlock_form
+    - slot{"phone_number": "+447495627911"}
+    - slot{"requested_slot": "email"}
+* form: email{"email": "q@misell.cymru"}
+    - slot{"email": "q@misell.cymru"}
+    - form: unlock_form
+    - slot{"email": "q@misell.cymru"}
+    - slot{"requested_slot": "imei"}
+* form: imei{"imei": "358545080134606"}
+    - slot{"imei": "358545080134606"}
+    - form: unlock_form
+    - slot{"imei": "358545080134606"}
+    - form{"name": null}
+    - slot{"requested_slot": null}
+    - unlock_lookup
+    - slot{"unlockable": true}
+    - utter_ask_order
+* affirm
+    - unlock_order
+    - unlock_clear

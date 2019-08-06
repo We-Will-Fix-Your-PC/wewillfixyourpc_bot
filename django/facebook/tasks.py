@@ -4,6 +4,7 @@ import logging
 import re
 import uuid
 import os.path
+import decimal
 import urllib.parse
 from io import BytesIO
 
@@ -250,34 +251,62 @@ def send_facebook_message(mid):
             }
         }
     except Message.paymentmessage.RelatedObjectDoesNotExist:
-        if message.text:
-            urls = re.findall("(http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*(),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+)",
-                              message.text)
-            if len(urls) == 1:
-                request_body["message"]["attachment"] = {
-                    "type": "template",
-                    "payload": {
-                        "template_type": "button",
-                        "text": message.text,
-                        "buttons": [
-                            {
-                                "type": "web_url",
-                                "url": urls[0],
-                                "title": "Open",
-                                "webview_height_ratio": "full"
-                            }
-                        ]
-                    }
-                }
-            else:
-                request_body["message"]["text"] = message.text
-        elif message.image:
+        try:
+            payment_confirm_message = message.paymentconfirmmessage
             request_body["message"]["attachment"] = {
-                "type": "image",
+                "type": "template",
                 "payload": {
-                    "url": message.image,
+                    "template_type": "receipt",
+                    "recipient_name": payment_confirm_message.payment.customer.name,
+                    "merchant_name": "We Will Fix Your PC",
+                    "timestamp": int(payment_confirm_message.payment.timestamp.timestamp()),
+                    "order_number": f"{payment_confirm_message.payment.id}",
+                    "currency": "GBP",
+                    "payment_method": payment_confirm_message.payment.payment_method,
+                    "summary": {
+                        "subtotal": (payment_confirm_message.payment.total * decimal.Decimal('0.8'))
+                            .quantize(decimal.Decimal('.01'), rounding=decimal.ROUND_DOWN),
+                        "total_tax": (payment_confirm_message.payment.total * decimal.Decimal('0.2'))
+                            .quantize(decimal.Decimal('.01'), rounding=decimal.ROUND_DOWN),
+                        "total_cost": payment_confirm_message.payment.total
+                            .quantize(decimal.Decimal('.01'), rounding=decimal.ROUND_DOWN)
+                    },
+                    "elements": [{
+                        "title": item.title,
+                        "quantity": item.quantity,
+                        "price": item.price,
+                    } for item in payment_confirm_message.payment.paymentitem_set.all()]
                 }
             }
+        except Message.paymentconfirmmessage.RelatedObjectDoesNotExist:
+            if message.text:
+                urls = re.findall("(http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*(),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+)",
+                                  message.text)
+                if len(urls) == 1:
+                    request_body["message"]["attachment"] = {
+                        "type": "template",
+                        "payload": {
+                            "template_type": "button",
+                            "text": message.text,
+                            "buttons": [
+                                {
+                                    "type": "web_url",
+                                    "url": urls[0],
+                                    "title": "Open",
+                                    "webview_height_ratio": "full"
+                                }
+                            ]
+                        }
+                    }
+                else:
+                    request_body["message"]["text"] = message.text
+            elif message.image:
+                request_body["message"]["attachment"] = {
+                    "type": "image",
+                    "payload": {
+                        "url": message.image,
+                    }
+                }
 
     r = requests.post("https://graph.facebook.com/me/messages",
                       params={"access_token": settings.FACEBOOK_ACCESS_TOKEN}, json=request_body)

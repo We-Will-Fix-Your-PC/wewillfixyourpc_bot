@@ -439,7 +439,6 @@ class ActionUnlockLookup(Action):
         unlock_o = models.PhoneUnlock.objects.filter(
             network=network_o, brand=brand_o, device=iphone_model if iphone_model else None
         )  # type: List[models.PhoneUnlock]
-        print(network_o, brand_o, iphone_model)
         if not len(unlock_o):
             dispatcher.utter_message(f"Sorry, we can't unlock a {brand_o.display_name} "
                                      f"{iphone_model if iphone_model else ''} from {network_name}")
@@ -467,7 +466,13 @@ class ActionOrderUnlock(Action):
         if iphone_model is not None:
             brand = "iPhone"
 
-        network_o = models.Network.objects.get(name=network.lower())
+        try:
+            network_o = models.Network.objects.get(name=network.lower())
+            network_name = network_o.display_name
+        except models.Network.DoesNotExist:
+            network_alt_o = models.NetworkAlternativeName.objects.get(name=network.lower())
+            network_o = network_alt_o.network
+            network_name = network_alt_o.display_name
         brand_o = models.Brand.objects.get(name=brand.lower())
 
         unlock_o = models.PhoneUnlock.objects.get(
@@ -488,7 +493,7 @@ class ActionOrderUnlock(Action):
         })
         payment_item_o = payment.models.PaymentItem(
             payment=payment_o, item_type="unlock", item_data=item_data,
-            title=f"Unlock {brand_o.name} {iphone_model if iphone_model else ''} from {network_o.name}",
+            title=f"Unlock {brand_o.display_name} {iphone_model if iphone_model else ''} from {network_name}",
             price=unlock_o.price
         )
 
@@ -593,7 +598,7 @@ class UnlockForm(FormAction):
         networks = models.Network.objects.all()
         alt_networks = models.NetworkAlternativeName.objects.all()
         networks = [(n.name, n) for n in networks]
-        networks.extend([(n.name, n.network) for n in alt_networks])
+        networks.extend([(n.name, n) for n in alt_networks])
 
         top_choice = fuzzywuzzy.process.extractOne((value.lower(), None), networks, lambda v: v[0])
 

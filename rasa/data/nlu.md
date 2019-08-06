@@ -53,25 +53,7 @@
 - Yes
 - Yes
 - Yes
-
-## intent:mood_unhappy
-- my day was horrible
-- I am sad
-- I don't feel very well
-- I am disappointed
-- super sad
-- I'm so sad
-- sad
-- very sad
-- unhappy
-- not so good
-- not very good
-- extremly sad
-- so saad
-- so sad
-- cheer me up
-- show me cute things
-- cats
+- Yes
 
 ## intent:ask_history
 - can you share your boss with me?
@@ -233,6 +215,11 @@
 - do you know how much wood would a woodchuck chuck
 - find out how much wood would a woodchuck chuck
 
+## intent:email
+- q@misell.cymru
+- test@example.com
+- bla@gmail.com
+
 ## intent:end
 - bye
 - Thanks for all your help
@@ -321,9 +308,7 @@
 ## intent:imei
 - [354403064522046](imei)
 - [358545080134606](imei)
-
-## regex:imei
-- [0-9]{15}
+- [358545080134606](imei)
 
 ## intent:insult
 - stupid
@@ -357,6 +342,25 @@
 - [not charging](iphone_repair:battery)
 - [not holding charge](iphone_repair:battery)
 
+## intent:mood_unhappy
+- my day was horrible
+- I am sad
+- I don't feel very well
+- I am disappointed
+- super sad
+- I'm so sad
+- sad
+- very sad
+- unhappy
+- not so good
+- not very good
+- extremly sad
+- so saad
+- so sad
+- cheer me up
+- show me cute things
+- cats
+
 ## intent:name
 - Q
 - John
@@ -364,9 +368,7 @@
 - Daniel Smith
 - my name is [Daniel Smith](name)
 - I'm [Adrian](name)
-
-## regex:name
-- [a-zA-Z ,.'-]+
+- [Q](name)
 
 ## intent:network
 - [VOXI](network)
@@ -392,9 +394,7 @@
 ## intent:phone_number
 - [07495627911](phone)
 - [02920497667](phone)
-
-## regex:phone
-- (?:0|\+?44)(?:\d\s?){9,10}
+- [07495627911](phone)[](number:7495627911)
 
 ## intent:rate
 - 10
@@ -606,6 +606,7 @@
 - can you unlock my phone from [VOXI](network)?
 - unlock my [iphone xr](iphone_model) from [ee](network)
 - unlock my phone
+- unlock my [nokia](brand:Nokia) from [ee](network)
 
 ## synonym:1
 - one
@@ -983,6 +984,15 @@
 - glass
 - lcd
 
+## regex:imei
+- [0-9]{15}
+
+## regex:name
+- [a-zA-Z ,.'-]+
+
+## regex:phone
+- (?:0|\+?44)(?:\d\s?){9,10}
+
 ## lookup:num_1_to_10
 - 1
 - 2
@@ -1019,7 +1029,6 @@
 - talktalk mobile
 - tesco
 - tesco mobile
-
 
 ## lookup:iphone_repairs
 - battery

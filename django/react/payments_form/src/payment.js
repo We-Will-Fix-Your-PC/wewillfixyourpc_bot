@@ -7,8 +7,6 @@ import SVG from 'react-inlinesvg';
 import CardForm from './cardForm';
 import GPayButton from './gpayButton';
 
-const ROOT_URL = 'https://8fb28af2.eu.ngrok.io/';
-
 const basicCardInstrument = {
     supportedMethods: 'basic-card',
     data: {
@@ -386,7 +384,7 @@ class PaymentForm extends Component {
             data.payment = this.state.payment;
         }
 
-        fetch(`${ROOT_URL}payment/worldpay/${this.state.payment.id}/`, {
+        fetch(`/payment/worldpay/${this.state.payment.id}/`, {
             method: "POST",
             credentials: 'include',
             body: JSON.stringify(data)

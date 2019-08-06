@@ -24,7 +24,7 @@ module.exports = {
     },
     resolve: {extensions: ["*", ".js", ".jsx"]},
     output: {
-        path: path.resolve(__dirname, "../payment/static/payment/js/"),
+        path: path.resolve(__dirname, "../../payment/static/payment/js/"),
         publicPath: "/static/payment/js/",
         filename: "[name].js"
     },

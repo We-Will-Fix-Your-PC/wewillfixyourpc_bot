@@ -12,7 +12,7 @@ pipeline:
     timezone: "Europe/London"
   - name: "EntitySynonymMapper"
   - name: "CountVectorsFeaturizer"
-  - name: "intent_classifier_tensorflow_embedding"
+  - name: "EmbeddingIntentClassifier"
 
 # Configuration for Rasa Core.
 # https://rasa.com/docs/rasa/core/policies/

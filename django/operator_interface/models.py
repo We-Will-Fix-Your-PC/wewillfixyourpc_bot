@@ -1,6 +1,7 @@
 from django.db import models
 from django.utils import timezone
 import json
+import payment.models
 from django.contrib.auth.models import User
 
 
@@ -123,3 +124,11 @@ class PaymentMessage(models.Model):
 
     def __str__(self):
         return self.payment_id
+
+
+class PaymentConfirmMessage(models.Model):
+    message = models.OneToOneField(Message, on_delete=models.CASCADE)
+    payment = models.ForeignKey(payment.models.Payment, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return self.payment.id

@@ -2,17 +2,17 @@
 ---
 actions:
 - action_default_ask_affirmation
+- greet
 - rate_slot
 - repair
-- greet
 - request_human
 - support_contact
 - support_contact_email
 - support_contact_phone
 - support_location
 - support_opening_hours
-- unlock_lookup
 - unlock_clear
+- unlock_lookup
 - unlock_order
 - utter_anything_else
 - utter_ask_continue
@@ -31,10 +31,10 @@ actions:
 - utter_positive_feedback_reaction
 - utter_respond_insult
 - utter_thanks_end
+- utter_unlock_explain
 - utter_weather
 - utter_why_chicken_cross_road
 - utter_woodchuck
-- utter_unlock_explain
 entities:
 - brand
 - date
@@ -42,7 +42,10 @@ entities:
 - ipad_model
 - iphone_model
 - iphone_repair
+- name
 - network
+- number
+- phone
 - price
 - rating
 forms:
@@ -50,16 +53,18 @@ forms:
 - repair_form
 - unlock_form
 intents:
+- unlock
+- email
+- phone_number
+- name
+- affirm
+- imei
 - repair
 - deny
 - greet
 - support_opening_hours
 - rate
-- imei
-- phone_number
 - network
-- name
-- affirm
 - support_contact_phone
 - support_location
 - ask_mood
@@ -79,12 +84,12 @@ intents:
 - easteregg_woodchuck
 - ask_whatspossible
 - request_human
-- unlock
 - stop
 - ask_weather
 - ask_history
 - brand
 - iphone_repair
+- mood_unhappy
 slots:
   brand:
     type: unfeaturized

@@ -11,7 +11,6 @@ from . import gpay
 import operator_interface.models
 import operator_interface.tasks
 import json
-import decimal
 import requests
 import uuid
 
@@ -27,6 +26,7 @@ def payment_saved(sender, instance: models.Payment, **kwargs):
                 conversation=conversation, direction=operator_interface.models.Message.TO_CUSTOMER,
                 message_id=uuid.uuid4(), text="Payment complete 💸, thanks!")
             message.save()
+            operator_interface.models.PaymentConfirmMessage(message=message, payment=instance).save()
             operator_interface.tasks.process_message.delay(message.id)
         except operator_interface.models.Message.DoesNotExist:
             return
@@ -66,7 +66,7 @@ def payment(request, payment_id):
             "id": payment_o.customer.id,
             "name": payment_o.customer.name,
             "email": payment_o.customer.email,
-            "phone": payment_o.customer.phone
+            "phone": payment_o.customer.phone.as_e164
         },
         "items": list(map(lambda i: {
             "id": i.id,
@@ -156,13 +156,8 @@ def take_worldpay_payment(request, payment_id):
     token = settings.WORLDPAY_LIVE_KEY if payment_o.environment == models.Payment.ENVIRONMENT_LIVE \
         else settings.WORLDPAY_TEST_KEY
 
-    total = decimal.Decimal('0.0')
-    description = []
-    for item in payment_o.paymentitem_set.all():
-        total += item.price
-        description.append(item.title)
-    description = ", ".join(description)
-    total = int(total * 100)
+    description = payment_o.description
+    total = int(payment_o.total * 100)
 
     if payment_o.customer is None:
         email = body.get("email")
@@ -241,6 +236,8 @@ def take_worldpay_payment(request, payment_id):
         }))
     elif data["paymentStatus"] in ["SUCCESS", "AUTHORIZED"]:
         payment_o.state = models.Payment.STATE_PAID
+        payment_o.payment_method = \
+            f"{data['paymentResponse']['cardIssuer']} {data['paymentResponse']['maskedCardNumber']}"
         payment_o.save()
         return HttpResponse(json.dumps({
             "state": "SUCCESS"
@@ -317,6 +314,8 @@ def threeds_complete(request, payment_id):
 
     if data["paymentStatus"] in ["SUCCESS", "AUTHORIZED"]:
         payment_o.state = models.Payment.STATE_PAID
+        payment_o.payment_method = \
+            f"{data['paymentResponse']['cardIssuer']} {data['paymentResponse']['maskedCardNumber']}"
         payment_o.save()
         return render(request, "payment/3ds_complete.html", {"payment_id": payment_id, "3ds_approved": True})
     else:

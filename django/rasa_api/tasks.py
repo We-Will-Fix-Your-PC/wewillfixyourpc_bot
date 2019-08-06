@@ -76,6 +76,7 @@ def handle_text(conversation, text):
                     payment_id = custom.get("payment_id")
 
                     message.text = "To complete payment follow this link 💸"
+                    message.save()
                     payment_message = PaymentMessage(message=message, payment_id=payment_id)
                     payment_message.save()
                 elif event_type == "request_human":
