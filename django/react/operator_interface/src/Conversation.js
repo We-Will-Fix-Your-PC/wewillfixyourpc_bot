@@ -29,6 +29,11 @@ export default class Conversation extends Component {
         }
     }
 
+    componentDidMount() {
+        const messages = this.refs.messages;
+        messages.scrollTo(0, messages.scrollHeight - messages.offsetHeight);
+    }
+
     render() {
         return (
             <div className='conversation'>
@@ -38,11 +43,10 @@ export default class Conversation extends Component {
                         d.setUTCSeconds(m.timestamp);
 
                         let out = [];
+                        let prevDate = new Date(0);
 
                         if (i !== 0) {
-                            let prevDate = new Date(0);
                             prevDate.setUTCSeconds(a[i - 1].timestamp);
-
                             if (!(prevDate.getDay() === d.getDay() && prevDate.getMonth() === d.getMonth() &&
                                 prevDate.getFullYear() === d.getFullYear())) {
                                 out.push(<div key={(i * 2) + 1}>
@@ -61,8 +65,11 @@ export default class Conversation extends Component {
 
                         out.push(<div key={i * 2}>
                             <div className={"dir-" + m.direction}>
-                                <div dangerouslySetInnerHTML={{__html: m.text.replace(/\n/g, "<br />")}}/>
+                                {m.text ? <div dangerouslySetInnerHTML={{__html: m.text.replace(/\n/g, "<br />")}}/> : (
+                                  m.image ? <img src={m.image} alt=""/> : null
+                                )}
                                 <span>{dateformat(d, "h:MM TT")}</span>
+                                {m.direction === "I" ? <span>{m.read ? "Read" : "Delivered"}</span> : null}
                             </div>
                         </div>);
 

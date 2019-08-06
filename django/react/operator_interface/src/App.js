@@ -66,6 +66,8 @@ class App extends Component {
             direction: data.direction,
             timestamp: data.timestamp,
             text: data.text,
+            image: data.image,
+            read: data.read,
         };
         const conversations = this.state.conversations;
         const conversationMap = this.state.conversationMap;
@@ -77,7 +79,8 @@ class App extends Component {
                 username: data.conversation.customer_username,
                 picture: data.conversation.customer_pic,
                 agent_responding: data.conversation.agent_responding,
-                messages: [message]
+                messages: [message],
+                messageMap: {}
             }) - 1;
             conversationMap[data.conversation.id] = conversationId;
         } else {
@@ -86,7 +89,14 @@ class App extends Component {
             conversations[conversationId].picture = data.conversation.customer_pic;
             conversations[conversationId].agent_responding = data.conversation.agent_responding;
         }
-        conversations[conversationId].messages.push(message);
+        let messageId = conversations[conversationId].messageMap[data.id];
+        if (typeof messageId === "undefined") {
+            messageId = conversations[conversationId].messages.push(message) - 1;
+            conversations[conversationId].messageMap[data.id] = messageId;
+        } else {
+            let oldMessage = conversations[conversationId].messages[messageId];
+            conversations[conversationId].messages[messageId] = Object.assign(oldMessage, message)
+        }
         this.setState({
             conversations: conversations,
             conversationMap: conversationMap,
@@ -134,7 +144,7 @@ class App extends Component {
                 <Drawer dismissible open={this.state.open}>
                     <DrawerHeader>
                         <DrawerTitle tag='h2'>
-                            Operator interface
+                            Agent interface
                         </DrawerTitle>
                     </DrawerHeader>
 

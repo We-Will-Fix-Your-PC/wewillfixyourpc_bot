@@ -18,9 +18,10 @@ def handle_message(mid):
     conversation = message.conversation
     text = message.text
 
-    logging.info(f"Got message of \"{text}\" to process with rasa")
+    if text:
+        logging.info(f"Got message of \"{text}\" to process with rasa")
 
-    handle_text(conversation, text)
+        handle_text(conversation, text)
 
 
 @shared_task
@@ -59,11 +60,12 @@ def handle_text(conversation, text):
 
             platform, platform_id = data["recipient_id"].split(":")
             conversation = Conversation.objects.get(platform=platform, platform_id=platform_id)
+            message = Message(conversation=conversation, direction=Message.TO_CUSTOMER, message_id=uuid.uuid4())
 
             if data.get("text"):
-                message = Message(conversation=conversation, text=data["text"], direction=Message.TO_CUSTOMER,
-                                  message_id=uuid.uuid4())
-                message.save()
+                message.text = data["text"]
+            elif data.get("image"):
+                message.image = data["image"]
             elif data.get("custom"):
                 custom = data["custom"]
                 if not custom.get("type"):
@@ -73,12 +75,10 @@ def handle_text(conversation, text):
                 if event_type == "payment":
                     payment_id = custom.get("payment_id")
 
-                    message = Message(conversation=conversation, direction=Message.TO_CUSTOMER, message_id=uuid.uuid4(),
-                                      text="To complete payment follow this link 💸")
-                    message.save()
+                    message.text = "To complete payment follow this link 💸"
                     payment_message = PaymentMessage(message=message, payment_id=payment_id)
                     payment_message.save()
-                elif event_type == "human_needed":
+                elif event_type == "request_human":
                     conversation.agent_responding = False
                     conversation.save()
 
@@ -92,6 +92,7 @@ def handle_text(conversation, text):
                     continue
             else:
                 continue
+            message.save()
 
             if data.get("buttons"):
                 for button in data["buttons"]:

@@ -14,6 +14,10 @@ class OperatorConsumer(AsyncJsonWebsocketConsumer):
         super().__init__(*args, **kwargs)
         self.user = None
 
+    async def message(self, event):
+        message = await self.get_message(event["mid"])
+        await self.send_message(message)
+
     async def connect(self):
         self.user = self.scope["user"]
         print(self.user)
@@ -37,6 +41,8 @@ class OperatorConsumer(AsyncJsonWebsocketConsumer):
             "direction": message.direction,
             "timestamp": int(message.timestamp.timestamp()),
             "text": message.text,
+            "image": message.image,
+            "read": message.read,
             "conversation": {
                 "id": message.conversation.id,
                 "agent_responding": message.conversation.agent_responding,
@@ -61,6 +67,10 @@ class OperatorConsumer(AsyncJsonWebsocketConsumer):
         for conversation in operator_interface.models.Conversation.objects.all():
             for message in conversation.message_set.filter(timestamp__gt=last_message):
                 yield message
+
+    @database_sync_to_async
+    def get_message(self, mid):
+        return operator_interface.models.Message.objects.get(id=mid)
 
     async def receive_json(self, message, **kwargs):
         if message["type"] == "resyncReq":

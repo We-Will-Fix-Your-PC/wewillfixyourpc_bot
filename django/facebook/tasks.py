@@ -1,61 +1,126 @@
+import datetime
+import json
+import logging
+import re
+import uuid
+import os.path
+import urllib.parse
+from io import BytesIO
+
+import requests
 from celery import shared_task
 from django.conf import settings
-from django.shortcuts import reverse
-import requests
-from operator_interface.models import Conversation, Message
-import operator_interface.tasks
-import logging
-import json
-import uuid
-import datetime
-import re
-from io import BytesIO
-from django.utils import timezone
 from django.core.files.uploadedfile import InMemoryUploadedFile
+from django.core.files.storage import DefaultStorage
+from django.shortcuts import reverse
+from django.utils import timezone
+
+import operator_interface.tasks
+from operator_interface.models import Conversation, Message
 
 
 @shared_task
 def handle_facebook_message(psid, message):
     text = message.get("text")
+    attachments = message.get("attachments")
     mid = message["mid"]
     is_echo = message.get("is_echo")
-    if text is not None:
-        psid = psid["sender"] if not is_echo else psid["recipient"]
-        conversation = Conversation.get_or_create_conversation(Conversation.FACEBOOK, psid)
-        if not is_echo:
-            update_facebook_profile(psid, conversation.id)
-            if not Message.message_exits(conversation, mid):
-                message_m = Message(conversation=conversation, message_id=mid, text=text, direction=Message.FROM_CUSTOMER)
+    psid = psid["sender"] if not is_echo else psid["recipient"]
+    conversation = Conversation.get_or_create_conversation(Conversation.FACEBOOK, psid)
+    if not is_echo:
+        update_facebook_profile(psid, conversation.id)
+        if not Message.message_exits(conversation, mid):
+            handle_mark_facebook_message_read.delay(psid)
+            if text:
+                message_m = Message(conversation=conversation, message_id=mid, text=text,
+                                    direction=Message.FROM_CUSTOMER)
                 message_m.save()
-                handle_mark_facebook_message_read.delay(psid)
                 operator_interface.tasks.process_message.delay(message_m.id)
-        else:
-            if not Message.message_exits(conversation, mid):
-                similar_messages = \
-                    Message.objects.filter(conversation=conversation, text=text,
-                                           timestamp__gte=timezone.now() - datetime.timedelta(seconds=30))
-                if len(similar_messages) == 0:
-                    message_m = \
-                        Message(conversation=conversation, message_id=mid, text=text, direction=Message.TO_CUSTOMER)
-                    message_m.save()
-                    operator_interface.tasks.send_message_to_interface.delay(message_m.id)
+            if attachments:
+                for attachment in attachments:
+                    payload = attachment["payload"]
+                    att_type = attachment.get("type")
+                    if att_type == "image" or att_type == "file":
+                        url = payload.get("url")
+                        r = requests.get(url)
+                        if r.status_code == 200:
+                            orig_file_name = os.path.basename(urllib.parse.urlparse(url).path)
+                            fs = DefaultStorage()
+                            file_name = fs.save(orig_file_name, BytesIO(r.content))
+
+                            if att_type == "image":
+                                message_m = Message(
+                                    conversation=conversation, message_id=mid, image=fs.base_url + file_name,
+                                    direction=Message.FROM_CUSTOMER
+                                )
+                                message_m.save()
+                                operator_interface.tasks.process_message.delay(message_m.id)
+                            else:
+                                message_m = Message(
+                                    conversation=conversation, message_id=mid, direction=Message.FROM_CUSTOMER,
+                                    text=f"<a href=\"{fs.base_url + file_name}\" target=\"_blank\">"
+                                         f"{orig_file_name}"
+                                         f"</a>",
+                                )
+                                message_m.save()
+                                operator_interface.tasks.send_message_to_interface.delay(message_m.id)
+                    elif att_type == "location":
+                        message_m = Message(
+                            conversation=conversation, message_id=mid, direction=Message.FROM_CUSTOMER,
+                            text=f"<a href=\"{attachment.get('url')}\" target=\"_blank\">Location</a>",
+                        )
+                        message_m.save()
+                        operator_interface.tasks.send_message_to_interface.delay(message_m.id)
+    else:
+        if not Message.message_exits(conversation, mid):
+            similar_messages = \
+                Message.objects.filter(conversation=conversation, text=text,
+                                       timestamp__gte=timezone.now() - datetime.timedelta(seconds=30))
+            if len(similar_messages) == 0:
+                message_m = \
+                    Message(conversation=conversation, message_id=mid, text=text if text else "", direction=Message.TO_CUSTOMER)
+                message_m.save()
+                operator_interface.tasks.send_message_to_interface.delay(message_m.id)
 
 
 @shared_task
 def handle_facebook_postback(psid, postback):
     psid = psid["sender"]
     payload = postback.get("payload")
+    title = postback.get("title")
     if payload is not None:
         conversation = Conversation.get_or_create_conversation(Conversation.FACEBOOK, psid)
         payload = json.loads(payload)
-        action = payload["action"]
+        action = payload.get("action")
         if action == "start_action":
             operator_interface.tasks.process_event.delay(conversation.id, "WELCOME")
-            message_m = Message(conversation=conversation, message_id=uuid.uuid4(), text="Get started",
-                                direction=Message.FROM_CUSTOMER)
-            message_m.save()
-            handle_mark_facebook_message_read.delay(psid)
-            operator_interface.tasks.send_message_to_interface.delay(message_m.id)
+        else:
+            operator_interface.tasks.process_event.delay(conversation.id, action)
+
+        message_m = Message(conversation=conversation, message_id=uuid.uuid4(), text=title,
+                            direction=Message.FROM_CUSTOMER)
+        message_m.save()
+        handle_mark_facebook_message_read.delay(psid)
+        operator_interface.tasks.send_message_to_interface.delay(message_m.id)
+        update_facebook_profile.delay(psid, conversation.id)
+
+
+@shared_task
+def handle_facebook_read(psid, read):
+    psid = psid["sender"]
+    watermark = read.get("watermark")
+    if watermark is not None:
+        conversation = Conversation.get_or_create_conversation(Conversation.FACEBOOK, psid)
+
+        messages = Message.objects.filter(
+            conversation=conversation, direction=Message.TO_CUSTOMER, read=False,
+            timestamp__lte=datetime.datetime.fromtimestamp(watermark/1000)
+        )
+        message_ids = [m.id for m in messages]
+        messages.update(read=True)
+        for message in message_ids:
+            operator_interface.tasks.send_message_to_interface.delay(message)
+
         update_facebook_profile.delay(psid, conversation.id)
 
 
@@ -163,8 +228,6 @@ def send_facebook_message(mid):
     if len(quick_replies) > 0:
         request_body["message"]["quick_replies"] = quick_replies
 
-    urls = re.findall("(http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*(),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+)", message.text)
-
     try:
         payment_message = message.paymentmessage
         request_body["message"]["attachment"] = {
@@ -187,24 +250,34 @@ def send_facebook_message(mid):
             }
         }
     except Message.paymentmessage.RelatedObjectDoesNotExist:
-        if len(urls) == 1:
+        if message.text:
+            urls = re.findall("(http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*(),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+)",
+                              message.text)
+            if len(urls) == 1:
+                request_body["message"]["attachment"] = {
+                    "type": "template",
+                    "payload": {
+                        "template_type": "button",
+                        "text": message.text,
+                        "buttons": [
+                            {
+                                "type": "web_url",
+                                "url": urls[0],
+                                "title": "Open",
+                                "webview_height_ratio": "full"
+                            }
+                        ]
+                    }
+                }
+            else:
+                request_body["message"]["text"] = message.text
+        elif message.image:
             request_body["message"]["attachment"] = {
-                "type": "template",
+                "type": "image",
                 "payload": {
-                    "template_type": "button",
-                    "text": message.text,
-                    "buttons": [
-                        {
-                            "type": "web_url",
-                            "url": urls[0],
-                            "title": "Open",
-                            "webview_height_ratio": "full"
-                        }
-                    ]
+                    "url": message.image,
                 }
             }
-        else:
-            request_body["message"]["text"] = message.text
 
     r = requests.post("https://graph.facebook.com/me/messages",
                       params={"access_token": settings.FACEBOOK_ACCESS_TOKEN}, json=request_body)

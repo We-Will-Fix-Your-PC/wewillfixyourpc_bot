@@ -92,7 +92,7 @@ class Message(models.Model):
     timestamp = models.DateTimeField(default=timezone.now)
     user = models.ForeignKey(User, blank=True, null=True, on_delete=models.SET_NULL)
     read = models.BooleanField(default=False)
-    image = models.ImageField(blank=True, null=True)
+    image = models.URLField(blank=True, null=True)
 
     class Meta:
         ordering = ('timestamp',)

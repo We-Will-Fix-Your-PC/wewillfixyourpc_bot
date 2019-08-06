@@ -14,7 +14,10 @@ channel_layer = get_channel_layer()
 
 @shared_task
 def send_message_to_interface(mid):
-    async_to_sync(channel_layer.group_send)("operator_interface", {"mid": mid})
+    async_to_sync(channel_layer.group_send)("operator_interface", {
+        "type": "message",
+        "mid": mid
+    })
 
 
 @shared_task
