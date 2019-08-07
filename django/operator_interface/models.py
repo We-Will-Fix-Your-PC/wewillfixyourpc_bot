@@ -3,6 +3,7 @@ from django.utils import timezone
 import json
 import payment.models
 from django.contrib.auth.models import User
+from phonenumber_field.modelfields import PhoneNumberField
 
 
 class UserProfile(models.Model):
@@ -39,6 +40,8 @@ class Conversation(models.Model):
     customer_name = models.CharField(max_length=255, blank=True, null=True)
     customer_username = models.CharField(max_length=255, blank=True, null=True)
     customer_pic = models.ImageField(blank=True, null=True)
+    customer_email = models.EmailField(blank=True, null=True)
+    customer_phone = PhoneNumberField(blank=True, null=True)
 
     def __str__(self):
         platform = list(filter(lambda p: p[0] == self.platform, self.PLATFORM_CHOICES))
@@ -94,6 +97,10 @@ class Message(models.Model):
     user = models.ForeignKey(User, blank=True, null=True, on_delete=models.SET_NULL)
     read = models.BooleanField(default=False)
     image = models.URLField(blank=True, null=True)
+    payment_request = models.ForeignKey(payment.models.Payment, on_delete=models.SET_NULL, blank=True, null=True,
+                                        related_name='request_message')
+    payment_confirm = models.ForeignKey(payment.models.Payment, on_delete=models.SET_NULL, blank=True, null=True,
+                                        related_name='confirm_message')
 
     class Meta:
         ordering = ('timestamp',)
@@ -116,19 +123,3 @@ class MessageSuggestion(models.Model):
 
     def __str__(self):
         return self.suggested_response
-
-
-class PaymentMessage(models.Model):
-    message = models.OneToOneField(Message, on_delete=models.CASCADE)
-    payment_id = models.CharField(max_length=255)
-
-    def __str__(self):
-        return self.payment_id
-
-
-class PaymentConfirmMessage(models.Model):
-    message = models.OneToOneField(Message, on_delete=models.CASCADE)
-    payment = models.ForeignKey(payment.models.Payment, on_delete=models.CASCADE)
-
-    def __str__(self):
-        return self.payment.id

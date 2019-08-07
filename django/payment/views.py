@@ -19,14 +19,18 @@ import uuid
 def payment_saved(sender, instance: models.Payment, **kwargs):
     if instance.state == models.Payment.STATE_PAID:
         try:
-            message = operator_interface.models.Message.objects.get(paymentmessage__payment_id=instance.id)
+            message = operator_interface.models.Message.objects.get(payment_request=instance.id)
             conversation = message.conversation
 
             message = operator_interface.models.Message(
                 conversation=conversation, direction=operator_interface.models.Message.TO_CUSTOMER,
                 message_id=uuid.uuid4(), text="Payment complete 💸, thanks!")
             message.save()
-            operator_interface.models.PaymentConfirmMessage(message=message, payment=instance).save()
+            operator_interface.tasks.process_message.delay(message.id)
+            message = operator_interface.models.Message(
+                conversation=conversation, direction=operator_interface.models.Message.TO_CUSTOMER,
+                message_id=uuid.uuid4(), payment_confirm=instance)
+            message.save()
             operator_interface.tasks.process_message.delay(message.id)
         except operator_interface.models.Message.DoesNotExist:
             return

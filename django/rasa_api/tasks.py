@@ -1,13 +1,13 @@
 from django.conf import settings
 from celery import shared_task
 import operator_interface.tasks
-import logging
 import requests
 import json
 import logging
 import uuid
+import payment.models
 import operator_interface.tasks
-from operator_interface.models import Message, MessageSuggestion, Conversation, PaymentMessage
+from operator_interface.models import Message, MessageSuggestion, Conversation
 
 logger = logging.getLogger(__name__)
 
@@ -74,11 +74,11 @@ def handle_text(conversation, text):
 
                 if event_type == "payment":
                     payment_id = custom.get("payment_id")
+                    payment_o = payment.models.Payment.objects.get(id=payment_id)
 
                     message.text = "To complete payment follow this link 💸"
+                    message.payment_request = payment_o
                     message.save()
-                    payment_message = PaymentMessage(message=message, payment_id=payment_id)
-                    payment_message.save()
                 elif event_type == "request_human":
                     conversation.agent_responding = False
                     conversation.save()
