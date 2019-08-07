@@ -63,6 +63,21 @@ def is_open():
     return True
 
 
+def sender_id_to_conversation(sender_id):
+    sender_id = sender_id.split(":")
+    if len(sender_id) >= 2:
+        platform = sender_id[0]
+        platform_id = sender_id[1]
+        try:
+            conversation = operator_interface.models.Conversation.objects.get(
+                platform=platform, platform_id=platform_id
+            )
+
+            return conversation
+        except operator_interface.models.Conversation.DoesNotExist:
+            return None
+
+
 class ActionRequestHuman(Action):
     def name(self) -> Text:
         return "request_human"
@@ -87,19 +102,15 @@ class ActionGreet(Action):
             # type: rasa_api.models.UtteranceResponse
 
         dispatcher.utter_message(utterance_choice.text)
+        conversation = sender_id_to_conversation(tracker.sender_id)
 
-        sender_id = tracker.sender_id.split(":")
-        if len(sender_id) >= 2:
-            platform = sender_id[0]
-            platform_id = sender_id[1]
-            try:
-                conversation = operator_interface.models.Conversation.objects.get(
-                    platform=platform, platform_id=platform_id
-                )
-
-                return [rasa_sdk.events.SlotSet("name", conversation.customer_name)]
-            except operator_interface.models.Conversation.DoesNotExist:
-                pass
+        if conversation:
+            out = [rasa_sdk.events.SlotSet("name", conversation.customer_name)]
+            if conversation.customer_phone:
+                out.append(rasa_sdk.events.SlotSet("phone_number", conversation.customer_phone.as_e164))
+            if conversation.customer_email:
+                out.append(rasa_sdk.events.SlotSet("email", conversation.customer_email))
+            return out
 
         return []
 
@@ -624,7 +635,24 @@ class UnlockForm(FormAction):
             dispatcher.utter_message("Hmmm 🤔, that's doesn't look like a valid phone number ☎️ to me")
             return {"phone_number": None}
         else:
-            return {"phone_number": phonenumbers.format_number(phone, phonenumbers.PhoneNumberFormat.E164)}
+            phone = phonenumbers.format_number(phone, phonenumbers.PhoneNumberFormat.E164)
+            conversation = sender_id_to_conversation(tracker.sender_id)
+
+            if conversation:
+                conversation.customer_phone = phone
+                conversation.save()
+
+            return {"phone_number": phone}
+
+    def validate_email(self, value: Text, dispatcher: CollectingDispatcher, tracker: Tracker,
+                      domain: Dict[Text, Any]) -> Optional[Dict[Text, Any]]:
+        conversation = sender_id_to_conversation(tracker.sender_id)
+
+        if conversation:
+            conversation.customer_email = value
+            conversation.save()
+
+        return {"email": value}
 
     def submit(self, dispatcher: CollectingDispatcher, tracker: Tracker, domain: Dict[Text, Any]) -> List[Dict]:
         dispatcher.utter_template('utter_looking_up', tracker)
