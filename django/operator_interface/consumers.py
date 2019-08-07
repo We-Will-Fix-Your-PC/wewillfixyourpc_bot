@@ -7,6 +7,7 @@ from django.contrib.staticfiles.templatetags.staticfiles import static
 
 import operator_interface.models
 import operator_interface.tasks
+import payment.models
 
 
 class OperatorConsumer(AsyncJsonWebsocketConsumer):
@@ -20,7 +21,6 @@ class OperatorConsumer(AsyncJsonWebsocketConsumer):
 
     async def connect(self):
         self.user = self.scope["user"]
-        print(self.user)
 
         if not self.user.is_authenticated:
             await self.close()
@@ -33,9 +33,6 @@ class OperatorConsumer(AsyncJsonWebsocketConsumer):
         await self.channel_layer.group_discard("operator_interface", self.channel_name)
 
     async def send_message(self, message: operator_interface.models.Message):
-        pic = static("operator_interface/img/default_profile_normal.png")
-        if message.conversation.customer_pic:
-            pic = message.conversation.customer_pic.url
         await self.send_json({
             "id": message.id,
             "direction": message.direction,
@@ -43,15 +40,39 @@ class OperatorConsumer(AsyncJsonWebsocketConsumer):
             "text": message.text,
             "image": message.image,
             "read": message.read,
-            "conversation": {
-                "id": message.conversation.id,
-                "agent_responding": message.conversation.agent_responding,
-                "platform": message.conversation.platform,
-                "customer_name": message.conversation.customer_name,
-                "customer_username": message.conversation.customer_username,
-                "customer_pic": pic,
-            }
+            "conversation": self.make_conversation(message.conversation)
         })
+
+    @staticmethod
+    def make_conversation(conversation: operator_interface.models.Conversation):
+        pic = static("operator_interface/img/default_profile_normal.png")
+        if conversation.customer_pic:
+            pic = conversation.customer_pic.url
+        return {
+            "id": conversation.id,
+            "agent_responding": conversation.agent_responding,
+            "platform": conversation.platform,
+            "customer_name": conversation.customer_name,
+            "customer_username": conversation.customer_username,
+            "customer_pic": pic,
+            "timezone": conversation.timezone,
+            "customer_email": conversation.customer_email,
+            "customer_phone": conversation.customer_phone.as_national if conversation.customer_phone else None,
+            "payments": [{
+                "id": p.id,
+                "timestamp": p.timestamp.timestamp(),
+                "state": p.state,
+                "payment_method": p.payment_method,
+                "total": str(p.total),
+                "items": [{
+                    "type": i.item_type,
+                    "data": i.item_data,
+                    "title": i.title,
+                    "quantity": i.quantity,
+                    "price": str(i.price)
+                } for i in p.paymentitem_set.all()]
+            } for p in payment.models.Payment.objects.filter(request_message__conversation__id=conversation.id).order_by("-timestamp")]
+        }
 
     @database_sync_to_async
     def make_message(self, cid, text):

@@ -5,6 +5,10 @@
 @import '@material/react-text-field/index.scss';
 @import '@material/react-list/index.scss';
 @import '@material/react-button/index.scss';
+@import '@material/react-tab-bar/index.scss';
+@import '@material/react-tab-scroller/index.scss';
+@import '@material/react-tab/index.scss';
+@import '@material/react-tab-indicator/index.scss';
 @import "@material/shape/mixins";
 @import "@material/shape/functions";
 @import "@material/theme/mdc-theme.scss";
@@ -36,87 +40,153 @@ main {
   .conversation {
     height: 100%;
     display: grid;
-    grid-template-rows: 1fr auto;
+    grid-template-columns: 3fr 1fr;
 
-    .messages {
-      overflow-y: auto;
-      padding: 0 5px;
+    .main {
+      height: 100%;
+      display: grid;
+      grid-template-rows: 1fr auto;
+      min-height: 0;
 
-      > div {
-        padding: 5px;
-        display: flex;
-        flex-direction: column;
-        
-        > span {
-          color: gray;
-          font-size: 14px;
-          text-align: center;
-
-          span {
-            display: inline-block;
-            position: relative;
-          }
-          span:before,
-          span:after {
-            content: "";
-            position: absolute;
-            height: 5px;
-            border-bottom: 1px solid grey;
-            top: 50%;
-            transform: translateY(-50%);
-            width: 100%;
-          }
-          span:before {
-            right: 100%;
-            margin-right: 15px;
-          }
-          span:after {
-            left: 100%;
-            margin-left: 15px;
-          }
-        }
+      .messages {
+        overflow-y: auto;
+        padding: 0 5px;
 
         > div {
+          padding: 5px;
           display: flex;
           flex-direction: column;
 
-          > div {
-            padding: 15px;
-          }
-
-          > img {
-            display: block;
-            max-width: 700px;
-          }
-
           > span {
             color: gray;
-            font-size: 12px;
-          }
+            font-size: 14px;
+            text-align: center;
 
-          &.dir-O {
-            align-self: flex-start;
-
-            > div {
-
-              @include mdc-theme-prop(background-color, secondary);
-              @include mdc-theme-prop(color, on-secondary);
-              @include mdc-shape-radius(25px 15px 25px 0, $rtl-reflexive: true);
+            span {
+              display: inline-block;
+              position: relative;
             }
 
+            span:before,
+            span:after {
+              content: "";
+              position: absolute;
+              height: 5px;
+              border-bottom: 1px solid grey;
+              top: 50%;
+              transform: translateY(-50%);
+              width: 100%;
+            }
 
+            span:before {
+              right: 100%;
+              margin-right: 15px;
+            }
+
+            span:after {
+              left: 100%;
+              margin-left: 15px;
+            }
           }
-          &.dir-I {
-            align-self: flex-end;
+
+          > div {
+            display: flex;
+            flex-direction: column;
 
             > div {
-              @include mdc-theme-prop(background-color, primary);
-              @include mdc-theme-prop(color, on-primary);
-              @include mdc-shape-radius(15px 25px 0 15px, $rtl-reflexive: true);
+              padding: 15px;
+            }
+
+            > img {
+              display: block;
+              max-width: 700px;
             }
 
             > span {
+              color: gray;
+              font-size: 12px;
+            }
+
+            &.dir-O {
+              align-self: flex-start;
+
+              > div {
+
+                @include mdc-theme-prop(background-color, secondary);
+                @include mdc-theme-prop(color, on-secondary);
+                @include mdc-shape-radius(25px 15px 25px 0, $rtl-reflexive: true);
+              }
+
+
+            }
+
+            &.dir-I {
               align-self: flex-end;
+
+              > div {
+                @include mdc-theme-prop(background-color, primary);
+                @include mdc-theme-prop(color, on-primary);
+                @include mdc-shape-radius(15px 25px 0 15px, $rtl-reflexive: true);
+              }
+
+              > span {
+                align-self: flex-end;
+              }
+            }
+          }
+        }
+      }
+    }
+
+    .panel {
+      overflow-y: auto;
+      box-shadow: inset #aaa 0 0 5px;
+      padding: 5px;
+      grid-column: 2;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+
+      .profile {
+        max-width: 200px;
+        flex-shrink: 0;
+      }
+
+      .custInfo {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        align-self: stretch;
+        padding: 10px;
+        grid-gap: 10px;
+
+        span:nth-of-type(2n+1) {
+          font-weight: bold;
+        }
+      }
+
+      .ordering {
+        h3, h4 {
+          text-align: center;
+        }
+
+        .order {
+          display: grid;
+          grid-template-columns: 1fr 3fr;
+          align-self: stretch;
+          padding: 10px;
+          grid-gap: 10px;
+          border-bottom: 1px solid #aaa;
+
+          span:nth-of-type(2n+1) {
+            font-weight: bold;
+          }
+
+          .items {
+            grid-column: 1 / 3;
+
+            .item {
+              display: grid;
+              grid-template-columns: 1fr 2fr 1fr;
             }
           }
         }

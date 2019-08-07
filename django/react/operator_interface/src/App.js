@@ -1,24 +1,21 @@
 import React, {Component} from 'react';
 import TopAppBar, {
     TopAppBarFixedAdjust,
+    TopAppBarIcon,
     TopAppBarRow,
-    TopAppBarTitle,
     TopAppBarSection,
-    TopAppBarIcon
+    TopAppBarTitle
 } from '@material/react-top-app-bar';
-import Drawer, {
-    DrawerAppContent,
-    DrawerContent,
-    DrawerHeader,
-    DrawerTitle,
-} from '@material/react-drawer';
+import Drawer, {DrawerAppContent, DrawerContent, DrawerHeader, DrawerTitle,} from '@material/react-drawer';
 import MaterialIcon from '@material/react-material-icon';
-import List, {ListItem, ListItemGraphic, ListItemText, ListItemMeta} from '@material/react-list';
+import List, {ListItem, ListItemGraphic, ListItemMeta, ListItemText} from '@material/react-list';
 import Button from '@material/react-button';
 import ReconnectingWebSocket from './reconnecting-websocket';
 import Conversation from './Conversation';
 
 import './App.scss';
+
+const SockContext = React.createContext(null);
 
 class App extends Component {
     constructor(props) {
@@ -72,22 +69,26 @@ class App extends Component {
         const conversations = this.state.conversations;
         const conversationMap = this.state.conversationMap;
         let conversationId = conversationMap[data.conversation.id];
+        let conversation = {
+            customer_name: data.conversation.customer_name,
+            username: data.conversation.customer_username,
+            picture: data.conversation.customer_pic,
+            agent_responding: data.conversation.agent_responding,
+            timezone: data.conversation.timezone,
+            customer_email: data.conversation.customer_email,
+            customer_phone: data.conversation.customer_phone,
+            payments: data.conversation.payments
+        };
         if (typeof conversationId === "undefined") {
-            conversationId = conversations.push({
+            conversationId = conversations.push(Object.assign({
                 id: data.conversation.id,
-                customer_name: data.conversation.customer_name,
-                username: data.conversation.customer_username,
-                picture: data.conversation.customer_pic,
-                agent_responding: data.conversation.agent_responding,
                 messages: [message],
                 messageMap: {}
-            }) - 1;
+            }, conversation)) - 1;
             conversationMap[data.conversation.id] = conversationId;
         } else {
-            conversations[conversationId].customer_name = data.conversation.customer_name;
-            conversations[conversationId].username = data.conversation.customer_username;
-            conversations[conversationId].picture = data.conversation.customer_pic;
-            conversations[conversationId].agent_responding = data.conversation.agent_responding;
+            let oldConversation = conversations[conversationId];
+            conversations[conversationId] = Object.assign(oldConversation, conversation);
         }
         let messageId = conversations[conversationId].messageMap[data.id];
         if (typeof messageId === "undefined") {
@@ -151,18 +152,20 @@ class App extends Component {
                     <DrawerContent>
                         <List twoLine avatarList singleSelection selectedIndex={this.state.selectedIndex}>
                             {this.state.conversations
-                                .map((c, i) => {return {c: c, i: i, lastMsg: c.messages[c.messages.length - 1]}})
+                                .map((c, i) => {
+                                    return {c: c, i: i, lastMsg: c.messages[c.messages.length - 1]}
+                                })
                                 .sort((f, s) => s.lastMsg.timestamp - f.lastMsg.timestamp)
                                 .map(c => (
-                                <ListItem key={c.i} onClick={() => this.selectConversation(c.i)}>
-                                    <ListItemGraphic graphic={<img src={c.c.picture} alt=""/>}/>
-                                    <ListItemText
-                                        primaryText={c.c.customer_name}
-                                        secondaryText={c.lastMsg.text}/>
-                                    {!c.c.agent_responding ?
-                                        <ListItemMeta meta={<MaterialIcon icon='notification_important'/>}/> : null}
-                                </ListItem>
-                            ))}
+                                    <ListItem key={c.i} onClick={() => this.selectConversation(c.i)}>
+                                        <ListItemGraphic graphic={<img src={c.c.picture} alt=""/>}/>
+                                        <ListItemText
+                                            primaryText={c.c.customer_name}
+                                            secondaryText={c.lastMsg.text}/>
+                                        {!c.c.agent_responding ?
+                                            <ListItemMeta meta={<MaterialIcon icon='notification_important'/>}/> : null}
+                                    </ListItem>
+                                ))}
                         </List>
                     </DrawerContent>
                 </Drawer>
@@ -175,9 +178,7 @@ class App extends Component {
                                     <MaterialIcon icon='menu' onClick={() => this.setState({open: !this.state.open})}/>
                                 </TopAppBarIcon>
                                 <TopAppBarTitle>{this.state.selectedIndex === null ? "Loading..." :
-                                    this.state.conversations[this.state.selectedIndex].customer_name +
-                                    ((this.state.conversations[this.state.selectedIndex].username != null) ? " - " +
-                                        this.state.conversations[this.state.selectedIndex].username : "")}</TopAppBarTitle>
+                                    this.state.conversations[this.state.selectedIndex].customer_name}</TopAppBarTitle>
                             </TopAppBarSection>
                             <TopAppBarSection role='toolbar'>
                                 {this.state.selectedIndex === null ? null :
@@ -197,10 +198,12 @@ class App extends Component {
                     <TopAppBarFixedAdjust>
                         {this.state.selectedIndex === null ?
                             <h2>Please select a conversation from the drawer</h2> :
-                            <Conversation
-                                messages={this.state.conversations[this.state.selectedIndex].messages}
-                                onSend={this.onSend}
-                            />}
+                            <SockContext.Provider value={this.sock}>
+                                <Conversation
+                                    conversation={this.state.conversations[this.state.selectedIndex]}
+                                    onSend={this.onSend}
+                                />
+                            </SockContext.Provider>}
                     </TopAppBarFixedAdjust>
                 </DrawerAppContent>
             </div>

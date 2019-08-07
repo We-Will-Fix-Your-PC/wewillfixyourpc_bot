@@ -1654,6 +1654,53 @@
     react "^16.4.2"
     utility-types "^3.2.1"
 
+"@material/react-ripple@^0.15.0":
+  version "0.15.0"
+  resolved "https://registry.yarnpkg.com/@material/react-ripple/-/react-ripple-0.15.0.tgz#70adfec74942b4b5dab130e71cc5d0734f2257bb"
+  integrity sha512-8YPEpiQNOaq3QtMc1DBxVVqOg/XnoWDj/EJ8eW0xmB4HvXElztKNTZoIpAAuQMZ8jbyZkRJRiFDa33u+wLFDCg==
+  dependencies:
+    "@material/dom" "^1.0.0"
+    "@material/ripple" "^1.0.0"
+    classnames "^2.2.6"
+    utility-types "^3.2.1"
+
+"@material/react-tab-bar@^0.15.0":
+  version "0.15.0"
+  resolved "https://registry.yarnpkg.com/@material/react-tab-bar/-/react-tab-bar-0.15.0.tgz#8445712ec8b3295cc94bf43e7d27d1ec12ff50a0"
+  integrity sha512-GQFuK1OAxuA7QFruodxVE/mwie/+3tQVPbhmCnPioDr7JkvW6bKoJ7Gklp3w49XeCUDMJns7CDrztDJVYG/O6g==
+  dependencies:
+    "@material/react-tab" "^0.15.0"
+    "@material/react-tab-scroller" "^0.15.0"
+    "@material/tab-bar" "^1.0.0"
+    classnames "^2.2.6"
+
+"@material/react-tab-indicator@^0.15.0":
+  version "0.15.0"
+  resolved "https://registry.yarnpkg.com/@material/react-tab-indicator/-/react-tab-indicator-0.15.0.tgz#ba184692690aed5a3da09c7400dafd85fad69492"
+  integrity sha512-rznSK1abeuyCQsPtKzfcY/zgEm+JQOsli/7xAHXA0WDeJA/8mteiJBehvItJtEfXzwloP/b3r62PTUEBZK0LWw==
+  dependencies:
+    "@material/tab-indicator" "^1.0.0"
+    classnames "^2.2.6"
+
+"@material/react-tab-scroller@^0.15.0":
+  version "0.15.0"
+  resolved "https://registry.yarnpkg.com/@material/react-tab-scroller/-/react-tab-scroller-0.15.0.tgz#798a2a65b21c17c95a1a8f37493b8238a73a4b97"
+  integrity sha512-WQz9L2U1lZQXHi/N2dB0sgZFUHlp3Ulb0T52MV7JmKx3bX8LPtqMSDnHq6DeXkM7E/JPdh+CZ1lcO6bAWnD/zw==
+  dependencies:
+    "@material/dom" "^1.0.0"
+    "@material/tab-scroller" "^1.0.0"
+    classnames "^2.2.6"
+
+"@material/react-tab@^0.15.0":
+  version "0.15.0"
+  resolved "https://registry.yarnpkg.com/@material/react-tab/-/react-tab-0.15.0.tgz#7084ff90c892b5fcd69e3af290732fba1bc726ef"
+  integrity sha512-GGY9slESEV9O80H7kGELMKeDD20lzgdZCQalAtlVQLQdP6ej8vZ0bHyl55x1w0kLkk3tej+G1UZQ5kYt01yUzA==
+  dependencies:
+    "@material/react-ripple" "^0.15.0"
+    "@material/react-tab-indicator" "^0.15.0"
+    "@material/tab" "^1.0.0"
+    classnames "^2.2.6"
+
 "@material/react-text-field@^0.12.1":
   version "0.12.1"
   resolved "https://registry.yarnpkg.com/@material/react-text-field/-/react-text-field-0.12.1.tgz#c1c534398889a88cc371be3f2ab6d813b68df9ef"
@@ -1732,6 +1779,51 @@
   integrity sha512-Jge/h1XBLjdLlam4QMSzVgM99e/N8+elQROPkltqVP7eyLc17BwM3aP5cLVfZDgrJgvsjUxbgAP1H1j8sqmUyg==
   dependencies:
     "@material/feature-targeting" "^0.44.1"
+
+"@material/tab-bar@^1.0.0":
+  version "1.1.1"
+  resolved "https://registry.yarnpkg.com/@material/tab-bar/-/tab-bar-1.1.1.tgz#f0f17fafd2e97b04d1a3dd7a3ad3861624d193b2"
+  integrity sha512-BwMcZlaQmlN919jugVl4AOnt/sQYfv42/TRT2EFbFQGfFUN+8C0kwWL8m5TDhZkQ5S6IR5oPLX7kqC0NDYqW+Q==
+  dependencies:
+    "@material/base" "^1.0.0"
+    "@material/elevation" "^1.1.0"
+    "@material/tab" "^1.1.1"
+    "@material/tab-scroller" "^1.1.1"
+    tslib "^1.9.3"
+
+"@material/tab-indicator@^1.0.0", "@material/tab-indicator@^1.1.0":
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/@material/tab-indicator/-/tab-indicator-1.1.0.tgz#2c37e8fe146d84a99482509cbb785f67336f0463"
+  integrity sha512-wbZMFCfQo62einr/Ju9PDAeFpRR/Ori5oV2lcsF1uSQXeLxougarwcbk0egWnEtY4Wa6dPgM5P6wQQsYnIeUIQ==
+  dependencies:
+    "@material/animation" "^1.0.0"
+    "@material/base" "^1.0.0"
+    "@material/theme" "^1.1.0"
+    tslib "^1.9.3"
+
+"@material/tab-scroller@^1.0.0", "@material/tab-scroller@^1.1.1":
+  version "1.1.1"
+  resolved "https://registry.yarnpkg.com/@material/tab-scroller/-/tab-scroller-1.1.1.tgz#e7704b2d3c4de9b7474d4b017e440ed655ee9c2e"
+  integrity sha512-LwYXIdk0rzjisnRTNBw1OPMvBzRWhMVGfVV73pEuDV3lkpcp1v4gfig3GR6JI8U8iPZXpxbPqaVEl/K/r8zhYw==
+  dependencies:
+    "@material/animation" "^1.0.0"
+    "@material/base" "^1.0.0"
+    "@material/dom" "^1.1.0"
+    "@material/tab" "^1.1.1"
+    tslib "^1.9.3"
+
+"@material/tab@^1.0.0", "@material/tab@^1.1.1":
+  version "1.1.1"
+  resolved "https://registry.yarnpkg.com/@material/tab/-/tab-1.1.1.tgz#8d4890929be3c44cc076925f83f6366ac107b7ac"
+  integrity sha512-PpBehtp1eeh9wNDkYdRS3JpFa4Do9wMqK4OZo7ZSntKucjd9bx0TiA2TLj8WuFVWIWmXMcsz3DAWshyG3JAs0Q==
+  dependencies:
+    "@material/base" "^1.0.0"
+    "@material/ripple" "^1.1.0"
+    "@material/rtl" "^0.42.0"
+    "@material/tab-indicator" "^1.1.0"
+    "@material/theme" "^1.1.0"
+    "@material/typography" "^1.0.0"
+    tslib "^1.9.3"
 
 "@material/textfield@^1.1.1":
   version "1.1.1"
