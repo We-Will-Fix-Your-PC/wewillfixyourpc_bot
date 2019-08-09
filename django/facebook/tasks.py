@@ -272,17 +272,17 @@ def send_facebook_message(mid):
                 "currency": "GBP",
                 "payment_method": message.payment_confirm.payment_method,
                 "summary": {
-                    "subtotal": (message.payment_confirm.total / decimal.Decimal('1.2'))
-                        .quantize(decimal.Decimal('.01'), rounding=decimal.ROUND_DOWN),
-                    "total_tax": (message.payment_confirm.total * decimal.Decimal('0.2'))
-                        .quantize(decimal.Decimal('.01'), rounding=decimal.ROUND_DOWN),
-                    "total_cost": message.payment_confirm.total
-                        .quantize(decimal.Decimal('.01'), rounding=decimal.ROUND_DOWN)
+                    "subtotal": str((message.payment_confirm.total / decimal.Decimal('1.2'))
+                        .quantize(decimal.Decimal('.01'), rounding=decimal.ROUND_DOWN)),
+                    "total_tax": str((message.payment_confirm.total * decimal.Decimal('0.2'))
+                        .quantize(decimal.Decimal('.01'), rounding=decimal.ROUND_DOWN)),
+                    "total_cost": str(message.payment_confirm.total
+                        .quantize(decimal.Decimal('.01'), rounding=decimal.ROUND_DOWN))
                 },
                 "elements": [{
                     "title": item.title,
                     "quantity": item.quantity,
-                    "price": item.price,
+                    "price": str(item.price.quantize(decimal.Decimal('.01'), rounding=decimal.ROUND_DOWN)),
                 } for item in message.payment_confirm.paymentitem_set.all()]
             }
         }
