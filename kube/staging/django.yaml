@@ -139,7 +139,7 @@ spec:
               prefix: "DB_"
             - secretRef:
                 name: rabbitmq-user
-              prefix: "CELERY_BROKER"
+              prefix: "CELERY_BROKER_"
             - secretRef:
                 name: django-secret
             - secretRef:
@@ -267,6 +267,9 @@ spec:
             - secretRef:
                 name: twitter-secrets
               prefix: "TWITTER_"
+            - secretRef:
+                name: email-creds
+              prefix: "EMAIL_"
 ---
 apiVersion: v1
 kind: Service

@@ -15,6 +15,7 @@ from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.core.files.storage import DefaultStorage
 from django.shortcuts import reverse
 from django.utils import timezone
+from django.contrib.auth.models import User
 
 import operator_interface.tasks
 from operator_interface.models import Conversation, Message
@@ -191,21 +192,24 @@ def send_facebook_message(mid):
 
     persona_id = None
     if message.user is not None:
-        if message.user.userprofile.fb_persona_id is None:
-            r = requests.post("https://graph.facebook.com/me/personas",
-                              params={"access_token": settings.FACEBOOK_ACCESS_TOKEN},
-                              json={
-                                  "name": message.user.first_name,
-                                  "profile_picture_url": settings.EXTERNAL_URL_BASE
-                                                         + reverse("operator:profile_pic", args=[message.user.id]),
-                              })
-            if r.status_code == 200:
-                r = r.json()
-                message.user.userprofile.fb_persona_id = r["id"]
-                message.user.userprofile.save()
-                persona_id = r["id"]
-        else:
-            persona_id = message.user.userprofile.fb_persona_id
+        try:
+            if message.user.userprofile.fb_persona_id is None:
+                r = requests.post("https://graph.facebook.com/me/personas",
+                                  params={"access_token": settings.FACEBOOK_ACCESS_TOKEN},
+                                  json={
+                                      "name": message.user.first_name,
+                                      "profile_picture_url": settings.EXTERNAL_URL_BASE
+                                                             + reverse("operator:profile_pic", args=[message.user.id]),
+                                  })
+                if r.status_code == 200:
+                    r = r.json()
+                    message.user.userprofile.fb_persona_id = r["id"]
+                    message.user.userprofile.save()
+                    persona_id = r["id"]
+            else:
+                persona_id = message.user.userprofile.fb_persona_id
+        except User.userprofile.RelatedObjectDoesNotExist:
+            pass
 
     requests.post("https://graph.facebook.com/me/messages",
                   params={"access_token": settings.FACEBOOK_ACCESS_TOKEN},

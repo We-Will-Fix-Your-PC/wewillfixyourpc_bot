@@ -188,11 +188,13 @@ else:
     DEFAULT_PAYMENT_ENVIRONMENT = "T"
 
 EMAIL_HOST = os.getenv("EMAIL_HOST")
+EMAIL_PORT = int(os.getenv("EMAIL_PORT", 25))
 EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER")
 EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD")
 EMAIL_USE_TLS = os.getenv("EMAIL_USE_TLS", False)
 EMAIL_USE_SSL = os.getenv("EMAIL_USE_SSL", False)
 ORDER_NOTIFICATION_EMAIL = os.getenv("ORDER_NOTIFICATION_EMAIL", "q@misell.cymru")
+ORDER_NOTIFICATION_FROM = os.getenv("ORDER_CONFIRMATION_FROM", "noreply@noreply.wewillfixyourpc.co.uk")
 
 CORS_ORIGIN_ALLOW_ALL = True
 CORS_ALLOW_CREDENTIALS = True

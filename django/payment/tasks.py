@@ -38,7 +38,7 @@ Items:
     send_mail(
         'New order notification',
         email_content,
-        'noreply@noreply.wewillfixyourpc.co.uk',
+        settings.ORDER_NOTIFICATION_FROM,
         [settings.ORDER_NOTIFICATION_EMAIL],
         fail_silently=False,
     )

@@ -191,6 +191,7 @@ RASA_HTTP_URL = "http://localhost:5005"
 DEFAULT_PAYMENT_ENVIRONMENT = "T"
 
 ORDER_NOTIFICATION_EMAIL = "q@misell.cymru"
+ORDER_NOTIFICATION_FROM = "noreply@noreply.wewillfixyourpc.co.uk"
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 CORS_ORIGIN_ALLOW_ALL = True
