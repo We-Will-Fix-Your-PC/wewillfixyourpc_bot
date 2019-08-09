@@ -11,7 +11,6 @@ https://docs.djangoproject.com/en/2.1/ref/settings/
 """
 
 import os
-import payment.models
 import json
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
@@ -139,9 +138,6 @@ USE_L10N = True
 USE_TZ = True
 
 
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/2.1/howto/static-files/
-
 SENTRY_ENVIRONMENT = "dev"
 
 EXTERNAL_URL_BASE = "https://wewillfixyourpc-bot.eu.ngrok.io"
@@ -192,7 +188,7 @@ GOOGLE_PROJECT_ID = "wewillfixyourpc-8df73"
 
 RASA_HTTP_URL = "http://localhost:5005"
 
-DEFAULT_PAYMENT_ENVIRONMENT = payment.models.Payment.ENVIRONMENT_TEST
+DEFAULT_PAYMENT_ENVIRONMENT = "T"
 
 ORDER_NOTIFICATION_EMAIL = "q@misell.cymru"
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'

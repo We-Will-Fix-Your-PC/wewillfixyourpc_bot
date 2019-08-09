@@ -11,7 +11,6 @@ https://docs.djangoproject.com/en/2.1/ref/settings/
 """
 
 import os
-import payment.models
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -184,9 +183,15 @@ RASA_HTTP_URL = os.getenv("RASA_HTTP_URL", "http://localhost:5005")
 
 payment_environment = os.getenv("PAYMENT_ENVIRONMENT", "test")
 if payment_environment == "live":
-    DEFAULT_PAYMENT_ENVIRONMENT = payment.models.Payment.ENVIRONMENT_LIVE
+    DEFAULT_PAYMENT_ENVIRONMENT = "L"
 else:
-    DEFAULT_PAYMENT_ENVIRONMENT = payment.models.Payment.ENVIRONMENT_TEST
+    DEFAULT_PAYMENT_ENVIRONMENT = "T"
+
+EMAIL_HOST = os.getenv("EMAIL_HOST")
+EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER")
+EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD")
+EMAIL_USE_TLS = os.getenv("EMAIL_USE_TLS", False)
+EMAIL_USE_SSL = os.getenv("EMAIL_USE_SSL", False)
 
 CORS_ORIGIN_ALLOW_ALL = True
 CORS_ALLOW_CREDENTIALS = True

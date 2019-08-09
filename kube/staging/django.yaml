@@ -39,6 +39,7 @@ data:
   RASA_HTTP_URL: "http://rasa:5005"
   SENTRY_ENVIRONMENT: "staging"
   PAYMENT_ENVIRONMENT: "test"
+  EMAIL_HOST: "mail.misell.cymru"
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -107,6 +108,9 @@ spec:
             - secretRef:
                 name: twitter-secrets
               prefix: "TWITTER_"
+            - secretRef:
+                name: email-creds
+              prefix: "EMAIL_"
       containers:
         - name: gunicorn
           image: theenbyperor/wewillfixyourpcbot_django:(version)
@@ -148,6 +152,9 @@ spec:
             - secretRef:
                 name: twitter-secrets
               prefix: "TWITTER_"
+            - secretRef:
+                name: email-creds
+              prefix: "EMAIL_"
         - name: daphne
           image: theenbyperor/wewillfixyourpcbot_django:(version)
           imagePullPolicy: Always
@@ -188,6 +195,9 @@ spec:
             - secretRef:
                 name: twitter-secrets
               prefix: "TWITTER_"
+            - secretRef:
+                name: email-creds
+              prefix: "EMAIL_"
 ---
 apiVersion: apps/v1
 kind: Deployment
