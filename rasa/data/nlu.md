@@ -54,6 +54,7 @@
 - Yes
 - Yes
 - Yes
+- Yes
 
 ## intent:ask_history
 - can you share your boss with me?
@@ -107,6 +108,8 @@
 ## intent:brand
 - [Samsung](brand)
 - [ipad](brand)
+- [SOny](brand:sony)
+- [ipad](brand:iPad)
 
 ## intent:deny
 - No
@@ -154,6 +157,7 @@
 - I disagree
 - not this time
 - nothing else thanks
+- No
 - No
 - No
 - No
@@ -219,6 +223,7 @@
 - q@misell.cymru
 - test@example.com
 - bla@gmail.com
+- bonzi@lordbonzi.pro
 
 ## intent:end
 - bye
@@ -309,6 +314,7 @@
 - [354403064522046](imei)
 - [358545080134606](imei)
 - [358545080134606](imei)
+- 352632082920491[](imei:352632082920491)
 
 ## intent:insult
 - stupid
@@ -371,11 +377,14 @@
 - my name is [Daniel Smith](name)
 - I'm [Adrian](name)
 - [Q](name)
+- [Alfie Foster](name)
 
 ## intent:network
 - [VOXI](network)
 - [ee](network)
 - [three](network)
+- Three
+- [three](number:3)
 
 ## intent:opinion+negative
 - ugh
@@ -396,7 +405,7 @@
 ## intent:phone_number
 - [07495627911](phone)
 - [02920497667](phone)
-- [07495627911](phone)[](number:7495627911)
+- [07495627911](phone)
 
 ## intent:rate
 - 10
@@ -512,6 +521,8 @@
 - human
 - operator
 - let me speak to a human
+- talk to agent
+- agent
 
 ## intent:stop
 - ok then you cant help me
@@ -609,6 +620,8 @@
 - unlock my [iphone xr](iphone_model) from [ee](network)
 - unlock my phone
 - unlock my [nokia](brand:Nokia) from [ee](network)
+- unlock
+- unlock
 
 ## synonym:1
 - one

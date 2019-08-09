@@ -166,6 +166,7 @@
 ## not unlockable
 > unlockable
     - slot{"unlockable": false}
+    - unlock_clear
 > anything_else
 
 ## interactive_story_1
@@ -430,6 +431,85 @@
     - form{"name": null}
     - slot{"requested_slot": null}
     - repair
+    - utter_anything_else
+* deny
+    - utter_goodbye
+
+## interactive_story_1
+* unlock
+    - utter_unlock_explain
+    - unlock_form
+    - form{"name": "unlock_form"}
+    - slot{"requested_slot": "brand"}
+* form: brand{"brand": "sony"}
+    - slot{"brand": "sony"}
+    - form: unlock_form
+    - slot{"brand": "sony"}
+    - slot{"requested_slot": "network"}
+* form: network{"number": 3}
+    - form: unlock_form
+    - slot{"network": "three"}
+    - slot{"requested_slot": "name"}
+* form: name{"name": "Alfie Foster"}
+    - slot{"name": "Alfie Foster"}
+    - form: unlock_form
+    - slot{"name": "Alfie Foster"}
+    - slot{"requested_slot": "phone_number"}
+* form: phone_number{"phone-number": "07585461539", "number": "7585461539"}
+    - form: unlock_form
+    - slot{"phone_number": "+447585461539"}
+    - slot{"requested_slot": "email"}
+* form: email{"email": "bonzi@lordbonzi.pro"}
+    - slot{"email": "bonzi@lordbonzi.pro"}
+    - form: unlock_form
+    - slot{"email": "bonzi@lordbonzi.pro"}
+    - slot{"requested_slot": "imei"}
+* form: imei{"phone-number": "352632082920491", "imei": "352632082920491"}
+    - slot{"imei": "352632082920491"}
+    - form: unlock_form
+    - slot{"imei": "352632082920491"}
+    - form{"name": null}
+    - slot{"requested_slot": null}
+    - unlock_lookup
+    - slot{"unlockable": true}
+    - utter_ask_order
+* affirm
+    - unlock_order
+    - unlock_clear
+    - slot{"brand": null}
+    - slot{"iphone_model": null}
+    - slot{"network": null}
+    - slot{"imei": null}
+* unlock
+    - utter_unlock_explain
+    - unlock_form
+    - form{"name": "unlock_form"}
+    - slot{"name": "Alfie Foster"}
+    - slot{"phone_number": "+447585461539"}
+    - slot{"email": "bonzi@lordbonzi.pro"}
+    - slot{"requested_slot": "brand"}
+* form: brand{"brand": "iPad"}
+    - slot{"brand": "iPad"}
+    - form: unlock_form
+    - slot{"brand": "ipad"}
+    - slot{"requested_slot": "network"}
+* form: network{"number": "3"}
+    - form: unlock_form
+    - slot{"network": "three"}
+    - slot{"requested_slot": "imei"}
+* form: imei{"phone-number": "352632082920491", "imei": "352632082920491"}
+    - slot{"imei": "352632082920491"}
+    - form: unlock_form
+    - slot{"imei": "352632082920491"}
+    - form{"name": null}
+    - slot{"requested_slot": null}
+    - unlock_lookup
+    - slot{"unlockable": false}
+    - unlock_clear
+    - slot{"brand": null}
+    - slot{"iphone_model": null}
+    - slot{"network": null}
+    - slot{"imei": null}
     - utter_anything_else
 * deny
     - utter_goodbye

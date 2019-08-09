@@ -1,8 +1,8 @@
 %YAML 1.1
 ---
 actions:
-- cat_pic
 - action_default_ask_affirmation
+- cat_pic
 - greet
 - rate_slot
 - repair
@@ -54,18 +54,19 @@ forms:
 - repair_form
 - unlock_form
 intents:
-- unlock
-- email
-- phone_number
 - name
+- email
 - affirm
+- deny
+- unlock
+- brand
+- phone_number
+- network
 - imei
 - repair
-- deny
 - greet
 - support_opening_hours
 - rate
-- network
 - support_contact_phone
 - support_location
 - ask_mood
@@ -88,7 +89,6 @@ intents:
 - stop
 - ask_weather
 - ask_history
-- brand
 - iphone_repair
 - mood_unhappy
 slots:
