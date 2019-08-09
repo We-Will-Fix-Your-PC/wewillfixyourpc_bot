@@ -40,6 +40,7 @@ data:
   SENTRY_ENVIRONMENT: "staging"
   PAYMENT_ENVIRONMENT: "test"
   EMAIL_HOST: "mail.misell.cymru"
+  ORDER_NOTIFICATION_EMAIL: "q@misell.cymru"
 ---
 apiVersion: apps/v1
 kind: Deployment
