@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'fulfillment',
     'facebook',
     'twitter',
+    'telegram_bot',
     'operator_interface',
     'payment',
     'rasa_api',
@@ -205,6 +206,10 @@ LOGGING = {
             'level': 'INFO',
         },
         'facebook': {
+            'handlers': ['console'],
+            'level': 'INFO',
+        },
+        'telegram_bot': {
             'handlers': ['console'],
             'level': 'INFO',
         },

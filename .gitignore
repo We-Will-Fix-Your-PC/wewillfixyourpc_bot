@@ -219,12 +219,4 @@ fabric.properties
 
 node_modules
 
-facebook.json
-twitter.json
-WeWillFixYourPC.json
-SECRET_KEY
-private_key.pem
-public_key.pem
-PUSH_PRIV_KEY
-worldpay.json
-gpay-key-test.pem
+django/secrets/

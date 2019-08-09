@@ -26,6 +26,7 @@ urlpatterns = [
     path('rasa/', include('rasa_api.urls', namespace='rasa')),
     path('twitter/', include('twitter.urls', namespace='twitter')),
     path('facebook/', include('facebook.urls', namespace='facebook')),
+    path('telegram/', include('telegram_bot.urls', namespace='telegram')),
     path('payment/', include('payment.urls', namespace='payment')),
     path('', include('operator_interface.urls', namespace='operator')),
 ]

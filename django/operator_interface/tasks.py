@@ -66,6 +66,8 @@ def process_message(mid):
     elif message.direction == models.Message.TO_CUSTOMER:
         if conversation.platform == models.Conversation.FACEBOOK:
             facebook.tasks.send_facebook_message(mid)
+        elif conversation.platform == models.Conversation.TELEGRAM:
+            telegram_bot.tasks.send_telegram_message(mid)
 
 
 @shared_task

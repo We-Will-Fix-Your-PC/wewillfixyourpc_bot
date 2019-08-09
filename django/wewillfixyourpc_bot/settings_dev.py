@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'fulfillment',
     'facebook',
     'twitter',
+    'telegram_bot',
     'operator_interface',
     'payment',
     'rasa_api',
@@ -161,6 +162,8 @@ with open(os.path.join(BASE_DIR, "secrets/facebook.json")) as f:
     facebook_conf = json.load(f)
 with open(os.path.join(BASE_DIR, "secrets/twitter.json")) as f:
     twitter_conf = json.load(f)
+with open(os.path.join(BASE_DIR, "secrets/telegram.json")) as f:
+    telegram_conf = json.load(f)
 with open(os.path.join(BASE_DIR, "secrets/worldpay.json")) as f:
     worldpay_conf = json.load(f)
 with open(os.path.join(BASE_DIR, 'secrets/gpay-key-test.pem'), 'rb') as f:
@@ -175,6 +178,8 @@ TWITTER_ACCESS_TOKEN = twitter_conf["access_token"]
 TWITTER_ACCESS_TOKEN_SECRET = twitter_conf["access_token_secret"]
 
 TWITTER_ENVNAME = "main"
+
+TELEGRAM_TOKEN = telegram_conf["token"]
 
 WORLDPAY_TEST_KEY = worldpay_conf["test_key"]
 WORLDPAY_LIVE_KEY = worldpay_conf["live_key"]
@@ -212,6 +217,10 @@ LOGGING = {
             'level': 'DEBUG',
         },
         'facebook': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+        },
+        'telegram_bot': {
             'handlers': ['console'],
             'level': 'DEBUG',
         },

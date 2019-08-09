@@ -28,9 +28,11 @@ class NotificationSubscription(models.Model):
 class Conversation(models.Model):
     FACEBOOK = 'FB'
     TWITTER = 'TW'
+    TELEGRAM = 'TG'
     PLATFORM_CHOICES = (
         (FACEBOOK, 'Facebook'),
-        (TWITTER, 'Twitter')
+        (TWITTER, 'Twitter'),
+        (TELEGRAM, 'Telegram'),
     )
 
     platform = models.CharField(max_length=2, choices=PLATFORM_CHOICES)

@@ -142,13 +142,12 @@ def update_facebook_profile(psid, cid):
     timezone = r.get('timezone', None)
     locale = r.get('locale', None)
     gender = r.get('gender', None)
-    if not conversation.customer_pic or conversation.customer_pic.name != psid:
-        r = requests.get(profile_pic)
-        if r.status_code == 200:
-            conversation.customer_pic = \
-                InMemoryUploadedFile(file=BytesIO(r.content), size=len(r.content), charset=r.encoding,
-                                     content_type=r.headers.get('content-type'), field_name=psid,
-                                     name=psid)
+    r = requests.get(profile_pic)
+    if r.status_code == 200:
+        conversation.customer_pic = \
+            InMemoryUploadedFile(file=BytesIO(r.content), size=len(r.content), charset=r.encoding,
+                                 content_type=r.headers.get('content-type'), field_name=psid,
+                                 name=psid)
     conversation.customer_name = name
     conversation.customer_locale = locale
     conversation.customer_gender = gender
