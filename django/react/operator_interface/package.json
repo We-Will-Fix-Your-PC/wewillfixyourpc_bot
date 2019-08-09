@@ -2,7 +2,7 @@
   "name": "operator_interface",
   "version": "0.1.0",
   "private": true,
-  "homepage": "/static/operator_interface",
+  "homepage": "/static/operator_interface/build",
   "dependencies": {
     "@babel/core": "7.4.3",
     "@material/drawer": "^2.1.1",
