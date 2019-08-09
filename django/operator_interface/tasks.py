@@ -5,7 +5,7 @@ from asgiref.sync import async_to_sync
 from celery import shared_task
 from channels.layers import get_channel_layer
 from django.conf import settings
-from pywebpush import webpush
+from pywebpush import webpush, WebPushException
 
 import facebook.tasks
 import rasa_api.tasks
@@ -28,15 +28,21 @@ def send_message_to_interface(mid):
 @shared_task
 def send_push_notification(sid, data):
     subscription = models.NotificationSubscription.objects.get(id=sid)
-    webpush(
-        subscription_info=subscription.subscription_info_json,
-        data=json.dumps(data),
-        vapid_private_key=settings.PUSH_PRIV_KEY,
-        vapid_claims={
-            "sub": "mailto:q@misell.cymru",
-            "aud": "https://cardifftec.uk"
-        }
-    )
+    try:
+        webpush(
+            subscription_info=subscription.subscription_info_json,
+            data=json.dumps(data),
+            vapid_private_key=settings.PUSH_PRIV_KEY,
+            vapid_claims={
+                "sub": "mailto:q@misell.cymru",
+                "aud": "https://cardifftec.uk"
+            }
+        )
+    except WebPushException as e:
+        if e.response.status_code in [404, 410]:
+            subscription.delete()
+        else:
+            print(e.response.text)
 
 
 @shared_task
