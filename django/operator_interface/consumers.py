@@ -167,7 +167,9 @@ class OperatorConsumer(AsyncJsonWebsocketConsumer):
         try:
             return payment.models.Customer.objects.get(email=email, phone=phone, name=name)
         except payment.models.Customer.DoesNotExist:
-            return payment.models.Customer(email=email, phone=phone, name=name)
+            customer = payment.models.Customer(email=email, phone=phone, name=name)
+            customer.save()
+            return customer
 
     @database_sync_to_async
     def get_payment_item(self, pid):
