@@ -1,18 +1,20 @@
-from django.http import HttpResponse, Http404
-from django.core.exceptions import PermissionDenied, SuspiciousOperation
-from django.views.decorators.csrf import csrf_exempt
-from django.views.decorators.clickjacking import xframe_options_exempt
-from django.shortcuts import render, get_object_or_404, reverse
+import decimal
+import json
+import uuid
+
+import requests
 from django.conf import settings
+from django.core.exceptions import PermissionDenied, SuspiciousOperation
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-from . import models
-from . import gpay
+from django.http import Http404, HttpResponse
+from django.shortcuts import get_object_or_404, render, reverse
+from django.views.decorators.clickjacking import xframe_options_exempt
+from django.views.decorators.csrf import csrf_exempt
+
 import operator_interface.models
 import operator_interface.tasks
-import json
-import requests
-import uuid
+from . import gpay, models, tasks
 
 
 @receiver(post_save, sender=models.Payment)
@@ -32,13 +34,9 @@ def payment_saved(sender, instance: models.Payment, **kwargs):
                 message_id=uuid.uuid4(), text="Payment complete 💸, thanks!")
             message.save()
             operator_interface.tasks.process_message.delay(message.id)
-            message = operator_interface.models.Message(
-                conversation=conversation, direction=operator_interface.models.Message.TO_CUSTOMER,
-                message_id=uuid.uuid4(), payment_confirm=instance)
-            message.save()
-            operator_interface.tasks.process_message.delay(message.id)
         except operator_interface.models.Message.DoesNotExist:
-            return
+            pass
+        tasks.process_payment.delay(instance.id)
 
 
 def get_client_ip(request):
@@ -50,17 +48,38 @@ def get_client_ip(request):
     return ip
 
 
-@xframe_options_exempt
-def fb_payment(request, payment_id):
+def render_payment(request, payment_id, template):
     if not request.session.get("sess_id"):
         request.session["sess_id"] = str(uuid.uuid4())
         request.session.save()
 
     payment_o = get_object_or_404(models.Payment, id=payment_id)
 
-    return render(request, "payment/fb_payment.html",
+    return render(request, template,
                   {"payment_id": payment_id, "accepts_header": request.META.get('HTTP_ACCEPT'),
                    "is_open_payment": payment_o.state == models.Payment.STATE_OPEN})
+
+
+@xframe_options_exempt
+def fb_payment(request, payment_id):
+    return render_payment(request, payment_id, "payment/fb_payment.html")
+
+
+@xframe_options_exempt
+def twitter_payment(request, payment_id):
+    return render_payment(request, payment_id, "payment/twitter_payment.html")
+
+
+@xframe_options_exempt
+def receipt(request, payment_id):
+    payment_o = get_object_or_404(models.Payment, id=payment_id)
+    return render(request, "payment/receipt.html", {
+        "payment": payment_o,
+        "subtotal": (payment_o.total / decimal.Decimal('1.2'))
+                  .quantize(decimal.Decimal('.01'), rounding=decimal.ROUND_DOWN),
+        "tax": (payment_o.total * decimal.Decimal('0.2'))
+                        .quantize(decimal.Decimal('.01'), rounding=decimal.ROUND_DOWN)
+    })
 
 
 def payment(request, payment_id):
@@ -329,10 +348,3 @@ def threeds_complete(request, payment_id):
         return render(request, "payment/3ds_complete.html", {"payment_id": payment_id, "3ds_approved": True})
     else:
         return render(request, "payment/3ds_complete.html", {"payment_id": payment_id, "3ds_approved": False})
-
-
-
-
-
-
-

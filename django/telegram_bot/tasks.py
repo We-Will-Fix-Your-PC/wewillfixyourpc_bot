@@ -74,6 +74,16 @@ def handle_telegram_message(message):
 
 
 @shared_task
+def handle_telegram_message_typing_on(cid):
+    conversation = Conversation.objects.get(id=cid)
+    r = requests.post(f"https://api.telegram.org/bot{settings.TELEGRAM_TOKEN}/sendChatAction", json={
+        "chat_id": conversation.platform_id,
+        "action": "typing"
+    })
+    r.raise_for_status()
+
+
+@shared_task
 def update_telegram_profile(chat_id, cid):
     conversation = Conversation.objects.get(id=cid)
     r = requests.post(f"https://api.telegram.org/bot{settings.TELEGRAM_TOKEN}/getChat", json={

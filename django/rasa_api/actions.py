@@ -522,7 +522,7 @@ class ActionOrderUnlock(Action):
 
         customer_o = payment.models.Customer.find_customer(name=name, email=email, phone=phone_number)
         payment_o = payment.models.Payment(
-            state=payment.models.Payment.STATE_OPEN, environment=payment.models.Payment.ENVIRONMENT_TEST,
+            state=payment.models.Payment.STATE_OPEN,
             customer=customer_o
         )
         item_data = json.dumps({

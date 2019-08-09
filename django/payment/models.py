@@ -1,5 +1,6 @@
 from django.db import models
 from phonenumber_field.modelfields import PhoneNumberField
+from django.conf import settings
 import uuid
 import decimal
 import secrets
@@ -57,7 +58,7 @@ class Payment(models.Model):
     timestamp = models.DateTimeField(auto_now_add=True)
     state = models.CharField(max_length=1, choices=STATES)
     customer = models.ForeignKey(Customer, on_delete=models.SET_NULL, null=True, blank=True)
-    environment = models.CharField(max_length=1, choices=ENVIRONMENTS, default=ENVIRONMENT_TEST)
+    environment = models.CharField(max_length=1, choices=ENVIRONMENTS, default=settings.DEFAULT_PAYMENT_ENVIRONMENT)
     payment_method = models.CharField(max_length=255, blank=True, default="")
 
     @property

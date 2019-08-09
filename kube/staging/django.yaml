@@ -26,6 +26,20 @@ spec:
     requests:
       storage: 1Gi
 ---
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: django-conf
+  namespace: chatbot-staging
+data:
+  HOST: staging.bot.cardifftec.uk
+  DJANGO_SETTINGS_MODULE: wewillfixyourpc_bot.settings
+  EXTERNAL_URL: "https://staging.bot.cardifftec.uk/"
+  CELERY_RESULT_BACKEND: "redis://redis"
+  RASA_HTTP_URL: "http://rasa:5005"
+  SENTRY_ENVIRONMENT: "staging"
+  PAYMENT_ENVIRONMENT: "test"
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -68,94 +82,31 @@ spec:
               name: static
             - mountPath: "/app/media/"
               name: media
-          env:
-            - name: HOST
-              value: staging.bot.cardifftec.uk
-            - name: DJANGO_SETTINGS_MODULE
-              value: wewillfixyourpc_bot.settings
-            - name: EXTERNAL_URL
-              value: "https://staging.bot.cardifftec.uk/"
-            - name: CELERY_RESULT_BACKEND
-              value: "redis://redis"
-            - name: RASA_HTTP_URL
-              value: "http://rasa:5005"
-            - name: SENTRY_ENVIRONMENT
-              value: "staging"
-            - name: DB_HOST
-              valueFrom:
-                configMapKeyRef:
-                  key: db-host
-                  name: db-conf
-            - name: DB_NAME
-              valueFrom:
-                configMapKeyRef:
-                  key: db-name
-                  name: db-conf
-            - name: DB_USER
-              valueFrom:
-                secretKeyRef:
-                  key: db-user
-                  name: db-creds
-            - name: DB_PASS
-              valueFrom:
-                secretKeyRef:
-                  key: db-pass
-                  name: db-creds
-            - name: CELERY_BROKER_URL
-              valueFrom:
-                secretKeyRef:
-                  key: url
-                  name: rabbitmq-user
-            - name: SECRET_KEY
-              valueFrom:
-                secretKeyRef:
-                  key: secret-key
-                  name: django-secret
-            - name: PUSH_PRIV_KEY
-              valueFrom:
-                secretKeyRef:
-                  key: push-priv-key
-                  name: webpush-secrets
-            - name: WORLDPAY_TEST_KEY
-              valueFrom:
-                secretKeyRef:
-                  key: test-key
-                  name: worldpay-keys
-            - name: WORLDPAY_LIVE_KEY
-              valueFrom:
-                secretKeyRef:
-                  key: live-key
-                  name: worldpay-keys
-            - name: FACEBOOK_VERIFY_TOKEN
-              valueFrom:
-                secretKeyRef:
-                  key: verify-token
-                  name: facebook-secrets
-            - name: FACEBOOK_ACCESS_TOKEN
-              valueFrom:
-                secretKeyRef:
-                  key: access-token
-                  name: facebook-secrets
-            - name: TWITTER_CONSUMER_KEY
-              valueFrom:
-                secretKeyRef:
-                  key: consumer-key
-                  name: twitter-secrets
-            - name: TWITTER_CONSUMER_SECRET
-              valueFrom:
-                secretKeyRef:
-                  key: consumer-secret
-                  name: twitter-secrets
-            - name: TWITTER_ACCESS_TOKEN
-              valueFrom:
-                secretKeyRef:
-                  key: access-token
-                  name: twitter-secrets
-            - name: TWITTER_ACCESS_TOKEN_SECRET
-              valueFrom:
-                secretKeyRef:
-                  key: access-token-secret
-                  name: twitter-secrets
+          envFrom:
+            - configMapRef:
+                name: django-conf
+            - configMapRef:
+                name: db-conf
+              prefix: "DB_"
+            - secretRef:
+                name: db-creds
+              prefix: "DB_"
+            - secretRef:
+                name: rabbitmq-user
+              prefix: "CELERY_BROKER"
+            - secretRef:
+                name: django-secret
+            - secretRef:
+                name: webpush-secrets
+            - secretRef:
+                name: worldpay-keys
+              prefix: "WORLDPAY_"
+            - secretRef:
+                name: facebook-secrets
+              prefix: "FACEBOOK_"
+            - secretRef:
+                name: twitter-secrets
+              prefix: "TWITTER_"
       containers:
         - name: gunicorn
           image: theenbyperor/wewillfixyourpcbot_django:(version)
@@ -171,92 +122,32 @@ spec:
               name: static
             - mountPath: "/app/media/"
               name: media
-          env:
-            - name: HOST
-              value: staging.bot.cardifftec.uk
-            - name: DJANGO_SETTINGS_MODULE
-              value: wewillfixyourpc_bot.settings
-            - name: EXTERNAL_URL
-              value: "https://staging.bot.cardifftec.uk/"
-            - name: CELERY_RESULT_BACKEND
-              value: "redis://redis"
-            - name: SETNY_ENVIRONMENT
-              value: "staging"
-            - name: DB_HOST
-              valueFrom:
-                configMapKeyRef:
-                  key: db-host
-                  name: db-conf
-            - name: DB_NAME
-              valueFrom:
-                configMapKeyRef:
-                  key: db-name
-                  name: db-conf
-            - name: DB_USER
-              valueFrom:
-                secretKeyRef:
-                  key: db-user
-                  name: db-creds
-            - name: DB_PASS
-              valueFrom:
-                secretKeyRef:
-                  key: db-pass
-                  name: db-creds
-            - name: CELERY_BROKER_URL
-              valueFrom:
-                secretKeyRef:
-                  key: url
-                  name: rabbitmq-user
-            - name: SECRET_KEY
-              valueFrom:
-                secretKeyRef:
-                  key: secret-key
-                  name: django-secret
-            - name: PUSH_PRIV_KEY
-              valueFrom:
-                secretKeyRef:
-                  key: push-priv-key
-                  name: webpush-secrets
-            - name: WORLDPAY_TEST_KEY
-              valueFrom:
-                secretKeyRef:
-                  key: test-key
-                  name: worldpay-keys
-            - name: WORLDPAY_LIVE_KEY
-              valueFrom:
-                secretKeyRef:
-                  key: live-key
-                  name: worldpay-keys
-            - name: FACEBOOK_VERIFY_TOKEN
-              valueFrom:
-                secretKeyRef:
-                  key: verify-token
-                  name: facebook-secrets
-            - name: FACEBOOK_ACCESS_TOKEN
-              valueFrom:
-                secretKeyRef:
-                  key: access-token
-                  name: facebook-secrets
-            - name: TWITTER_CONSUMER_KEY
-              valueFrom:
-                secretKeyRef:
-                  key: consumer-key
-                  name: twitter-secrets
-            - name: TWITTER_CONSUMER_SECRET
-              valueFrom:
-                secretKeyRef:
-                  key: consumer-secret
-                  name: twitter-secrets
-            - name: TWITTER_ACCESS_TOKEN
-              valueFrom:
-                secretKeyRef:
-                  key: access-token
-                  name: twitter-secrets
-            - name: TWITTER_ACCESS_TOKEN_SECRET
-              valueFrom:
-                secretKeyRef:
-                  key: access-token-secret
-                  name: twitter-secrets
+
+          envFrom:
+            - configMapRef:
+                name: django-conf
+            - configMapRef:
+                name: db-conf
+              prefix: "DB_"
+            - secretRef:
+                name: db-creds
+              prefix: "DB_"
+            - secretRef:
+                name: rabbitmq-user
+              prefix: "CELERY_BROKER"
+            - secretRef:
+                name: django-secret
+            - secretRef:
+                name: webpush-secrets
+            - secretRef:
+                name: worldpay-keys
+              prefix: "WORLDPAY_"
+            - secretRef:
+                name: facebook-secrets
+              prefix: "FACEBOOK_"
+            - secretRef:
+                name: twitter-secrets
+              prefix: "TWITTER_"
         - name: daphne
           image: theenbyperor/wewillfixyourpcbot_django:(version)
           imagePullPolicy: Always
@@ -271,94 +162,32 @@ spec:
               name: static
             - mountPath: "/app/media/"
               name: media
-          env:
-            - name: HOST
-              value: staging.bot.cardifftec.uk
-            - name: DJANGO_SETTINGS_MODULE
-              value: wewillfixyourpc_bot.settings
-            - name: EXTERNAL_URL
-              value: "https://staging.bot.cardifftec.uk/"
-            - name: CELERY_RESULT_BACKEND
-              value: "redis://redis"
-            - name: RASA_HTTP_URL
-              value: "http://rasa:5005"
-            - name: SETNY_ENVIRONMENT
-              value: "staging"
-            - name: DB_HOST
-              valueFrom:
-                configMapKeyRef:
-                  key: db-host
-                  name: db-conf
-            - name: DB_NAME
-              valueFrom:
-                configMapKeyRef:
-                  key: db-name
-                  name: db-conf
-            - name: DB_USER
-              valueFrom:
-                secretKeyRef:
-                  key: db-user
-                  name: db-creds
-            - name: DB_PASS
-              valueFrom:
-                secretKeyRef:
-                  key: db-pass
-                  name: db-creds
-            - name: CELERY_BROKER_URL
-              valueFrom:
-                secretKeyRef:
-                  key: url
-                  name: rabbitmq-user
-            - name: SECRET_KEY
-              valueFrom:
-                secretKeyRef:
-                  key: secret-key
-                  name: django-secret
-            - name: PUSH_PRIV_KEY
-              valueFrom:
-                secretKeyRef:
-                  key: push-priv-key
-                  name: webpush-secrets
-            - name: WORLDPAY_TEST_KEY
-              valueFrom:
-                secretKeyRef:
-                  key: test-key
-                  name: worldpay-keys
-            - name: WORLDPAY_LIVE_KEY
-              valueFrom:
-                secretKeyRef:
-                  key: live-key
-                  name: worldpay-keys
-            - name: FACEBOOK_VERIFY_TOKEN
-              valueFrom:
-                secretKeyRef:
-                  key: verify-token
-                  name: facebook-secrets
-            - name: FACEBOOK_ACCESS_TOKEN
-              valueFrom:
-                secretKeyRef:
-                  key: access-token
-                  name: facebook-secrets
-            - name: TWITTER_CONSUMER_KEY
-              valueFrom:
-                secretKeyRef:
-                  key: consumer-key
-                  name: twitter-secrets
-            - name: TWITTER_CONSUMER_SECRET
-              valueFrom:
-                secretKeyRef:
-                  key: consumer-secret
-                  name: twitter-secrets
-            - name: TWITTER_ACCESS_TOKEN
-              valueFrom:
-                secretKeyRef:
-                  key: access-token
-                  name: twitter-secrets
-            - name: TWITTER_ACCESS_TOKEN_SECRET
-              valueFrom:
-                secretKeyRef:
-                  key: access-token-secret
-                  name: twitter-secrets
+
+          envFrom:
+            - configMapRef:
+                name: django-conf
+            - configMapRef:
+                name: db-conf
+              prefix: "DB_"
+            - secretRef:
+                name: db-creds
+              prefix: "DB_"
+            - secretRef:
+                name: rabbitmq-user
+              prefix: "CELERY_BROKER"
+            - secretRef:
+                name: django-secret
+            - secretRef:
+                name: webpush-secrets
+            - secretRef:
+                name: worldpay-keys
+              prefix: "WORLDPAY_"
+            - secretRef:
+                name: facebook-secrets
+              prefix: "FACEBOOK_"
+            - secretRef:
+                name: twitter-secrets
+              prefix: "TWITTER_"
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -402,94 +231,31 @@ spec:
               name: static
             - mountPath: "/app/media/"
               name: media
-          env:
-            - name: HOST
-              value: staging.bot.cardifftec.uk
-            - name: DJANGO_SETTINGS_MODULE
-              value: wewillfixyourpc_bot.settings
-            - name: EXTERNAL_URL
-              value: "https://staging.bot.cardifftec.uk/"
-            - name: CELERY_RESULT_BACKEND
-              value: "redis://redis"
-            - name: RASA_HTTP_URL
-              value: "http://rasa:5005"
-            - name: SETNY_ENVIRONMENT
-              value: "staging"
-            - name: DB_HOST
-              valueFrom:
-                configMapKeyRef:
-                  key: db-host
-                  name: db-conf
-            - name: DB_NAME
-              valueFrom:
-                configMapKeyRef:
-                  key: db-name
-                  name: db-conf
-            - name: DB_USER
-              valueFrom:
-                secretKeyRef:
-                  key: db-user
-                  name: db-creds
-            - name: DB_PASS
-              valueFrom:
-                secretKeyRef:
-                  key: db-pass
-                  name: db-creds
-            - name: CELERY_BROKER_URL
-              valueFrom:
-                secretKeyRef:
-                  key: url
-                  name: rabbitmq-user
-            - name: SECRET_KEY
-              valueFrom:
-                secretKeyRef:
-                  key: secret-key
-                  name: django-secret
-            - name: PUSH_PRIV_KEY
-              valueFrom:
-                secretKeyRef:
-                  key: push-priv-key
-                  name: webpush-secrets
-            - name: WORLDPAY_TEST_KEY
-              valueFrom:
-                secretKeyRef:
-                  key: test-key
-                  name: worldpay-keys
-            - name: WORLDPAY_LIVE_KEY
-              valueFrom:
-                secretKeyRef:
-                  key: live-key
-                  name: worldpay-keys
-            - name: FACEBOOK_VERIFY_TOKEN
-              valueFrom:
-                secretKeyRef:
-                  key: verify-token
-                  name: facebook-secrets
-            - name: FACEBOOK_ACCESS_TOKEN
-              valueFrom:
-                secretKeyRef:
-                  key: access-token
-                  name: facebook-secrets
-            - name: TWITTER_CONSUMER_KEY
-              valueFrom:
-                secretKeyRef:
-                  key: consumer-key
-                  name: twitter-secrets
-            - name: TWITTER_CONSUMER_SECRET
-              valueFrom:
-                secretKeyRef:
-                  key: consumer-secret
-                  name: twitter-secrets
-            - name: TWITTER_ACCESS_TOKEN
-              valueFrom:
-                secretKeyRef:
-                  key: access-token
-                  name: twitter-secrets
-            - name: TWITTER_ACCESS_TOKEN_SECRET
-              valueFrom:
-                secretKeyRef:
-                  key: access-token-secret
-                  name: twitter-secrets
+          envFrom:
+            - configMapRef:
+                name: django-conf
+            - configMapRef:
+                name: db-conf
+              prefix: "DB_"
+            - secretRef:
+                name: db-creds
+              prefix: "DB_"
+            - secretRef:
+                name: rabbitmq-user
+              prefix: "CELERY_BROKER"
+            - secretRef:
+                name: django-secret
+            - secretRef:
+                name: webpush-secrets
+            - secretRef:
+                name: worldpay-keys
+              prefix: "WORLDPAY_"
+            - secretRef:
+                name: facebook-secrets
+              prefix: "FACEBOOK_"
+            - secretRef:
+                name: twitter-secrets
+              prefix: "TWITTER_"
 ---
 apiVersion: v1
 kind: Service

@@ -136,5 +136,11 @@ def webhook(request):
                     message = message["message_data"]
                     user = users[psid]
                     tasks.handle_twitter_message.delay(mid, psid, message, user)
+    if r.get("direct_message_mark_read_events") is not None:
+        events = r["direct_message_mark_read_events"]
+        for event in events:
+            psid = event["sender_id"]
+            last_read = event["last_read_event_id"]
+            tasks.handle_twitter_read.delay(psid, last_read)
 
     return HttpResponse("")

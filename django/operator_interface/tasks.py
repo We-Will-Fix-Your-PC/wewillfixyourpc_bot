@@ -66,6 +66,8 @@ def process_message(mid):
     elif message.direction == models.Message.TO_CUSTOMER:
         if conversation.platform == models.Conversation.FACEBOOK:
             facebook.tasks.send_facebook_message(mid)
+        elif conversation.platform == models.Conversation.TWITTER:
+            twitter.tasks.send_twitter_message(mid)
         elif conversation.platform == models.Conversation.TELEGRAM:
             telegram_bot.tasks.send_telegram_message(mid)
 
@@ -104,3 +106,5 @@ def process_typing(cid):
         facebook.tasks.handle_facebook_message_typing_on(cid)
     elif conversation.platform == models.Conversation.TWITTER:
         twitter.tasks.handle_twitter_message_typing_on(cid)
+    elif conversation.platform == models.Conversation.TELEGRAM:
+        telegram_bot.tasks.handle_telegram_message_typing_on(cid)

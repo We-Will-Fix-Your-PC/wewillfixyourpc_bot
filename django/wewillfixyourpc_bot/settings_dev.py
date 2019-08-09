@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/2.1/ref/settings/
 """
 
 import os
+import payment.models
 import json
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
@@ -143,12 +144,12 @@ USE_TZ = True
 
 SENTRY_ENVIRONMENT = "dev"
 
-EXTERNAL_URL_BASE = "https://wewillfixyourpc-bot.eu.ngrok.io/"
+EXTERNAL_URL_BASE = "https://wewillfixyourpc-bot.eu.ngrok.io"
 
-STATIC_URL = f'{EXTERNAL_URL_BASE}static/'
+STATIC_URL = f'{EXTERNAL_URL_BASE}/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 
-MEDIA_URL = f'{EXTERNAL_URL_BASE}media/'
+MEDIA_URL = f'{EXTERNAL_URL_BASE}/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 PHONENUMBER_DEFAULT_REGION = "GB"
@@ -190,6 +191,11 @@ GOOGLE_CREDENTIALS_FILE = "secrets/WeWillFixYourPC.json"
 GOOGLE_PROJECT_ID = "wewillfixyourpc-8df73"
 
 RASA_HTTP_URL = "http://localhost:5005"
+
+DEFAULT_PAYMENT_ENVIRONMENT = payment.models.Payment.ENVIRONMENT_TEST
+
+ORDER_NOTIFICATION_EMAIL = "q@misell.cymru"
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 CORS_ORIGIN_ALLOW_ALL = True
 CORS_ALLOW_CREDENTIALS = True

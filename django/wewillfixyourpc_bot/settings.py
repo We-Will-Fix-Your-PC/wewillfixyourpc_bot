@@ -11,7 +11,7 @@ https://docs.djangoproject.com/en/2.1/ref/settings/
 """
 
 import os
-import json
+import payment.models
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -181,6 +181,12 @@ GPAY_TEST_PRIVATE_KEYS = [gpay_priv_key_test]
 PUSH_PRIV_KEY = os.getenv("PUSH_PRIV_KEY")
 
 RASA_HTTP_URL = os.getenv("RASA_HTTP_URL", "http://localhost:5005")
+
+payment_environment = os.getenv("PAYMENT_ENVIRONMENT", "test")
+if payment_environment == "live":
+    DEFAULT_PAYMENT_ENVIRONMENT = payment.models.Payment.ENVIRONMENT_LIVE
+else:
+    DEFAULT_PAYMENT_ENVIRONMENT = payment.models.Payment.ENVIRONMENT_TEST
 
 CORS_ORIGIN_ALLOW_ALL = True
 CORS_ALLOW_CREDENTIALS = True

@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Order details</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <style>
+        body {
+            margin: auto;
+            padding: 10px;
+            max-width: 800px;
+            font-family: "Helvetica Neue", Helvetica, Arial, FreeSans, sans-serif;
+        }
+
+        div {
+            padding-bottom: 21px;
+            border-bottom: 1px dotted #dfdfdf;
+        }
+
+        table .summary td:first-of-type {
+            text-align: right;
+        }
+
+        table .total {
+            font-weight: bold;
+        }
+
+        table tr td:last-of-type {
+            text-align: right;
+        }
+
+        p span {
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+<h1>Order details</h1>
+<p><span>Deliver to:</span> {{ payment.customer.name }}</p>
+<p><span>Ordered on:</span> {{ payment.timestamp|date:"Y-m-d P" }}</p>
+<p><span>Paid with:</span> {{ payment.payment_method }}</p>
+<p><span>Order number:</span> {{ payment.id }}</p>
+<table>
+    <thead>
+    <tr>
+        <th>Quantity</th>
+        <th>Item</th>
+        <th>Price</th>
+    </tr>
+    </thead>
+    <tbody>
+    {% for item in payment.paymentitem_set.all %}
+        <tr>
+            <td>{{ item.quantity }}x</td>
+            <td>{{ item.title }}</td>
+            <td>@ £{{ item.price }}</td>
+        </tr>
+    {% endfor %}
+    <tr class="summary">
+        <td colspan="2">Subtotal:</td>
+        <td>£{{ subtotal }}</td>
+    </tr>
+    <tr class="summary">
+        <td colspan="2">VAT:</td>
+        <td>£{{ tax }}</td>
+    </tr>
+    <tr class="summary total">
+        <td colspan="2">Total:</td>
+        <td>£{{ payment.total }}</td>
+    </tr>
+    </tbody>
+</table>
+</body>
+</html>

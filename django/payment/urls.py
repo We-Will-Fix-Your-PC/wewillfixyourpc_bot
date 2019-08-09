@@ -4,6 +4,8 @@ from . import views
 app_name = 'payment'
 urlpatterns = [
     path('fb/<payment_id>/', views.fb_payment, name='fb_payment'),
+    path('twitter/<payment_id>/', views.twitter_payment, name='twitter_payment'),
+    path('receipt/<payment_id>/', views.receipt, name='receipt'),
     path('complete/', views.complete_payment),
     path('<payment_id>/', views.payment),
     path('worldpay/<payment_id>/', views.take_worldpay_payment),

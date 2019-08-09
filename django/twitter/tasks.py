@@ -1,14 +1,18 @@
-from celery import shared_task
-from operator_interface.models import Conversation, Message
-from operator_interface.consumers import conversation_saved
-import operator_interface.tasks
-import requests
 import logging
-from django.core.files.uploadedfile import InMemoryUploadedFile
 import os
-import urllib.parse
 import re
+import urllib.parse
 from io import BytesIO
+
+import requests
+from celery import shared_task
+from django.core.files.uploadedfile import InMemoryUploadedFile
+from django.conf import settings
+from django.shortcuts import reverse
+
+import operator_interface.tasks
+from operator_interface.consumers import conversation_saved
+from operator_interface.models import Conversation, Message
 from . import views
 
 
@@ -24,15 +28,33 @@ def handle_twitter_message(mid, psid, message, user):
             handle_mark_twitter_message_read.delay(psid, mid)
             operator_interface.tasks.process_message.delay(message_m.id)
         file_name = os.path.basename(urllib.parse.urlparse(user["profile_image_url_https"]).path)
-        if not conversation.customer_pic or conversation.customer_pic.name != file_name:
-            r = requests.get(user["profile_image_url_https"])
-            if r.status_code == 200:
-                conversation.customer_pic = \
-                    InMemoryUploadedFile(file=BytesIO(r.content), size=len(r.content), charset=r.encoding,
-                                         content_type=r.headers.get('content-type'), field_name=file_name,
-                                         name=file_name)
-                conversation.save()
-                conversation_saved(None, conversation)
+        r = requests.get(user["profile_image_url_https"])
+        if r.status_code == 200:
+            conversation.customer_pic = \
+                InMemoryUploadedFile(file=BytesIO(r.content), size=len(r.content), charset=r.encoding,
+                                     content_type=r.headers.get('content-type'), field_name=file_name,
+                                     name=file_name)
+            conversation.save()
+            conversation_saved(None, conversation)
+
+
+@shared_task
+def handle_twitter_read(psid, last_read):
+    last_read = int(last_read)
+    conversation = Conversation.get_or_create_conversation(Conversation.TWITTER, psid)
+    messages = Message.objects.filter(conversation=conversation, direction=Message.TO_CUSTOMER, read=False)
+    message_ids = []
+    for m in messages:
+        try:
+            m_id = int(m.message_id)
+        except ValueError:
+            continue
+        if m_id <= last_read:
+            m.read = True
+            m.save()
+            message_ids.append(m.id)
+    for message in message_ids:
+        operator_interface.tasks.send_message_to_interface.delay(message)
 
 
 @shared_task
@@ -87,16 +109,40 @@ def send_twitter_message(mid):
             "options": quick_replies
         }
 
-    urls = re.findall("(http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*(),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+)", message.text)
-
-    if len(urls) == 1:
+    if message.payment_request:
         request_body["event"]["message_create"]["message_data"]["ctas"] = [
             {
                 "type": "web_url",
-                "label": "Open",
-                "url": urls[0]
+                "label": "Pay",
+                "url": settings.EXTERNAL_URL_BASE + reverse(
+                    "payment:twitter_payment", kwargs={"payment_id": message.payment_request.id}
+                ),
             }
         ]
+    elif message.payment_confirm:
+        request_body["event"]["message_create"]["message_data"]["text"] =\
+            "You can view your receipt using the link below"
+        request_body["event"]["message_create"]["message_data"]["ctas"] = [
+            {
+                "type": "web_url",
+                "label": "View Receipt",
+                "url": settings.EXTERNAL_URL_BASE + reverse(
+                    "payment:receipt", kwargs={"payment_id": message.payment_confirm.id}
+                ),
+            }
+        ]
+    else:
+        urls = re.findall("(http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*(),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+)",
+                          message.text)
+
+        if len(urls) == 1:
+            request_body["event"]["message_create"]["message_data"]["ctas"] = [
+                {
+                    "type": "web_url",
+                    "label": "Open link",
+                    "url": urls[0]
+                }
+            ]
 
     r = requests.post("https://api.twitter.com/1.1/direct_messages/events/new.json", auth=creds, json=request_body)
     if r.status_code != 200:
@@ -116,3 +162,7 @@ def send_twitter_message(mid):
         }
         requests.post("https://api.twitter.com/1.1/direct_messages/events/new.json", auth=creds, json=request_body) \
             .raise_for_status()
+    else:
+        r = r.json()
+        message.message_id = r["event"]["id"]
+        message.save()
