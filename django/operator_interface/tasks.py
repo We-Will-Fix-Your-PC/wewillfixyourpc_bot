@@ -8,6 +8,7 @@ import facebook.tasks
 import twitter.tasks
 import json
 from . import models
+from . import consumers
 
 channel_layer = get_channel_layer()
 
@@ -73,6 +74,7 @@ def hand_back(cid):
     conversation = models.Conversation.objects.get(id=cid)
     conversation.agent_responding = True
     conversation.save()
+    consumers.conversation_saved(None, conversation)
 
 
 @shared_task

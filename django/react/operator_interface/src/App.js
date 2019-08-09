@@ -15,7 +15,9 @@ import Conversation from './Conversation';
 
 import './App.scss';
 
-const SockContext = React.createContext(null);
+export const ROOT_URL = process.env.NODE_ENV === 'production' ?
+    "https://" + window.location.host + "/" : "http://localhost:8000/";
+export const SockContext = React.createContext(null);
 
 class App extends Component {
     constructor(props) {
@@ -24,10 +26,17 @@ class App extends Component {
         this.state = {
             open: true,
             lastMessage: 0,
-            selectedIndex: null,
-            conversations: [],
-            conversationMap: {}
+            selectedCid: null,
+            conversations: {},
+            messages: {},
+            payments: {},
+            paymentItems: {},
         };
+
+        this.getConversation = this.getConversation.bind(this);
+        this.getConversationMessages = this.getConversationMessages.bind(this);
+        this.getConversationPayments = this.getConversationPayments.bind(this);
+        this.getPayment = this.getPayment.bind(this);
 
         this.selectConversation = this.selectConversation.bind(this);
         this.handleOpen = this.handleOpen.bind(this);
@@ -51,95 +60,164 @@ class App extends Component {
 
     selectConversation(i) {
         this.setState({
-            selectedIndex: i
+            selectedCid: i
         })
     }
 
     handleReceiveMessage(msg) {
         const data = JSON.parse(msg.data);
 
-        const message = {
-            id: data.id,
-            direction: data.direction,
-            timestamp: data.timestamp,
-            text: data.text,
-            image: data.image,
-            read: data.read,
-        };
-        const conversations = this.state.conversations;
-        const conversationMap = this.state.conversationMap;
-        let conversationId = conversationMap[data.conversation.id];
-        let conversation = {
-            customer_name: data.conversation.customer_name,
-            username: data.conversation.customer_username,
-            picture: data.conversation.customer_pic,
-            agent_responding: data.conversation.agent_responding,
-            timezone: data.conversation.timezone,
-            customer_email: data.conversation.customer_email,
-            customer_phone: data.conversation.customer_phone,
-            payments: data.conversation.payments
-        };
-        if (typeof conversationId === "undefined") {
-            conversationId = conversations.push(Object.assign({
-                id: data.conversation.id,
-                messages: [message],
-                messageMap: {}
-            }, conversation)) - 1;
-            conversationMap[data.conversation.id] = conversationId;
-        } else {
-            let oldConversation = conversations[conversationId];
-            conversations[conversationId] = Object.assign(oldConversation, conversation);
+        if (data.type === "message") {
+            const messages = this.state.messages;
+            messages[data.id] = data;
+            this.setState({
+                messages: messages,
+                lastMessage: data.timestamp
+            });
+            if (!this.state.conversations[data.conversation_id]) {
+                this.sock.send(JSON.stringify({
+                    type: "getConversation",
+                    id: data.conversation_id
+                }));
+            }
+            if (data.payment_request) {
+                if (!this.state.payments[data.payment_request]) {
+                    this.sock.send(JSON.stringify({
+                        type: "getPayment",
+                        id: data.payment_request
+                    }));
+                }
+            }
+            if (data.payment_confirm) {
+                if (!this.state.payments[data.payment_confirm]) {
+                    this.sock.send(JSON.stringify({
+                        type: "getPayment",
+                        id: data.payment_confirm
+                    }));
+                }
+            }
+        } else if (data.type === "conversation") {
+            const conversations = this.state.conversations;
+            conversations[data.id] = data;
+            this.setState({
+                conversations: conversations
+            });
+        } else if (data.type === "payment") {
+            const payments = this.state.payments;
+            payments[data.id] = data;
+            this.setState({
+                payments: payments
+            });
+            for (let item of data.items) {
+                if (!this.state.paymentItems[item]) {
+                    this.sock.send(JSON.stringify({
+                        type: "getPaymentItem",
+                        id: item
+                    }));
+                }
+            }
+        } else if (data.type === "payment_item") {
+            const paymentItems = this.state.paymentItems;
+            paymentItems[data.id] = data;
+            this.setState({
+                paymentItems: paymentItems
+            });
         }
-        let messageId = conversations[conversationId].messageMap[data.id];
-        if (typeof messageId === "undefined") {
-            messageId = conversations[conversationId].messages.push(message) - 1;
-            conversations[conversationId].messageMap[data.id] = messageId;
-        } else {
-            let oldMessage = conversations[conversationId].messages[messageId];
-            conversations[conversationId].messages[messageId] = Object.assign(oldMessage, message)
-        }
-        this.setState({
-            conversations: conversations,
-            conversationMap: conversationMap,
-            lastMessage: message.timestamp,
-        });
     }
 
     handleOpen() {
         this.sock.send(JSON.stringify({
-            "type": "resyncReq",
-            "lastMessage": this.state.lastMessage
+            type: "resyncReq",
+            lastMessage: this.state.lastMessage
         }));
     }
 
     onSend(text) {
         this.sock.send(JSON.stringify({
-            "type": "msg",
-            "text": text,
-            "cid": this.state.conversations[this.state.selectedIndex].id
+            type: "msg",
+            text: text,
+            cid: this.state.selectedCid
         }));
     }
 
     onEnd() {
         this.sock.send(JSON.stringify({
-            "type": "endConv",
-            "cid": this.state.conversations[this.state.selectedIndex].id
+            type: "endConv",
+            cid: this.state.selectedCid
         }));
     }
 
     onFinish() {
         this.sock.send(JSON.stringify({
-            "type": "finishConv",
-            "cid": this.state.conversations[this.state.selectedIndex].id
+            type: "finishConv",
+            cid: this.state.selectedCid
         }));
-        const conversations = this.state.conversations;
-        conversations[this.state.selectedIndex].agent_responding = true;
-        this.setState({
-            conversations: conversations
-        })
+    }
+
+    getConversationMessages(cid) {
+        let msgs = Object.entries(this.state.messages)
+            .filter(([mid, m]) => m.conversation_id.toString() === cid.toString())
+            .map(([mid, m]) => m);
+        msgs.sort((f, s) => f.timestamp - s.timestamp);
+        return msgs;
+    }
+
+    getConversationPayments(msgs) {
+        let payments = msgs.map(m => {
+            if (m.payment_request) {
+                return this.getPayment(m.payment_request);
+            } else if (m.payment_confirm) {
+                return this.getPayment(m.payment_confirm);
+            } else {
+                return null;
+            }
+        }).filter(p => p !== null);
+        let seen_payments = [];
+        let unique_payments = payments.filter(p => {
+            if (seen_payments.indexOf(p.id) !== -1) {
+                return false;
+            } else {
+                seen_payments.push(p.id);
+                return true;
+            }
+        });
+        unique_payments.sort((f, s) => s.timestamp - f.timestamp);
+        return unique_payments;
+    }
+
+    getPayment(pid) {
+        let payment = Object.assign({}, this.state.payments[pid]);
+        payment = Object.assign(payment, {
+            items: Object.entries(this.state.paymentItems).filter(([_, pi]) => pi.payment_id === pid)
+                .map(([_, pi]) => pi)
+        });
+        return payment;
+    }
+
+    getConversation(cid) {
+        let msgs = this.getConversationMessages(cid);
+        let conversation = Object.assign({}, this.state.conversations[cid]);
+        return Object.assign(conversation, {
+            messages: msgs,
+            payments: this.getConversationPayments(msgs),
+        });
     }
 
     render() {
+        const conversations = Object.entries(this.state.conversations)
+            .map(([cid, c]) => {
+                let msgs = this.getConversationMessages(cid);
+                let i = 1;
+                let lastMsg = msgs[msgs.length - i];
+                while (!lastMsg.text) {
+                    i++;
+                    lastMsg = msgs[msgs.length - i];
+                }
+
+                return {c: c, lastMsg: lastMsg}
+            })
+            .sort((f, s) => s.lastMsg.timestamp - f.lastMsg.timestamp);
+
         return (
             <div className='drawer-container'>
                 <Drawer dismissible open={this.state.open}>
@@ -150,22 +228,20 @@ class App extends Component {
                     </DrawerHeader>
 
                     <DrawerContent>
-                        <List twoLine avatarList singleSelection selectedIndex={this.state.selectedIndex}>
-                            {this.state.conversations
-                                .map((c, i) => {
-                                    return {c: c, i: i, lastMsg: c.messages[c.messages.length - 1]}
-                                })
-                                .sort((f, s) => s.lastMsg.timestamp - f.lastMsg.timestamp)
-                                .map(c => (
-                                    <ListItem key={c.i} onClick={() => this.selectConversation(c.i)}>
-                                        <ListItemGraphic graphic={<img src={c.c.picture} alt=""/>}/>
-                                        <ListItemText
-                                            primaryText={c.c.customer_name}
-                                            secondaryText={c.lastMsg.text}/>
-                                        {!c.c.agent_responding ?
-                                            <ListItemMeta meta={<MaterialIcon icon='notification_important'/>}/> : null}
-                                    </ListItem>
-                                ))}
+                        <List twoLine avatarList singleSelection
+                              selectedIndex={this.state.selectedCid === null ? null :
+                                  conversations.map((c, i) => ({c: c, i: i}))
+                                      .filter(c => c.c.c.id === this.state.selectedCid)[0].i}>
+                            {conversations.map(c => {
+                                return <ListItem key={c.c.id} onClick={() => this.selectConversation(c.c.id)}>
+                                    <ListItemGraphic graphic={<img src={c.c.customer_pic} alt=""/>}/>
+                                    <ListItemText
+                                        primaryText={c.c.customer_name}
+                                        secondaryText={c.lastMsg.text}/>
+                                    {!c.c.agent_responding ?
+                                        <ListItemMeta meta={<MaterialIcon icon='notification_important'/>}/> : null}
+                                </ListItem>
+                            })}
                         </List>
                     </DrawerContent>
                 </Drawer>
@@ -177,11 +253,11 @@ class App extends Component {
                                 <TopAppBarIcon navIcon>
                                     <MaterialIcon icon='menu' onClick={() => this.setState({open: !this.state.open})}/>
                                 </TopAppBarIcon>
-                                <TopAppBarTitle>{this.state.selectedIndex === null ? "Loading..." :
-                                    this.state.conversations[this.state.selectedIndex].customer_name}</TopAppBarTitle>
+                                <TopAppBarTitle>{this.state.selectedCid === null ? "Loading..." :
+                                    this.state.conversations[this.state.selectedCid.toString()].customer_name}</TopAppBarTitle>
                             </TopAppBarSection>
                             <TopAppBarSection role='toolbar'>
-                                {this.state.selectedIndex === null ? null :
+                                {this.state.selectedCid === null ? null :
                                     <React.Fragment>
                                         <Button raised onClick={this.onEnd}>
                                             End conversation
@@ -196,11 +272,11 @@ class App extends Component {
                     </TopAppBar>
 
                     <TopAppBarFixedAdjust>
-                        {this.state.selectedIndex === null ?
+                        {this.state.selectedCid === null ?
                             <h2>Please select a conversation from the drawer</h2> :
                             <SockContext.Provider value={this.sock}>
                                 <Conversation
-                                    conversation={this.state.conversations[this.state.selectedIndex]}
+                                    conversation={this.getConversation(this.state.selectedCid)}
                                     onSend={this.onSend}
                                 />
                             </SockContext.Provider>}

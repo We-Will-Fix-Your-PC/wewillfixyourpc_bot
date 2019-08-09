@@ -1,5 +1,6 @@
 from celery import shared_task
 from operator_interface.models import Conversation, Message
+from operator_interface.consumers import conversation_saved
 import operator_interface.tasks
 import requests
 import logging
@@ -31,6 +32,7 @@ def handle_twitter_message(mid, psid, message, user):
                                          content_type=r.headers.get('content-type'), field_name=file_name,
                                          name=file_name)
                 conversation.save()
+                conversation_saved(None, conversation)
 
 
 @shared_task

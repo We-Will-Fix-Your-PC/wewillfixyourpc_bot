@@ -1,7 +1,10 @@
 import React, {Component} from 'react';
 import Tab from '@material/react-tab';
 import TabBar from '@material/react-tab-bar';
+import List, {ListItem, ListItemText} from '@material/react-list';
+import Card from '@material/react-card';
 import dateformat from "dateformat";
+import OrderCard from "./OrderCard";
 
 export default class CustomerPanel extends Component {
     state = {activeTab: 0};
@@ -13,8 +16,10 @@ export default class CustomerPanel extends Component {
             "C": "Complete",
         };
 
+        // console.log(this.props.conversation.payments);
+
         return <React.Fragment>
-            <img src={this.props.conversation.picture} alt="" className="profile"/>
+            <img src={this.props.conversation.customer_pic} alt="" className="profile"/>
             <TabBar
                 activeIndex={this.state.activeTab}
                 handleActiveIndexUpdate={i => this.setState({activeTab: i})}
@@ -40,17 +45,23 @@ export default class CustomerPanel extends Component {
                     <span>{this.props.conversation.customer_email ? this.props.conversation.customer_email : "N/A"}</span>
                     <span>Phone:</span>
                     <span>{this.props.conversation.customer_phone ? this.props.conversation.customer_phone : "N/A"}</span>
+                    <span>Locale:</span>
+                    <span>{this.props.conversation.customer_locale ? this.props.conversation.customer_locale : "N/A"}</span>
+                    <span>Gender:</span>
+                    <span>{this.props.conversation.customer_gender ? this.props.conversation.customer_gender : "N/A"}</span>
                 </div> : null
             }
             {this.state.activeTab === 1 ?
                 <div className="ordering">
+                    <h3>Current order</h3>
+                    <OrderCard cid={this.props.conversation.id}/>
                     <h3>Order History</h3>
                     <div className="orderHistory">
                         {this.props.conversation.payments.map(p => {
                             let d = new Date(0);
                             d.setUTCSeconds(p.timestamp);
 
-                            return <div className="order">
+                            return <Card key={p.id} className="order" outlined>
                                 <span>ID:</span>
                                 <span>{p.id}</span>
                                 <span>State:</span>
@@ -60,18 +71,19 @@ export default class CustomerPanel extends Component {
                                 <span>Payment method:</span>
                                 <span>{p.payment_method}</span>
                                 <span>Total:</span>
-                                <span>{p.total}</span>
+                                <span>{p.total} GBP</span>
                                 <div className="items">
                                     <h4>Items</h4>
-                                    {p.items.map(i => {
-                                        return <div className="item">
-                                            <span>{i.quantity}x</span>
-                                            <span>{i.title}</span>
-                                            <span>@{i.price}</span>
-                                        </div>
-                                    })}
+                                    <List twoLine>
+                                        {p.items.map(i => {
+                                            return <ListItem key={i.id}>
+                                                <ListItemText primaryText={i.title}
+                                                              secondaryText={`${i.quantity} @ ${i.price} GBP`}/>
+                                            </ListItem>
+                                        })}
+                                    </List>
                                 </div>
-                            </div>
+                            </Card>
                         })}
                     </div>
                 </div> : null

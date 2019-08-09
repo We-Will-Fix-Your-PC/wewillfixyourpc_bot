@@ -19,8 +19,8 @@ class PaymentToken(models.Model):
 
 class Customer(models.Model):
     name = models.CharField(max_length=255)
-    email = models.EmailField()
-    phone = PhoneNumberField()
+    email = models.EmailField(blank=True, null=True)
+    phone = PhoneNumberField(blank=True, null=True)
 
     def __str__(self):
         return self.name

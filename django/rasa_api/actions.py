@@ -8,17 +8,22 @@ import collections
 from django.utils import timezone
 from django.conf import settings
 import pytz
+import imghdr
 import time
 import json
 import inflect
+import requests
 import phonenumbers
 import fuzzywuzzy.process
 import fuzzywuzzy.utils
 import dateutil.parser
 import rasa_sdk.events
+from PIL import Image
+from io import BytesIO
 from rasa_sdk import Action, Tracker
 from rasa_sdk.forms import FormAction
 from rasa_sdk.executor import CollectingDispatcher
+from django.core.files.storage import DefaultStorage
 from typing import Text, List, Dict, Any, Union, Optional
 
 tz = pytz.timezone('Europe/London')
@@ -111,6 +116,31 @@ class ActionGreet(Action):
             if conversation.customer_email:
                 out.append(rasa_sdk.events.SlotSet("email", conversation.customer_email))
             return out
+
+        return []
+
+
+class ActionCatPic(Action):
+    def name(self) -> Text:
+        return "cat_pic"
+
+    def run(self, dispatcher: CollectingDispatcher, tracker: Tracker, domain: Dict[Text, Any]) -> List[Dict[Text, Any]]:
+        utterance = rasa_api.models.Utterance.objects.get(name="utter_cheer_up")
+        utterance_choice = random.choice(utterance.utteranceresponse_set.all()) \
+            # type: rasa_api.models.UtteranceResponse
+
+        dispatcher.utter_message(utterance_choice.text)
+
+        cat = requests.get("https://cataas.com/cat")
+        if cat.status_code == 200:
+            fs = DefaultStorage()
+            file = BytesIO(cat.content)
+            img = Image.open(file)
+            file_name = fs.save(f'cat.{img.format.lower()}', BytesIO(cat.content))
+
+            dispatcher.utter_image_url(fs.base_url + file_name)
+        else:
+            dispatcher.utter_image_url(utterance_choice.image.url)
 
         return []
 

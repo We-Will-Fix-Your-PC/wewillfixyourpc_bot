@@ -48,34 +48,6 @@ class OpeningHoursOverride(models.Model):
         return self.day.isoformat()
 
 
-class IPhoneRepair(models.Model):
-    name = models.CharField(max_length=255)
-    repair_name = models.CharField(max_length=255)
-    price = models.DecimalField(decimal_places=2, max_digits=10)
-    repair_time = models.CharField(max_length=255)
-
-    class Meta:
-        verbose_name = "iPhone Repair"
-        verbose_name_plural = "iPhone Repairs"
-
-    def __str__(self):
-        return f"{self.name} {self.repair_name}"
-
-
-class IPadRepair(models.Model):
-    name = models.CharField(max_length=255)
-    repair_name = models.CharField(max_length=255)
-    price = models.DecimalField(decimal_places=2, max_digits=10)
-    repair_time = models.CharField(max_length=255)
-
-    class Meta:
-        verbose_name = "iPad Repair"
-        verbose_name_plural = "iPad Repairs"
-
-    def __str__(self):
-        return f"{self.name} {self.repair_name}"
-
-
 class Network(models.Model):
     name = models.CharField(max_length=255)
     display_name = models.CharField(max_length=255)
@@ -101,10 +73,27 @@ class Brand(models.Model):
         return self.display_name
 
 
+class Model(models.Model):
+    brand = models.ForeignKey(Brand, on_delete=models.CASCADE)
+    name = models.CharField(max_length=255)
+    display_name = models.CharField(max_length=255)
+
+    def __str__(self):
+        return self.display_name
+
+
+class RepairType(models.Model):
+    name = models.CharField(max_length=255)
+    display_name = models.CharField(max_length=255)
+
+    def __str__(self):
+        return self.display_name
+
+
 class PhoneUnlock(models.Model):
     brand = models.ForeignKey(Brand, on_delete=models.CASCADE)
     network = models.ForeignKey(Network, on_delete=models.CASCADE)
-    device = models.CharField(max_length=255, blank=True, null=True)
+    device = models.ForeignKey(Model, blank=True, null=True, on_delete=models.CASCADE)
     price = models.DecimalField(decimal_places=2, max_digits=10)
     time = models.CharField(max_length=255)
 
@@ -114,3 +103,13 @@ class PhoneUnlock(models.Model):
 
     def __str__(self):
         return f"{self.brand} {self.device_name} on {self.network}"
+
+
+class Repair(models.Model):
+    device = models.ForeignKey(Model, on_delete=models.CASCADE)
+    repair = models.ForeignKey(RepairType, on_delete=models.CASCADE)
+    price = models.DecimalField(decimal_places=2, max_digits=10)
+    repair_time = models.CharField(max_length=255)
+
+    def __str__(self):
+        return f"{self.device} {self.repair}"

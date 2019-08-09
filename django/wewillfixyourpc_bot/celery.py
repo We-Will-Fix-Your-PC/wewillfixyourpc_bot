@@ -1,12 +1,13 @@
 from __future__ import absolute_import, unicode_literals
 import os
+import django
 from celery import Celery
 import sentry_sdk
 from sentry_sdk.integrations.celery import CeleryIntegration
 from sentry_sdk.integrations.django import DjangoIntegration
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'wewillfixyourpc_bot.settings')
-
+django.setup()
 from django.conf import settings
 
 if not settings.DEBUG:

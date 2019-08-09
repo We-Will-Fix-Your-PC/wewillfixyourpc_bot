@@ -6,6 +6,7 @@ from django.contrib.auth.models import User
 from PIL import Image
 import json
 from . import models
+import fulfillment.models
 
 
 @login_required
@@ -54,6 +55,7 @@ def push_subscription(request):
     return HttpResponseBadRequest()
 
 
+@login_required
 def profile_picture(request, user_id):
     user = get_object_or_404(User, id=user_id)
     image = user.userprofile.picture
@@ -66,3 +68,45 @@ def profile_picture(request, user_id):
 
 def privacy_policy(request):
     return render(request, "operator_interface/Privacy Policy.html")
+
+
+@login_required
+def get_networks(request):
+    return HttpResponse(json.dumps([{
+        "id": n.id,
+        "name": n.name,
+        "display_name": n.display_name,
+        "alternative_names": [{
+            "id": an.id,
+            "name": an.name,
+            "display_name": an.display_name
+        } for an in n.networkalternativename_set.all()]
+    } for n in fulfillment.models.Network.objects.all()]), content_type='application/json')
+
+
+@login_required
+def get_brands(request):
+    return HttpResponse(json.dumps([{
+        "id": b.id,
+        "name": b.name,
+        "display_name": b.display_name
+    } for b in fulfillment.models.Brand.objects.all()]), content_type='application/json')
+
+
+@login_required
+def get_models(request, brand):
+    return HttpResponse(json.dumps([{
+        "id": m.id,
+        "name": m.name,
+        "display_name": m.display_name
+    } for m in fulfillment.models.Model.objects.filter(brand__name=brand)]), content_type='application/json')
+
+
+@login_required
+def get_unlocks(request, brand, network):
+    return HttpResponse(json.dumps([{
+        "id": u.id,
+        "device": u.device.name if u.device else None,
+        "price": str(u.price),
+        "time": u.time,
+    } for u in fulfillment.models.PhoneUnlock.objects.filter(brand__name=brand, network__name=network)]), content_type='application/json')

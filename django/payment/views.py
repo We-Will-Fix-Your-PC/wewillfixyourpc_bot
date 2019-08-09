@@ -21,6 +21,11 @@ def payment_saved(sender, instance: models.Payment, **kwargs):
         try:
             message = operator_interface.models.Message.objects.get(payment_request=instance.id)
             conversation = message.conversation
+            conversation.customer_phone = instance.customer.phone if instance.customer.phone \
+                else conversation.customer_phone
+            conversation.customer_email = instance.customer.email if instance.customer.email \
+                else conversation.customer_email
+            conversation.save()
 
             message = operator_interface.models.Message(
                 conversation=conversation, direction=operator_interface.models.Message.TO_CUSTOMER,

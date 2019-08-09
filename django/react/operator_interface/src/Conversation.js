@@ -71,6 +71,12 @@ export default class Conversation extends Component {
                                         <div dangerouslySetInnerHTML={{__html: m.text.replace(/\n/g, "<br />")}}/> : (
                                             m.image ? <img src={m.image} alt=""/> : null
                                         )}
+                                    {m.payment_request ?
+                                        <span>Payment request for: {m.payment_request}</span> : null
+                                    }
+                                    {m.payment_confirm ?
+                                        <span>Payment receipt for: {m.payment_confirm}</span> : null
+                                    }
                                     <span>{dateformat(d, "h:MM TT")}</span>
                                     {m.direction === "I" ? <span>{m.read ? "Read" : "Delivered"}</span> : null}
                                 </div>

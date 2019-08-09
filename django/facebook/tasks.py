@@ -18,6 +18,7 @@ from django.utils import timezone
 
 import operator_interface.tasks
 from operator_interface.models import Conversation, Message
+import operator_interface.consumers
 
 
 @shared_task
@@ -74,14 +75,16 @@ def handle_facebook_message(psid, message):
                         operator_interface.tasks.send_message_to_interface.delay(message_m.id)
     else:
         if not Message.message_exits(conversation, mid):
-            similar_messages = \
-                Message.objects.filter(conversation=conversation, text=text,
-                                       timestamp__gte=timezone.now() - datetime.timedelta(seconds=30))
-            if len(similar_messages) == 0:
-                message_m = \
-                    Message(conversation=conversation, message_id=mid, text=text if text else "", direction=Message.TO_CUSTOMER)
-                message_m.save()
-                operator_interface.tasks.send_message_to_interface.delay(message_m.id)
+            if text:
+                similar_messages = \
+                    Message.objects.filter(conversation=conversation, text=text,
+                                           timestamp__gte=timezone.now() - datetime.timedelta(seconds=30))
+                if len(similar_messages) == 0:
+                    message_m = Message(
+                        conversation=conversation, message_id=mid, text=text if text else "",
+                        direction=Message.TO_CUSTOMER)
+                    message_m.save()
+                    operator_interface.tasks.send_message_to_interface.delay(message_m.id)
 
 
 @shared_task
@@ -129,14 +132,16 @@ def handle_facebook_read(psid, read):
 def update_facebook_profile(psid, cid):
     conversation = Conversation.objects.get(id=cid)
     r = requests.get(f"https://graph.facebook.com/{psid}", params={
-        "fields": "name,profile_pic,timezone",
+        "fields": "name,profile_pic,timezone,locale,gender",
         "access_token": settings.FACEBOOK_ACCESS_TOKEN
     })
     r.raise_for_status()
     r = r.json()
     name = r['name']
     profile_pic = r["profile_pic"]
-    timezone = r['timezone']
+    timezone = r.get('timezone', None)
+    locale = r.get('locale', None)
+    gender = r.get('gender', None)
     if not conversation.customer_pic or conversation.customer_pic.name != psid:
         r = requests.get(profile_pic)
         if r.status_code == 200:
@@ -145,11 +150,14 @@ def update_facebook_profile(psid, cid):
                                      content_type=r.headers.get('content-type'), field_name=psid,
                                      name=psid)
     conversation.customer_name = name
+    conversation.customer_locale = locale
+    conversation.customer_gender = gender
     if timezone < 0:
         conversation.timezone = f"Etc/GMT-{abs(timezone)}"
     else:
         conversation.timezone = f"Etc/GMT+{abs(timezone)}"
     conversation.save()
+    operator_interface.consumers.conversation_saved(None, conversation)
 
 
 @shared_task
@@ -207,7 +215,7 @@ def send_facebook_message(mid):
                           "id": psid
                       },
                       "sender_action": "typing_off"
-                  }).raise_for_status()
+                  })
 
     quick_replies = []
     for suggestion in message.messagesuggestion_set.all():
@@ -318,3 +326,8 @@ def send_facebook_message(mid):
         }
         requests.post("https://graph.facebook.com/me/messages",
                       params={"access_token": settings.FACEBOOK_ACCESS_TOKEN}, json=request_body).raise_for_status()
+    else:
+        r = r.json()
+        mid = r["message_id"]
+        message.message_id = mid
+        message.save()

@@ -42,6 +42,8 @@ class Conversation(models.Model):
     customer_pic = models.ImageField(blank=True, null=True)
     customer_email = models.EmailField(blank=True, null=True)
     customer_phone = PhoneNumberField(blank=True, null=True)
+    customer_locale = models.CharField(max_length=255, blank=True, null=True)
+    customer_gender = models.CharField(max_length=255, blank=True, null=True)
 
     def __str__(self):
         platform = list(filter(lambda p: p[0] == self.platform, self.PLATFORM_CHOICES))

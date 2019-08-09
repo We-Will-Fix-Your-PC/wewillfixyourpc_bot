@@ -9,6 +9,12 @@
 @import '@material/react-tab-scroller/index.scss';
 @import '@material/react-tab/index.scss';
 @import '@material/react-tab-indicator/index.scss';
+@import '@material/react-card/index.scss';
+@import '@material/react-dialog/index.scss';
+@import '@material/react-radio/index.scss';
+@import '@material/react-menu-surface/index.scss';
+@import '@material/react-menu/index.scss';
+@import '@material/react-select/index.scss';
 @import "@material/shape/mixins";
 @import "@material/shape/functions";
 @import "@material/theme/mdc-theme.scss";
@@ -111,13 +117,11 @@ main {
               align-self: flex-start;
 
               > div {
-
                 @include mdc-theme-prop(background-color, secondary);
                 @include mdc-theme-prop(color, on-secondary);
                 @include mdc-shape-radius(25px 15px 25px 0, $rtl-reflexive: true);
+                align-self: flex-start;
               }
-
-
             }
 
             &.dir-I {
@@ -127,6 +131,7 @@ main {
                 @include mdc-theme-prop(background-color, primary);
                 @include mdc-theme-prop(color, on-primary);
                 @include mdc-shape-radius(15px 25px 0 15px, $rtl-reflexive: true);
+                align-self: flex-end;
               }
 
               > span {
@@ -140,8 +145,7 @@ main {
 
     .panel {
       overflow-y: auto;
-      box-shadow: inset #aaa 0 0 5px;
-      padding: 5px;
+      padding: 20px 0;
       grid-column: 2;
       display: flex;
       flex-direction: column;
@@ -173,12 +177,21 @@ main {
           display: grid;
           grid-template-columns: 1fr 3fr;
           align-self: stretch;
+          margin: 10px 5px;
           padding: 10px;
           grid-gap: 10px;
           border-bottom: 1px solid #aaa;
 
+          &:last-of-type {
+            border-bottom: none;
+          }
+
           span:nth-of-type(2n+1) {
             font-weight: bold;
+          }
+
+          h4 {
+            margin: 5px 0;
           }
 
           .items {
@@ -193,4 +206,35 @@ main {
       }
     }
   }
+}
+
+.OrderCard {
+  display: flex;
+  flex-direction: column;
+
+  .mdc-button {
+    align-self: flex-end;
+    margin-right: 10px;
+  }
+
+  .ordering {
+    align-self: stretch;
+  }
+
+  .summary {
+    display: flex;
+    align-items: flex-end;
+    flex-direction: column;
+    margin-right: 10px;
+
+    > div > span {
+      font-weight: bold;
+    }
+  }
+}
+
+.UnlockForm {
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-gap: 20px;
 }
