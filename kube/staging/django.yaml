@@ -95,7 +95,7 @@ spec:
               prefix: "DB_"
             - secretRef:
                 name: rabbitmq-user
-              prefix: "CELERY_BROKER"
+              prefix: "CELERY_BROKER_"
             - secretRef:
                 name: django-secret
             - secretRef:
@@ -182,7 +182,7 @@ spec:
               prefix: "DB_"
             - secretRef:
                 name: rabbitmq-user
-              prefix: "CELERY_BROKER"
+              prefix: "CELERY_BROKER_"
             - secretRef:
                 name: django-secret
             - secretRef:
@@ -253,7 +253,7 @@ spec:
               prefix: "DB_"
             - secretRef:
                 name: rabbitmq-user
-              prefix: "CELERY_BROKER"
+              prefix: "CELERY_BROKER_"
             - secretRef:
                 name: django-secret
             - secretRef:
