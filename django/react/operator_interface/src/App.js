@@ -43,7 +43,8 @@ class App extends Component {
         this.handleReceiveMessage = this.handleReceiveMessage.bind(this);
         this.onSend = this.onSend.bind(this);
         this.onEnd = this.onEnd.bind(this);
-        this.onFinish = this.onFinish.bind(this);
+        this.onTakeOver = this.onTakeOver.bind(this);
+        this.onHandBack = this.onHandBack.bind(this);
     }
 
     componentDidMount() {
@@ -147,7 +148,14 @@ class App extends Component {
         }));
     }
 
-    onFinish() {
+    onTakeOver() {
+        this.sock.send(JSON.stringify({
+            type: "takeOver",
+            cid: this.state.selectedCid
+        }));
+    }
+
+    onHandBack() {
         this.sock.send(JSON.stringify({
             type: "finishConv",
             cid: this.state.selectedCid
@@ -209,9 +217,16 @@ class App extends Component {
                 let msgs = this.getConversationMessages(cid);
                 let i = 1;
                 let lastMsg = msgs[msgs.length - i];
-                while (!lastMsg.text) {
-                    i++;
-                    lastMsg = msgs[msgs.length - i];
+                if (typeof lastMsg === "undefined") {
+                    lastMsg = {text: "No messages"};
+                } else {
+                    while (!lastMsg.text) {
+                        i++;
+                        lastMsg = msgs[msgs.length - i];
+                        if (typeof lastMsg === "undefined") {
+                            lastMsg = {text: "No messages"};
+                        }
+                    }
                 }
 
                 return {c: c, lastMsg: lastMsg}
@@ -262,9 +277,14 @@ class App extends Component {
                                         <Button raised onClick={this.onEnd}>
                                             End conversation
                                         </Button>
-                                        <Button raised onClick={this.onFinish}>
-                                            Hand back to agent
-                                        </Button>
+                                        {!this.state.conversations[this.state.selectedCid.toString()].agent_responding ?
+                                            <Button raised onClick={this.onHandBack}>
+                                                Hand back to bot
+                                            </Button> :
+                                            <Button raised onClick={this.onTakeOver}>
+                                                Take over from bot
+                                            </Button>
+                                        }
                                     </React.Fragment>
                                 }
                             </TopAppBarSection>

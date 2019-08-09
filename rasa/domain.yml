@@ -1,6 +1,7 @@
 %YAML 1.1
 ---
 actions:
+- cat_pic
 - action_default_ask_affirmation
 - greet
 - rate_slot

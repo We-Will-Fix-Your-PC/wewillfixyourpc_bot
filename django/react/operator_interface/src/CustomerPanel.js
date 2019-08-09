@@ -36,7 +36,7 @@ export default class CustomerPanel extends Component {
                     <span>Name:</span>
                     <span>{this.props.conversation.customer_name}</span>
                     <span>Username:</span>
-                    <span>{this.props.conversation.username ? this.props.conversation.username : "N/A"}</span>
+                    <span>{this.props.conversation.customer_username ? this.props.conversation.customer_username : "N/A"}</span>
                     <span>Bot responding:</span>
                     <span>{this.props.conversation.agent_responding ? "Yes" : "No"}</span>
                     <span>Timezone:</span>

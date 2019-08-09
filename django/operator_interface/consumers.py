@@ -230,6 +230,9 @@ class OperatorConsumer(AsyncJsonWebsocketConsumer):
         elif message["type"] == "finishConv":
             cid = message["cid"]
             operator_interface.tasks.hand_back.delay(cid)
+        elif message["type"] == "takeOver":
+            cid = message["cid"]
+            operator_interface.tasks.take_over.delay(cid, self.user.id)
         elif message["type"] == "requestPayment":
             cid = message["cid"]
             await self.make_payment_request(cid, message["items"])

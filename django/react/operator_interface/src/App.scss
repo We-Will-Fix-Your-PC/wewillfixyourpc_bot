@@ -169,6 +169,8 @@ main {
       }
 
       .ordering {
+        align-self: stretch;
+
         h3, h4 {
           text-align: center;
         }
@@ -215,10 +217,6 @@ main {
   .mdc-button {
     align-self: flex-end;
     margin-right: 10px;
-  }
-
-  .ordering {
-    align-self: stretch;
   }
 
   .summary {

@@ -1,14 +1,18 @@
-from celery import shared_task
-from django.conf import settings
-from asgiref.sync import async_to_sync
-from channels.layers import get_channel_layer
-from pywebpush import webpush
-import rasa_api.tasks
-import facebook.tasks
-import twitter.tasks
 import json
-from . import models
-from . import consumers
+import uuid
+
+from asgiref.sync import async_to_sync
+from celery import shared_task
+from channels.layers import get_channel_layer
+from django.conf import settings
+from pywebpush import webpush
+
+import facebook.tasks
+import rasa_api.tasks
+import telegram_bot.tasks
+import twitter.tasks
+from . import consumers, models
+from django.contrib.auth.models import User
 
 channel_layer = get_channel_layer()
 
@@ -75,6 +79,20 @@ def hand_back(cid):
     conversation.agent_responding = True
     conversation.save()
     consumers.conversation_saved(None, conversation)
+
+
+@shared_task
+def take_over(cid, uid):
+    conversation = models.Conversation.objects.get(id=cid)
+    user = User.objects.get(id=uid)
+    conversation.agent_responding = False
+    conversation.save()
+    consumers.conversation_saved(None, conversation)
+    message = models.Message(
+        message_id=uuid.uuid4(), conversation=conversation, direction=models.Message.TO_CUSTOMER, user=user,
+        text=f"Hello I'm {user.first_name} and I'll be taking over from here")
+    message.save()
+    process_message(message.id)
 
 
 @shared_task

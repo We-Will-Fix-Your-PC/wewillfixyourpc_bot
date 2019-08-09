@@ -360,6 +360,8 @@
 - cheer me up
 - show me cute things
 - cats
+- send cat pics
+- cat pictures
 
 ## intent:name
 - Q

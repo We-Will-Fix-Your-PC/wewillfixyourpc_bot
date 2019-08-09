@@ -89,12 +89,15 @@ export default class Conversation extends Component {
                         fullWidth
                         outlined
                         onTrailingIconSelect={() => {
-                            this.setState({value: ""});
-                            this.props.onSend(this.state.value);
+                            if (this.state.value.length && !this.props.conversation.agent_responding) {
+                                this.props.onSend(this.state.value);
+                                this.setState({value: ""});
+                            }
                         }}
                         trailingIcon={<MaterialIcon role="button" icon="send"/>}
                     ><Input
                         value={this.state.value}
+                        disabled={this.props.conversation.agent_responding}
                         onChange={(e) => this.setState({value: e.currentTarget.value})}/>
                     </TextField>
                 </div>
