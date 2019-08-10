@@ -1,3 +1,5 @@
+'use strict';
+
 import React, {Component} from 'react';
 import * as Sentry from '@sentry/browser';
 import ReactDOM from 'react-dom';
@@ -7,7 +9,7 @@ import SVG from 'react-inlinesvg';
 import CardForm from './cardForm';
 import GPayButton from './gpayButton';
 
-const API_ROOT = process.env.NODE_ENV === 'production' ? 'https://bot.cardifftec.uk' : 'https://04978659.eu.ngrok.io/';
+const API_ROOT = process.env.NODE_ENV  === 'production' ? 'https://bot.cardifftec.uk' : 'https://04978659.eu.ngrok.io/';
 
 const basicCardInstrument = {
     supportedMethods: 'basic-card',
