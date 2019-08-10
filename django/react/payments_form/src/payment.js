@@ -7,6 +7,8 @@ import SVG from 'react-inlinesvg';
 import CardForm from './cardForm';
 import GPayButton from './gpayButton';
 
+const API_ROOT = rocess.env.NODE_ENV === 'production' ? 'https://bot.cardifftec.uk' : 'https://04978659.eu.ngrok.io/';
+
 const basicCardInstrument = {
     supportedMethods: 'basic-card',
     data: {
@@ -144,7 +146,7 @@ class PaymentForm extends Component {
         };
 
         if (this.props.paymentId) {
-            fetch(`/payment/${this.props.paymentId}/`)
+            fetch(`${API_ROOT}payment/${this.props.paymentId}/`)
                 .then(resp => {
                     if (resp.ok) {
                         return resp.json();
@@ -384,7 +386,7 @@ class PaymentForm extends Component {
             data.payment = this.state.payment;
         }
 
-        fetch(`/payment/worldpay/${this.state.payment.id}/`, {
+        fetch(`${API_ROOT}payment/worldpay/${this.state.payment.id}/`, {
             method: "POST",
             credentials: 'include',
             body: JSON.stringify(data)

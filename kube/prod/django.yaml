@@ -1,0 +1,289 @@
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: django-static
+  namespace: chatbot
+  annotations:
+    volume.beta.kubernetes.io/storage-class: "managed-nfs-storage"
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 1Gi
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: django-media
+  namespace: chatbot
+  annotations:
+    volume.beta.kubernetes.io/storage-class: "managed-nfs-storage"
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 1Gi
+---
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: django-conf
+  namespace: chatbot
+data:
+  HOST: bot.cardifftec.uk
+  DJANGO_SETTINGS_MODULE: wewillfixyourpc_bot.settings
+  EXTERNAL_URL: "https://bot.cardifftec.uk/"
+  CELERY_RESULT_BACKEND: "redis://redis"
+  RASA_HTTP_URL: "http://rasa:5005"
+  SENTRY_ENVIRONMENT: "prod"
+  PAYMENT_ENVIRONMENT: "live"
+  EMAIL_HOST: "mail.misell.cymru"
+  ORDER_NOTIFICATION_EMAIL: "q@misell.cymru"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: django
+  namespace: chatbot
+  labels:
+    app: django
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: django
+  template:
+    metadata:
+      labels:
+        app: django
+    spec:
+      volumes:
+        - name: gpay-keys
+          secret:
+            secretName: gpay-keys
+        - name: static
+          persistentVolumeClaim:
+            claimName: django-static
+        - name: media
+          persistentVolumeClaim:
+            claimName: django-media
+      initContainers:
+        - name: django
+          image: theenbyperor/wewillfixyourpcbot_django:(version)
+          imagePullPolicy: Always
+          command: ["sh", "-c", "python3 manage.py collectstatic --noinput && python3 manage.py migrate"]
+          ports:
+            - containerPort: 8000
+          volumeMounts:
+            - mountPath: "/gpay-keys/"
+              name: gpay-keys
+              readOnly: true
+            - mountPath: "/app/static/"
+              name: static
+            - mountPath: "/app/media/"
+              name: media
+          envFrom:
+            - configMapRef:
+                name: django-conf
+            - configMapRef:
+                name: db-conf
+              prefix: "DB_"
+            - secretRef:
+                name: db-creds
+              prefix: "DB_"
+            - secretRef:
+                name: rabbitmq-user
+              prefix: "CELERY_BROKER_"
+            - secretRef:
+                name: django-secret
+            - secretRef:
+                name: webpush-secrets
+            - secretRef:
+                name: worldpay-keys
+              prefix: "WORLDPAY_"
+            - secretRef:
+                name: facebook-secrets
+              prefix: "FACEBOOK_"
+            - secretRef:
+                name: twitter-secrets
+              prefix: "TWITTER_"
+            - secretRef:
+                name: email-creds
+              prefix: "EMAIL_"
+      containers:
+        - name: gunicorn
+          image: theenbyperor/wewillfixyourpcbot_django:(version)
+          imagePullPolicy: Always
+          command: ["gunicorn", "-w", "4", "-b", "0.0.0.0:8000", "--forwarded-allow-ips", "*", "--access-logfile", "-", "wewillfixyourpc_bot.wsgi:application"]
+          ports:
+            - containerPort: 8000
+          volumeMounts:
+            - mountPath: "/gpay-keys/"
+              name: gpay-keys
+              readOnly: true
+            - mountPath: "/app/static/"
+              name: static
+            - mountPath: "/app/media/"
+              name: media
+
+          envFrom:
+            - configMapRef:
+                name: django-conf
+            - configMapRef:
+                name: db-conf
+              prefix: "DB_"
+            - secretRef:
+                name: db-creds
+              prefix: "DB_"
+            - secretRef:
+                name: rabbitmq-user
+              prefix: "CELERY_BROKER_"
+            - secretRef:
+                name: django-secret
+            - secretRef:
+                name: webpush-secrets
+            - secretRef:
+                name: worldpay-keys
+              prefix: "WORLDPAY_"
+            - secretRef:
+                name: facebook-secrets
+              prefix: "FACEBOOK_"
+            - secretRef:
+                name: twitter-secrets
+              prefix: "TWITTER_"
+            - secretRef:
+                name: email-creds
+              prefix: "EMAIL_"
+        - name: daphne
+          image: theenbyperor/wewillfixyourpcbot_django:(version)
+          imagePullPolicy: Always
+          command: ["daphne", "-b", "0.0.0.0", "-p", "8001", "--proxy-headers", "--access-log", "-", "wewillfixyourpc_bot.asgi:application"]
+          ports:
+            - containerPort: 8001
+          volumeMounts:
+            - mountPath: "/gpay-keys/"
+              name: gpay-keys
+              readOnly: true
+            - mountPath: "/app/static/"
+              name: static
+            - mountPath: "/app/media/"
+              name: media
+          envFrom:
+            - configMapRef:
+                name: django-conf
+            - configMapRef:
+                name: db-conf
+              prefix: "DB_"
+            - secretRef:
+                name: db-creds
+              prefix: "DB_"
+            - secretRef:
+                name: rabbitmq-user
+              prefix: "CELERY_BROKER_"
+            - secretRef:
+                name: django-secret
+            - secretRef:
+                name: webpush-secrets
+            - secretRef:
+                name: worldpay-keys
+              prefix: "WORLDPAY_"
+            - secretRef:
+                name: facebook-secrets
+              prefix: "FACEBOOK_"
+            - secretRef:
+                name: twitter-secrets
+              prefix: "TWITTER_"
+            - secretRef:
+                name: email-creds
+              prefix: "EMAIL_"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: celery
+  namespace: chatbot
+  labels:
+    app: celery
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: celery
+  template:
+    metadata:
+      labels:
+        app: celery
+    spec:
+      volumes:
+        - name: gpay-keys
+          secret:
+            secretName: gpay-keys
+        - name: static
+          persistentVolumeClaim:
+            claimName: django-static
+        - name: media
+          persistentVolumeClaim:
+            claimName: django-media
+      containers:
+        - name: celery
+          image: theenbyperor/wewillfixyourpcbot_django:(version)
+          imagePullPolicy: Always
+          command: ["celery", "worker", "-A", "wewillfixyourpc_bot", "--loglevel=INFO", "-c", "32"]
+          ports:
+            - containerPort: 8000
+          volumeMounts:
+            - mountPath: "/gpay-keys/"
+              name: gpay-keys
+              readOnly: true
+            - mountPath: "/app/static/"
+              name: static
+            - mountPath: "/app/media/"
+              name: media
+          envFrom:
+            - configMapRef:
+                name: django-conf
+            - configMapRef:
+                name: db-conf
+              prefix: "DB_"
+            - secretRef:
+                name: db-creds
+              prefix: "DB_"
+            - secretRef:
+                name: rabbitmq-user
+              prefix: "CELERY_BROKER_"
+            - secretRef:
+                name: django-secret
+            - secretRef:
+                name: webpush-secrets
+            - secretRef:
+                name: worldpay-keys
+              prefix: "WORLDPAY_"
+            - secretRef:
+                name: facebook-secrets
+              prefix: "FACEBOOK_"
+            - secretRef:
+                name: twitter-secrets
+              prefix: "TWITTER_"
+            - secretRef:
+                name: email-creds
+              prefix: "EMAIL_"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: chatbot
+  name: django
+  labels:
+    app: django
+spec:
+  selector:
+    app: django
+  ports:
+    - port: 8000
+      targetPort: 8000
+      name: gunicorn
+    - port: 8001
+      targetPort: 8001
+      name: daphne

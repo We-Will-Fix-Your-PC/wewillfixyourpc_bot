@@ -1,6 +1,7 @@
 import decimal
 import json
 import uuid
+import hmac
 
 import requests
 from django.conf import settings
@@ -171,13 +172,26 @@ def take_worldpay_payment(request, payment_id):
             payment_o.save()
 
             for item in items:
-                item_o = models.PaymentItem()
-                item_o.payment = payment_o
-                item_o.item_type = item["type"]
-                item_o.item_data = item["data"]
-                item_o.title = item["title"]
-                item_o.price = item["price"]
-                item_o.save()
+                verified = False
+                tokens = models.PaymentToken.objects.all()
+                for token in tokens:
+                    hmac_data = f"{item['type']}{item['data']}{item['title']}{item['price']}"
+                    sig = hmac.new(key=token.token.encode(), digestmod='sha512')
+                    sig.update(hmac_data.encode())
+                    digest = sig.hexdigest()
+                    if hmac.compare_digest(digest, item["sig"]):
+                        verified = True
+
+                if verified:
+                    item_o = models.PaymentItem()
+                    item_o.payment = payment_o
+                    item_o.item_type = item["type"]
+                    item_o.item_data = item["data"]
+                    item_o.title = item["title"]
+                    item_o.price = item["price"]
+                    item_o.save()
+                else:
+                    raise SuspiciousOperation()
         else:
             raise Http404()
 
