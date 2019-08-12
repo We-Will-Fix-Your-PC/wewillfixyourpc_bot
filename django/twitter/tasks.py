@@ -27,12 +27,14 @@ def handle_twitter_message(mid, psid, message, user):
         conversation = Conversation.get_or_create_conversation(Conversation.TWITTER, psid, user["name"],
                                                                f"@{user['screen_name']}", None)
         if not Message.message_exits(conversation, mid):
-            message_m = Message(conversation=conversation, message_id=mid, text=text, direction=Message.FROM_CUSTOMER)
+            message_m = Message(conversation=conversation, message_id=mid, text=text.strip(), direction=Message.FROM_CUSTOMER)
             
             if attachment:
                 if attachment["type"] == "media":
                     creds = views.get_creds()
                     url = attachment["media"]["media_url_https"]
+                    indices = attachment["media"]["indices"]
+                    message_m.text = (text[:indices[0]] + text[indices[1]:]).strip()
                     media_r = requests.get(url, auth=creds)
                     orig_file_name = os.path.basename(urllib.parse.urlparse(url).path)
                     fs = DefaultStorage()
