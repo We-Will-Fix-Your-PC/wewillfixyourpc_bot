@@ -26,3 +26,4 @@ channels_redis
 psycopg2-binary
 daphne
 python-Levenshtein
+python-magic

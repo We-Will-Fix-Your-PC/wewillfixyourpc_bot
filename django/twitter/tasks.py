@@ -1,12 +1,15 @@
 import logging
 import os
 import re
+import magic
+import time
 import urllib.parse
 from io import BytesIO
 
 import requests
 from celery import shared_task
 from django.core.files.uploadedfile import InMemoryUploadedFile
+from django.core.files.storage import DefaultStorage
 from django.conf import settings
 from django.shortcuts import reverse
 
@@ -19,11 +22,23 @@ from . import views
 @shared_task
 def handle_twitter_message(mid, psid, message, user):
     text = message.get("text")
+    attachment = message.get("attachment")
     if text is not None:
         conversation = Conversation.get_or_create_conversation(Conversation.TWITTER, psid, user["name"],
                                                                f"@{user['screen_name']}", None)
         if not Message.message_exits(conversation, mid):
             message_m = Message(conversation=conversation, message_id=mid, text=text, direction=Message.FROM_CUSTOMER)
+            
+            if attachment:
+                if attachment["type"] == "media":
+                    creds = views.get_creds()
+                    url = attachment["media"]["media_url_https"]
+                    media_r = requests.get(url, auth=creds)
+                    orig_file_name = os.path.basename(urllib.parse.urlparse(url).path)
+                    fs = DefaultStorage()
+                    file_name = fs.save(orig_file_name, BytesIO(media_r.content))
+                    message_m.image = fs.base_url + file_name
+                    
             message_m.save()
             handle_mark_twitter_message_read.delay(psid, mid)
             operator_interface.tasks.process_message.delay(message_m.id)
@@ -143,6 +158,65 @@ def send_twitter_message(mid):
                     "url": urls[0]
                 }
             ]
+
+    if message.image:
+        image = requests.get(message.image)
+        image.raise_for_status()
+        image = image.content
+        mime = magic.from_buffer(image, mime=True)
+
+        init_r = requests.post("https://upload.twitter.com/1.1/media/upload.json", auth=creds, data={
+            "command": "INIT",
+            "total_bytes": len(image),
+            "media_type": mime,
+            "media_category": "DmImage"
+        })
+        init_r.raise_for_status()
+        media_id = init_r.json()["media_id"]
+
+        append_r = requests.post("https://upload.twitter.com/1.1/media/upload.json", auth=creds, data={
+            "command": "APPEND",
+            "media_id": media_id,
+            "segment_index": 0,
+            "media": image,
+
+        })
+        append_r.raise_for_status()
+
+        finalize_r = requests.post("https://upload.twitter.com/1.1/media/upload.json", auth=creds, data={
+            "command": "FINALIZE",
+            "media_id": media_id,
+        })
+        finalize_r.raise_for_status()
+        finalize_r = finalize_r.json()
+
+        uploaded = True
+        wait_secs = 1
+
+        if finalize_r.get("processing_info"):
+            uploaded = False
+            wait_secs = finalize_r["processing_info"]["check_after_secs"]
+
+        while not uploaded:
+            time.sleep(wait_secs)
+            status_r = requests.post("https://upload.twitter.com/1.1/media/upload.json", auth=creds, data={
+                "command": "STATUS",
+                "media_id": media_id,
+            })
+            status_r.raise_for_status()
+            status_r = finalize_r.json()
+            processing_info = status_r["processing_info"]
+            if processing_info["state"] == "succeded":
+                uploaded = True
+            else:
+                wait_secs = processing_info["check_after_secs"]
+
+        request_body["event"]["message_create"]["message_data"]["attachment"] = {
+            "type": "media",
+            "media": {
+                "id": media_id
+            }
+        }
 
     r = requests.post("https://api.twitter.com/1.1/direct_messages/events/new.json", auth=creds, json=request_body)
     if r.status_code != 200:
