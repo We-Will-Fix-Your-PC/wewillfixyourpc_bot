@@ -24,6 +24,14 @@ def conversation_saved(sender, instance: operator_interface.models.Conversation,
     })
 
 
+@receiver(post_save, sender=operator_interface.models.Message)
+def message_saved(sender, instance: operator_interface.models.Conversation, **kwargs):
+    async_to_sync(channel_layer.group_send)("operator_interface", {
+        "type": "message",
+        "mid": instance.id
+    })
+
+
 @receiver(post_save, sender=payment.models.Payment)
 def payment_saved(sender, instance: payment.models.Payment, **kwargs):
     async_to_sync(channel_layer.group_send)("operator_interface", {
@@ -83,6 +91,7 @@ class OperatorConsumer(AsyncJsonWebsocketConsumer):
             "text": message.text,
             "image": message.image,
             "read": message.read,
+            "delivered": message.delivered,
             "conversation_id": message.conversation.id,
             "payment_request": message.payment_request.id if message.payment_request else None,
             "payment_confirm": message.payment_confirm.id if message.payment_confirm else None,

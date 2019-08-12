@@ -78,7 +78,9 @@ export default class Conversation extends Component {
                                         <span>Payment receipt for: {m.payment_confirm}</span> : null
                                     }
                                     <span>{dateformat(d, "h:MM TT")}</span>
-                                    {m.direction === "I" ? <span>{m.read ? "Read" : "Delivered"}</span> : null}
+                                    {m.direction === "I" && m.delivered ?
+                                        <span>{m.read ? "Read" : "Delivered"}</span> : null
+                                    }
                                 </div>
                             </div>);
 

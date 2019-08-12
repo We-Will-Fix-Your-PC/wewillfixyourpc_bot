@@ -101,6 +101,7 @@ class Message(models.Model):
     timestamp = models.DateTimeField(default=timezone.now)
     user = models.ForeignKey(User, blank=True, null=True, on_delete=models.SET_NULL)
     read = models.BooleanField(default=False)
+    delivered = models.BooleanField(default=False)
     image = models.URLField(blank=True, null=True)
     payment_request = models.ForeignKey(payment.models.Payment, on_delete=models.SET_NULL, blank=True, null=True,
                                         related_name='request_message')

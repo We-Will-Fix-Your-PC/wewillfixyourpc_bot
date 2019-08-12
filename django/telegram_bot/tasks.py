@@ -142,7 +142,9 @@ def send_telegram_message(mid):
             r = r.json()
             mid = r["result"]["message_id"]
             message.message_id = mid
+            message.delivered = True
             message.save()
+            operator_interface.consumers.message_saved(None, message)
 
     message = Message.objects.get(id=mid)
     if not message.image:

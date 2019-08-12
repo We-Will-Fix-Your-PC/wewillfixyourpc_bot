@@ -333,4 +333,6 @@ def send_facebook_message(mid):
         r = r.json()
         mid = r["message_id"]
         message.message_id = mid
+        message.delivered = True
         message.save()
+        operator_interface.consumers.message_saved(None, message)
