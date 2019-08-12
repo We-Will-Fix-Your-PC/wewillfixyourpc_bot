@@ -1,30 +1,34 @@
-from fulfillment import models
-import rasa_api.models
+import collections
+import datetime
+import functools
+import json
+import random
+import time
+from io import BytesIO
+from typing import Any, Dict, List, Optional, Text, Union
+
+import dateutil.parser
+import fuzzywuzzy.fuzz
+import fuzzywuzzy.process
+import fuzzywuzzy.string_processing
+import fuzzywuzzy.utils
+import inflect
+import phonenumbers
+import pytz
+import rasa_sdk.events
+import requests
+from django.conf import settings
+from django.core.files.storage import DefaultStorage
+from django.utils import timezone
+from PIL import Image
+from rasa_sdk import Action, Tracker
+from rasa_sdk.executor import CollectingDispatcher
+from rasa_sdk.forms import FormAction
+
 import operator_interface.models
 import payment.models
-import datetime
-import random
-import collections
-from django.utils import timezone
-from django.conf import settings
-import pytz
-import imghdr
-import time
-import json
-import inflect
-import requests
-import phonenumbers
-import fuzzywuzzy.process
-import fuzzywuzzy.utils
-import dateutil.parser
-import rasa_sdk.events
-from PIL import Image
-from io import BytesIO
-from rasa_sdk import Action, Tracker
-from rasa_sdk.forms import FormAction
-from rasa_sdk.executor import CollectingDispatcher
-from django.core.files.storage import DefaultStorage
-from typing import Text, List, Dict, Any, Union, Optional
+import rasa_api.models
+from fulfillment import models
 
 tz = pytz.timezone('Europe/London')
 p = inflect.engine()
@@ -103,7 +107,7 @@ class ActionGreet(Action):
 
     def run(self, dispatcher: CollectingDispatcher, tracker: Tracker, domain: Dict[Text, Any]) -> List[Dict[Text, Any]]:
         utterance = rasa_api.models.Utterance.objects.get(name="utter_greet")
-        utterance_choice = random.choice(utterance.utteranceresponse_set.all())  \
+        utterance_choice = random.choice(utterance.utteranceresponse_set.all()) \
             # type: rasa_api.models.UtteranceResponse
 
         dispatcher.utter_message(utterance_choice.text)
@@ -372,43 +376,94 @@ class ActionRepair(Action):
     def name(self) -> Text:
         return "repair"
 
-    def generic_repair(self, model_o, model: Text, repair_name: Text, dispatcher: CollectingDispatcher):
-        repair_m = model_o.objects.filter(name__startswith=model.lower(), repair_name=repair_name.lower())
-
-        if len(repair_m) > 0:
-            repair_strs = map(lambda r: f"A{p.a(f'{r.name} {repair_name}')[1:]} will cost £{r.price}"
-                                        f" and will take roughly {r.repair_time}", repair_m)
-            for r in repair_strs:
-                dispatcher.utter_message(r)
-        else:
-            dispatcher.utter_message(f"Sorry, but we do not fix {model} {p.plural(repair_name)}")
-
     def run(self, dispatcher: CollectingDispatcher, tracker: Tracker, domain: Dict[Text, Any]) -> List[Dict[Text, Any]]:
-        brand = tracker.get_slot("brand")
-        iphone_model = tracker.get_slot("iphone_model")
-        ipad_model = tracker.get_slot("ipad_model")
-        repair_name = tracker.get_slot("iphone_repair")
+        device_model = tracker.get_slot("device_model")
+        repair_name = tracker.get_slot("device_repair")
+
+        print(device_model, repair_name)
 
         time.sleep(3)
 
-        if iphone_model is not None:
-            brand = "iPhone"
+        device_models = models.Model.objects.filter(name__startswith=device_model.lower()) if device_model else []
+        repair = next(models.RepairType.objects.filter(name=repair_name.lower()).iterator(), None) \
+            if repair_name else None
 
-        if ipad_model is not None:
-            brand = "iPad"
+        print(device_models, repair)
 
-        if brand is not None:
-            if brand == "iPhone":
-                if iphone_model is not None and repair_name is not None:
-                    self.generic_repair(models.IPhoneRepair, iphone_model, repair_name, dispatcher)
-                    return []
-            elif brand == "iPad":
-                if ipad_model is not None and repair_name is not None:
-                    self.generic_repair(models.IPadRepair, ipad_model, repair_name, dispatcher)
-                    return []
+        if len(device_models) >= 1 and repair is not None:
+            repair_strs = []
+
+            for d in device_models:
+                repair_m = next(models.Repair.objects.filter(device=d, repair=repair).iterator(), None)
+                if repair_m:
+                    repair_strs.append(f"A{p.a(f'{d.display_name} {repair.display_name}')[1:]} will cost "
+                                       f"£{repair_m.price} and will take roughly {repair_m.repair_time}")
+
+            if len(repair_strs):
+                for r in repair_strs:
+                    dispatcher.utter_message(r)
+            else:
+                dispatcher.utter_message(f"Sorry, but we do not fix {device_model} {p.plural(repair.display_name)}")
+            return [rasa_sdk.events.SlotSet("device_model", None),
+                    rasa_sdk.events.SlotSet("device_repair", None)]
 
         dispatcher.utter_message("Sorry, we don't fix those")
-        return []
+        return [rasa_sdk.events.SlotSet("device_model", None),
+                rasa_sdk.events.SlotSet("device_repair", None)]
+
+
+def validate_brand(value: Text, dispatcher: CollectingDispatcher, tracker: Tracker):
+    asked_once = tracker.get_slot("asked_once")
+    asked_once = True if asked_once else False
+    brand = models.Brand.objects.all()
+    top_choice = fuzzywuzzy.process.extractOne(
+        value.lower(), brand, lambda v: fuzzywuzzy.utils.full_process(getattr(v, "name", v))
+    )
+
+    if not top_choice:
+        if not asked_once:
+            dispatcher.utter_message("Hmmm 🤔, I don't recognise that brand")
+            return {"brand": None, "asked_once": True}
+        else:
+            return {"brand": value, "asked_once": False}
+    elif top_choice[1] > 70:
+        return {"brand": top_choice[0].name}
+    else:
+        if not asked_once:
+            dispatcher.utter_message(f"Hmmm 🤔, I don't recognise that brand, did you mean "
+                                     f"{top_choice[0].display_name}?")
+            return {"brand": None, "asked_once": True}
+        else:
+            return {"brand": value, "asked_once": False}
+
+
+def validate_device_model(value: Text, dispatcher: CollectingDispatcher, tracker: Tracker):
+    asked_once = tracker.get_slot("asked_once")
+    asked_once = True if asked_once else False
+    model = models.Model.objects.all()
+    top_choice = fuzzywuzzy.process.extractOne(
+        value.lower(), model,
+        lambda v: fuzzywuzzy.string_processing.StringProcessor.strip(
+            fuzzywuzzy.string_processing.StringProcessor.to_lower_case(getattr(v, "name", v))
+        ),
+        functools.partial(fuzzywuzzy.fuzz.WRatio, full_process=False)
+    )
+
+    if not top_choice:
+        if not asked_once:
+            dispatcher.utter_message("Hmmm 🤔, I don't recognise that model")
+            return {"device_model": None, "asked_once": True}
+        else:
+            return {"device_model": value, "asked_once": False}
+    elif top_choice[1] > 70:
+        return {"device_model": top_choice[0].name}
+    else:
+        if not asked_once:
+            dispatcher.utter_message(f"Hmmm 🤔, I don't recognise that model, did you mean "
+                                     f"{top_choice[0].display_name}?")
+            return {"device_model": None, "asked_once": True}
+        else:
+            return {"device_model": value, "asked_once": False}
 
 
 class RepairForm(FormAction):
@@ -417,28 +472,56 @@ class RepairForm(FormAction):
 
     @staticmethod
     def required_slots(tracker: Tracker) -> List[Text]:
-        if tracker.get_slot("iphone_model") is not None:
-            return ["iphone_repair"]
-        elif tracker.get_slot("ipad_model") is not None:
-            return ["iphone_repair"]
-        elif tracker.get_slot('brand') == 'iPad':
-            return ["brand", "ipad_model", "iphone_repair"]
-        elif tracker.get_slot('brand') == 'iPhone':
-            return ["brand", "iphone_model", "iphone_repair"]
+        if tracker.get_slot("device_model") is not None:
+            return ["device_model", "device_repair"]
+        elif tracker.get_slot("brand").lower() in ["iphone", "ipad"]:
+            return ["brand", "device_model", "device_repair"]
         else:
             return ["brand"]
 
     def slot_mappings(self):
         return {
-            "brand": self.from_entity(entity="brand"),
-            "iphone_model": self.from_entity(entity="iphone_model"),
-            "ipad_model": self.from_entity(entity="ipad_model"),
-            "iphone_repair": self.from_entity(entity="iphone_repair"),
+            "brand": [self.from_entity(entity="brand"), self.from_text()],
+            "device_model": [self.from_entity(entity="device_model"), self.from_text()],
+            "device_repair": [self.from_entity(entity="device_repair"), self.from_text()],
         }
 
     def submit(self, dispatcher: CollectingDispatcher, tracker: Tracker, domain: Dict[Text, Any]) -> List[Dict]:
         dispatcher.utter_template('utter_looking_up', tracker)
         return []
+
+    def validate_brand(self, value: Text, dispatcher: CollectingDispatcher, tracker: Tracker,
+                       domain: Dict[Text, Any]) -> Optional[Dict[Text, Any]]:
+        return validate_brand(value, dispatcher, tracker)
+
+    def validate_device_model(self, value: Text, dispatcher: CollectingDispatcher, tracker: Tracker,
+                              domain: Dict[Text, Any]) -> Optional[Dict[Text, Any]]:
+        return validate_device_model(value, dispatcher, tracker)
+
+    def validate_device_repair(self, value: Text, dispatcher: CollectingDispatcher, tracker: Tracker,
+                               domain: Dict[Text, Any]) -> Optional[Dict[Text, Any]]:
+        asked_once = tracker.get_slot("asked_once")
+        asked_once = True if asked_once else False
+        repair = models.RepairType.objects.all()
+        top_choice = fuzzywuzzy.process.extractOne(
+            value.lower(), repair, lambda v: fuzzywuzzy.utils.full_process(getattr(v, "name", v))
+        )
+
+        if not top_choice:
+            if not asked_once:
+                dispatcher.utter_message("Hmmm 🤔, I don't recognise that repair")
+                return {"device_repair": None, "asked_once": True}
+            else:
+                return {"device_repair": value, "asked_once": False}
+        elif top_choice[1] > 70:
+            return {"device_repair": top_choice[0].name}
+        else:
+            if not asked_once:
+                dispatcher.utter_message(f"Hmmm 🤔, I don't recognise that repair, did you mean "
+                                         f"{top_choice[0].display_name}?")
+                return {"device_repair": None, "asked_once": True}
+            else:
+                return {"device_repair": value, "asked_once": False}
 
 
 class ActionUnlockLookup(Action):
@@ -447,13 +530,10 @@ class ActionUnlockLookup(Action):
 
     def run(self, dispatcher: CollectingDispatcher, tracker: Tracker, domain: Dict[Text, Any]) -> List[Dict[Text, Any]]:
         brand = tracker.get_slot("brand")  # type: Text
-        iphone_model = tracker.get_slot("iphone_model")  # type: Text
+        device_model = tracker.get_slot("device_model")  # type: Text
         network = tracker.get_slot("network")  # type: Text
 
         time.sleep(3)
-
-        if iphone_model is not None:
-            brand = "iPhone"
 
         not_unlockable = rasa_sdk.events.SlotSet("unlockable", False)
         unlockable = rasa_sdk.events.SlotSet("unlockable", True)
@@ -471,22 +551,32 @@ class ActionUnlockLookup(Action):
             network_o = network_o[0]
             network_name = network_o.display_name
 
-        brand_o = models.Brand.objects.filter(name=brand.lower())  # type: List[models.Brand]
-        if not len(brand_o):
+        brand_o = next(models.Brand.objects.filter(name=brand.lower()).iterator(), None)\
+            # type: Optional[models.Brand]
+        if not brand_o:
             dispatcher.utter_message(f"Sorry, we can't unlock {brand} phones")
             return [not_unlockable]
-        brand_o = brand_o[0]  # type: models.Brand
+
+        if device_model is not None:
+            device_model_o = next(models.Model.objects.filter(name=device_model).iterator(), None)\
+                # type: Optional[models.Model]
+            if not device_model_o:
+                dispatcher.utter_message(f"Sorry, we can't unlock an {device_model}")
+                return [not_unlockable]
+        else:
+            device_model_o = None
 
         unlock_o = models.PhoneUnlock.objects.filter(
-            network=network_o, brand=brand_o, device=iphone_model if iphone_model else None
+            network=network_o, brand=brand_o, device=device_model_o
         )  # type: List[models.PhoneUnlock]
         if not len(unlock_o):
             dispatcher.utter_message(f"Sorry, we can't unlock a {brand_o.display_name} "
-                                     f"{iphone_model if iphone_model else ''} from {network_name}")
+                                     f"{device_model if device_model else ''} from {network_name}")
             return [not_unlockable]
         else:
             unlock_o = unlock_o[0]  # type: models.PhoneUnlock
-            dispatcher.utter_message(f"Unlocking a {brand_o.display_name} {iphone_model if iphone_model else ''} "
+            dispatcher.utter_message(f"Unlocking a {brand_o.display_name} "
+                                     f"{device_model_o.display_name if device_model_o else ''} "
                                      f"from {network_name} will cost £{unlock_o.price} and take {unlock_o.time}")
             return [unlockable]
 
@@ -497,15 +587,12 @@ class ActionOrderUnlock(Action):
 
     def run(self, dispatcher: CollectingDispatcher, tracker: Tracker, domain: Dict[Text, Any]) -> List[Dict[Text, Any]]:
         brand = tracker.get_slot("brand")  # type: Text
-        iphone_model = tracker.get_slot("iphone_model")  # type: Text
+        device_model = tracker.get_slot("device_model")  # type: Text
         network = tracker.get_slot("network")  # type: Text
         name = tracker.get_slot("name")  # type: Text
         phone_number = tracker.get_slot("phone_number")  # type: Text
         email = tracker.get_slot("email")  # type: Text
         imei = tracker.get_slot("imei")  # type: Text
-
-        if iphone_model is not None:
-            brand = "iPhone"
 
         try:
             network_o = models.Network.objects.get(name=network.lower())
@@ -515,9 +602,10 @@ class ActionOrderUnlock(Action):
             network_o = network_alt_o.network
             network_name = network_alt_o.display_name
         brand_o = models.Brand.objects.get(name=brand.lower())
+        device_model_o = models.Model.objects.get(name=device_model.lower()) if device_model else None
 
         unlock_o = models.PhoneUnlock.objects.get(
-            network=network_o, brand=brand_o, device=iphone_model.lower() if iphone_model else None
+            network=network_o, brand=brand_o, device=device_model_o
         )  # type: models.PhoneUnlock
 
         customer_o = payment.models.Customer.find_customer(name=name, email=email, phone=phone_number)
@@ -529,12 +617,13 @@ class ActionOrderUnlock(Action):
             "imei": imei,
             "network": network_o.name,
             "make": brand_o.name,
-            "model": unlock_o.device,
+            "model": device_model_o.name if device_model_o else None,
             "days": unlock_o.time
         })
         payment_item_o = payment.models.PaymentItem(
             payment=payment_o, item_type="unlock", item_data=item_data,
-            title=f"Unlock {brand_o.display_name} {iphone_model if iphone_model else ''} from {network_name}",
+            title=f"Unlock {brand_o.display_name} {device_model_o.display_name if device_model_o else ''} from "
+                  f"{network_name}",
             price=unlock_o.price
         )
 
@@ -545,6 +634,7 @@ class ActionOrderUnlock(Action):
             "type": "payment",
             "payment_id": str(payment_o.id)
         })
+        return []
 
 
 class ActionUnlockClear(Action):
@@ -554,7 +644,7 @@ class ActionUnlockClear(Action):
     def run(self, dispatcher: CollectingDispatcher, tracker: Tracker, domain: Dict[Text, Any]) -> List[Dict[Text, Any]]:
         return [
             rasa_sdk.events.SlotSet("brand", None),
-            rasa_sdk.events.SlotSet("iphone_model", None),
+            rasa_sdk.events.SlotSet("device_model", None),
             rasa_sdk.events.SlotSet("network", None),
             rasa_sdk.events.SlotSet("imei", None),
         ]
@@ -566,14 +656,18 @@ class UnlockForm(FormAction):
 
     @staticmethod
     def required_slots(tracker: Tracker) -> List[Text]:
-        required = []
+        required = ["brand"]
 
-        if tracker.get_slot("iphone_model") is not None:
-            required.append("iphone_model")
-        elif tracker.get_slot('brand') == 'iPhone':
-            required.extend(["brand", "iphone_model"])
-        else:
-            required.append("brand")
+        model_needed = False
+        brand = tracker.get_slot("brand")
+        if brand is not None:
+            brand_o = next(models.Brand.objects.filter(name=brand.lower()).iterator(), None)
+            if brand_o:
+                phone_unlocks = next(models.PhoneUnlock.objects.filter(brand=brand_o, device=None).iterator(), None)
+                model_needed = phone_unlocks is None
+
+        if model_needed:
+            required.append("device_model")
 
         required.extend(["network", "name", "phone_number", "email", "imei"])
 
@@ -582,7 +676,7 @@ class UnlockForm(FormAction):
     def slot_mappings(self):
         return {
             "brand": [self.from_entity(entity="brand"), self.from_text()],
-            "iphone_model": self.from_entity(entity="iphone_model"),
+            "device_model": [self.from_entity(entity="device_model"), self.from_text()],
             "network": [self.from_entity(entity="network"), self.from_text()],
             "name": [self.from_entity(entity="name"), self.from_text()],
             "phone_number": self.from_entity(entity="phone-number", not_intent=["imei"]),
@@ -618,24 +712,17 @@ class UnlockForm(FormAction):
         return {"imei": value}
 
     def validate_brand(self, value: Text, dispatcher: CollectingDispatcher, tracker: Tracker,
-                      domain: Dict[Text, Any]) -> Optional[Dict[Text, Any]]:
-        brand = models.Brand.objects.all()
-        top_choice = fuzzywuzzy.process.extractOne(
-            value.lower(), brand, lambda v: fuzzywuzzy.utils.full_process(getattr(v, "name", v))
-        )
+                       domain: Dict[Text, Any]) -> Optional[Dict[Text, Any]]:
+        return validate_brand(value, dispatcher, tracker)
 
-        if not top_choice:
-            dispatcher.utter_message("Hmmm 🤔, I don't recognise that brand")
-            return {"brand": None}
-        elif top_choice[1] > 70:
-            return {"brand": top_choice[0].name}
-        else:
-            dispatcher.utter_message(f"Hmmm 🤔, I don't recognise that brand, did you mean "
-                                     f"{top_choice[0].display_name}?")
-            return {"brand": None}
+    def validate_device_model(self, value: Text, dispatcher: CollectingDispatcher, tracker: Tracker,
+                              domain: Dict[Text, Any]) -> Optional[Dict[Text, Any]]:
+        return validate_device_model(value, dispatcher, tracker)
 
     def validate_network(self, value: Text, dispatcher: CollectingDispatcher, tracker: Tracker,
-                      domain: Dict[Text, Any]) -> Optional[Dict[Text, Any]]:
+                         domain: Dict[Text, Any]) -> Optional[Dict[Text, Any]]:
+        asked_once = tracker.get_slot("asked_once")
+        asked_once = True if asked_once else False
         networks = models.Network.objects.all()
         alt_networks = models.NetworkAlternativeName.objects.all()
         networks = [(n.name, n) for n in networks]
@@ -644,17 +731,23 @@ class UnlockForm(FormAction):
         top_choice = fuzzywuzzy.process.extractOne((value.lower(), None), networks, lambda v: v[0])
 
         if not top_choice:
-            dispatcher.utter_message("Hmmm 🤔, I don't recognise that network")
-            return {"network": None}
+            if not asked_once:
+                dispatcher.utter_message("Hmmm 🤔, I don't recognise that network")
+                return {"network": None, "asked_once": True}
+            else:
+                return {"network": value, "asked_once": False}
         elif top_choice[1] > 70:
             return {"network": top_choice[0][0]}
         else:
-            dispatcher.utter_message(f"Hmmm 🤔, I don't recognise that network, did you mean "
-                                     f"{top_choice[0][1].display_name}?")
-            return {"network": None}
+            if not asked_once:
+                dispatcher.utter_message(f"Hmmm 🤔, I don't recognise that network, did you mean "
+                                         f"{top_choice[0][1].display_name}?")
+                return {"network": None, "asked_once": True}
+            else:
+                return {"network": value, "asked_once": False}
 
     def validate_phone_number(self, value: Text, dispatcher: CollectingDispatcher, tracker: Tracker,
-                      domain: Dict[Text, Any]) -> Optional[Dict[Text, Any]]:
+                              domain: Dict[Text, Any]) -> Optional[Dict[Text, Any]]:
         try:
             phone = phonenumbers.parse(value, settings.PHONENUMBER_DEFAULT_REGION)
         except phonenumbers.phonenumberutil.NumberParseException:
@@ -675,7 +768,7 @@ class UnlockForm(FormAction):
             return {"phone_number": phone}
 
     def validate_email(self, value: Text, dispatcher: CollectingDispatcher, tracker: Tracker,
-                      domain: Dict[Text, Any]) -> Optional[Dict[Text, Any]]:
+                       domain: Dict[Text, Any]) -> Optional[Dict[Text, Any]]:
         conversation = sender_id_to_conversation(tracker.sender_id)
 
         if conversation:

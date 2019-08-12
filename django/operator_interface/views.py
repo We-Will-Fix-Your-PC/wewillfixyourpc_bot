@@ -109,4 +109,5 @@ def get_unlocks(request, brand, network):
         "device": u.device.name if u.device else None,
         "price": str(u.price),
         "time": u.time,
-    } for u in fulfillment.models.PhoneUnlock.objects.filter(brand__name=brand, network__name=network)]), content_type='application/json')
+    } for u in fulfillment.models.PhoneUnlock.objects.filter(device__brand__name=brand, network__name=network)]),
+        content_type='application/json')

@@ -176,34 +176,34 @@
     - form{"name": "repair_form"}
     - slot{"brand": "iPhone"}
     - slot{"brand": "iPhone"}
-    - slot{"requested_slot": "iphone_model"}
-* form: iphone_model{"iphone_model": "iPhone 4S"}
-    - slot{"iphone_model": "iPhone 4S"}
+    - slot{"requested_slot": "device_model"}
+* form: device_model{"device_model": "iPhone 4S"}
+    - slot{"device_model": "iPhone 4S"}
     - form: repair_form
-    - slot{"iphone_model": "iPhone 4S"}
-    - slot{"requested_slot": "iphone_repair"}
-* form: repair{"iphone_repair": "battery"}
-    - slot{"iphone_repair": "battery"}
+    - slot{"device_model": "iPhone 4S"}
+    - slot{"requested_slot": "device_repair"}
+* form: repair{"device_repair": "battery"}
+    - slot{"device_repair": "battery"}
     - form: repair_form
-    - slot{"iphone_repair": "battery"}
+    - slot{"device_repair": "battery"}
     - form{"name": null}
     - slot{"requested_slot": null}
     - repair
-* repair{"iphone_model": "iphone 5s"}
-    - slot{"iphone_model": "iphone 5s"}
-    - slot{"iphone_repair": null}
+* repair{"device_model": "iphone 5s"}
+    - slot{"device_model": "iphone 5s"}
+    - slot{"device_repair": null}
     - repair_form
     - form{"name": "repair_form"}
-    - slot{"iphone_repair": "battery"}
+    - slot{"device_repair": "battery"}
     - form{"name": null}
     - slot{"requested_slot": null}
     - repair
-* repair{"iphone_repair": "screen"}
-    - slot{"iphone_repair": "screen"}
+* repair{"device_repair": "screen"}
+    - slot{"device_repair": "screen"}
     - repair_form
     - form{"name": "repair_form"}
-    - slot{"iphone_repair": "screen"}
-    - slot{"iphone_repair": "screen"}
+    - slot{"device_repair": "screen"}
+    - slot{"device_repair": "screen"}
     - form{"name": null}
     - slot{"requested_slot": null}
     - repair
@@ -216,35 +216,35 @@
     - form{"name": "repair_form"}
     - slot{"brand": "iPhone"}
     - slot{"brand": "iPhone"}
-    - slot{"requested_slot": "iphone_model"}
-* form: iphone_model{"iphone_model": "iPhone 4S"}
-    - slot{"iphone_model": "iPhone 4S"}
+    - slot{"requested_slot": "device_model"}
+* form: device_model{"device_model": "iPhone 4S"}
+    - slot{"device_model": "iPhone 4S"}
     - form: repair_form
-    - slot{"iphone_model": "iPhone 4S"}
-    - slot{"requested_slot": "iphone_repair"}
-* form: repair{"iphone_repair": "battery"}
-    - slot{"iphone_repair": "battery"}
+    - slot{"device_model": "iPhone 4S"}
+    - slot{"requested_slot": "device_repair"}
+* form: repair{"device_repair": "battery"}
+    - slot{"device_repair": "battery"}
     - form: repair_form
-    - slot{"iphone_repair": "battery"}
+    - slot{"device_repair": "battery"}
     - form{"name": null}
     - slot{"requested_slot": null}
     - repair
-* repair{"iphone_model": "ipad air"}
-    - slot{"iphone_model": "ipad air"}
+* repair{"device_model": "ipad air"}
+    - slot{"device_model": "ipad air"}
     - slot{"brand": "ipad"}
-    - slot{"iphone_repair": null}
+    - slot{"device_repair": null}
     - repair_form
     - form{"name": "repair_form"}
-    - slot{"iphone_repair": "battery"}
+    - slot{"device_repair": "battery"}
     - form{"name": null}
     - slot{"requested_slot": null}
     - repair
-* repair{"iphone_repair": "screen"}
-    - slot{"iphone_repair": "screen"}
+* repair{"device_repair": "screen"}
+    - slot{"device_repair": "screen"}
     - repair_form
     - form{"name": "repair_form"}
-    - slot{"iphone_repair": "screen"}
-    - slot{"iphone_repair": "screen"}
+    - slot{"device_repair": "screen"}
+    - slot{"device_repair": "screen"}
     - form{"name": null}
     - slot{"requested_slot": null}
     - repair
@@ -313,28 +313,28 @@
     - utter_thanks_end
 
 ## interactive_story_8
-* repair{"iphone_model": "iphone 6", "CARDINAL": "6"}
-    - slot{"iphone_model": "iphone 6"}
+* repair{"device_model": "iphone 6", "CARDINAL": "6"}
+    - slot{"device_model": "iphone 6"}
     - repair_form
     - form{"name": "repair_form"}
-    - slot{"requested_slot": "iphone_repair"}
-* form: repair{"iphone_repair": "screen"}
-    - slot{"iphone_repair": "screen"}
+    - slot{"requested_slot": "device_repair"}
+* form: repair{"device_repair": "screen"}
+    - slot{"device_repair": "screen"}
     - form: repair_form
-    - slot{"iphone_repair": "screen"}
+    - slot{"device_repair": "screen"}
     - form{"name": null}
     - slot{"requested_slot": null}
     - repair
 > anything_else
 
 ## interactive_story_9
-* repair{"iphone_model": "iPhone 7+", "iphone_repair": "battery", "PRODUCT": "iPhone 7+"}
-    - slot{"iphone_model": "iPhone 7+"}
-    - slot{"iphone_repair": "battery"}
+* repair{"device_model": "iPhone 7+", "device_repair": "battery", "PRODUCT": "iPhone 7+"}
+    - slot{"device_model": "iPhone 7+"}
+    - slot{"device_repair": "battery"}
     - repair_form
     - form{"name": "repair_form"}
-    - slot{"iphone_repair": "battery"}
-    - slot{"iphone_repair": "battery"}
+    - slot{"device_repair": "battery"}
+    - slot{"device_repair": "battery"}
     - form{"name": null}
     - slot{"requested_slot": null}
     - repair
@@ -347,16 +347,16 @@
     - form{"name": "repair_form"}
     - slot{"brand": "iPad"}
     - slot{"brand": "iPad"}
-    - slot{"requested_slot": "ipad_model"}
-* form: ipad_model{"ipad_model": "iPad air"}
-    - slot{"ipad_model": "iPad air"}
+    - slot{"requested_slot": "device_model"}
+* form: device_model{"device_model": "iPad air"}
+    - slot{"device_model": "iPad air"}
     - form: repair_form
-    - slot{"ipad_model": "iPad air"}
-    - slot{"requested_slot": "iphone_repair"}
-* form: repair{"iphone_repair": "battery"}
-    - slot{"iphone_repair": "battery"}
+    - slot{"device_model": "iPad air"}
+    - slot{"requested_slot": "device_repair"}
+* form: repair{"device_repair": "battery"}
+    - slot{"device_repair": "battery"}
     - form: repair_form
-    - slot{"iphone_repair": "battery"}
+    - slot{"device_repair": "battery"}
     - form{"name": null}
     - slot{"requested_slot": null}
     - repair
@@ -375,39 +375,39 @@
 > anything_else
 
 ## interactive_story_12
-* repair{"iphone_model": "iphone 6", "iphone_repair": "battery", "CARDINAL": "6"}
-    - slot{"iphone_model": "iphone 6"}
-    - slot{"iphone_repair": "battery"}
+* repair{"device_model": "iphone 6", "device_repair": "battery", "CARDINAL": "6"}
+    - slot{"device_model": "iphone 6"}
+    - slot{"device_repair": "battery"}
     - repair_form
     - form{"name": "repair_form"}
-    - slot{"iphone_repair": "battery"}
-    - slot{"iphone_repair": "battery"}
+    - slot{"device_repair": "battery"}
+    - slot{"device_repair": "battery"}
     - form{"name": null}
     - slot{"requested_slot": null}
     - repair
 > anything_else
 
 ## interactive_story_1
-* repair{"iphone_model": "iphone 6", "iphone_repair": "battery", "CARDINAL": "6"}
-    - slot{"iphone_model": "iphone 6"}
-    - slot{"iphone_repair": "battery"}
+* repair{"device_model": "iphone 6", "device_repair": "battery", "CARDINAL": "6"}
+    - slot{"device_model": "iphone 6"}
+    - slot{"device_repair": "battery"}
     - repair_form
     - form{"name": "repair_form"}
-    - slot{"iphone_repair": "battery"}
-    - slot{"iphone_repair": "battery"}
+    - slot{"device_repair": "battery"}
+    - slot{"device_repair": "battery"}
     - form{"name": null}
     - slot{"requested_slot": null}
     - repair
 > anything_else
 
 ## interactive_story_1
-* repair{"iphone_model": "iphone 6", "iphone_repair": "battery", "CARDINAL": "6"}
-    - slot{"iphone_model": "iphone 6"}
-    - slot{"iphone_repair": "battery"}
+* repair{"device_model": "iphone 6", "device_repair": "battery", "CARDINAL": "6"}
+    - slot{"device_model": "iphone 6"}
+    - slot{"device_repair": "battery"}
     - repair_form
     - form{"name": "repair_form"}
-    - slot{"iphone_repair": "battery"}
-    - slot{"iphone_repair": "battery"}
+    - slot{"device_repair": "battery"}
+    - slot{"device_repair": "battery"}
     - form{"name": null}
     - slot{"requested_slot": null}
     - repair
@@ -421,19 +421,17 @@
     - utter_anything_else
 * affirm
     - utter_can_do
-* repair{"iphone_model": "iPhone 6S", "iphone_repair": "battery", "number": 6}
-    - slot{"iphone_model": "iPhone 6S"}
-    - slot{"iphone_repair": "battery"}
+* repair{"device_model": "iPhone 6S", "device_repair": "battery", "number": 6}
+    - slot{"device_model": "iPhone 6S"}
+    - slot{"device_repair": "battery"}
     - repair_form
     - form{"name": "repair_form"}
-    - slot{"iphone_repair": "battery"}
-    - slot{"iphone_repair": "battery"}
+    - slot{"device_repair": "battery"}
+    - slot{"device_repair": "battery"}
     - form{"name": null}
     - slot{"requested_slot": null}
     - repair
-    - utter_anything_else
-* deny
-    - utter_goodbye
+> anything_else
 
 ## interactive_story_1
 * unlock
@@ -477,7 +475,7 @@
     - unlock_order
     - unlock_clear
     - slot{"brand": null}
-    - slot{"iphone_model": null}
+    - slot{"device_model": null}
     - slot{"network": null}
     - slot{"imei": null}
 * unlock
@@ -507,7 +505,7 @@
     - slot{"unlockable": false}
     - unlock_clear
     - slot{"brand": null}
-    - slot{"iphone_model": null}
+    - slot{"device_model": null}
     - slot{"network": null}
     - slot{"imei": null}
     - utter_anything_else

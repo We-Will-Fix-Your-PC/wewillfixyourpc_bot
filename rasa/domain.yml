@@ -40,9 +40,8 @@ entities:
 - brand
 - date
 - imei
-- ipad_model
-- iphone_model
-- iphone_repair
+- device_repair
+- device_model
 - name
 - network
 - number
@@ -98,11 +97,9 @@ slots:
     type: unfeaturized
   imei:
     type: unfeaturized
-  ipad_model:
+  device_model:
     type: unfeaturized
-  iphone_model:
-    type: unfeaturized
-  iphone_repair:
+  device_repair:
     type: unfeaturized
   name:
     type: unfeaturized
@@ -117,3 +114,5 @@ slots:
     type: unfeaturized
   unlockable:
     type: bool
+  asked_once:
+    type: unfeaturized

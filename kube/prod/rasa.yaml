@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: rasa
-  namespace: chatbot-staging
+  namespace: chatbot
   labels:
     app: rasa
 spec:
@@ -33,7 +33,7 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  namespace: chatbot-staging
+  namespace: chatbot
   name: rasa
   labels:
     app: rasa
