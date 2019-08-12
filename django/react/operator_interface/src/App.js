@@ -278,9 +278,17 @@ class App extends Component {
                                             End conversation
                                         </Button>
                                         {!this.state.conversations[this.state.selectedCid.toString()].agent_responding ?
-                                            <Button raised onClick={this.onHandBack}>
-                                                Hand back to bot
-                                            </Button> :
+                                            <React.Fragment>
+                                                <Button raised onClick={this.onHandBack}>
+                                                    Hand back to bot
+                                                </Button>
+                                                {!this.state.conversations[this.state.selectedCid.toString()]
+                                                    .current_user_responding ?
+                                                    <Button raised onClick={this.onTakeOver}>
+                                                        Take over
+                                                    </Button> : null
+                                                }
+                                            </React.Fragment> :
                                             <Button raised onClick={this.onTakeOver}>
                                                 Take over from bot
                                             </Button>

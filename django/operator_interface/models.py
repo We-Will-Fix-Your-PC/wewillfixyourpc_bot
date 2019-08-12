@@ -39,6 +39,7 @@ class Conversation(models.Model):
     platform_id = models.CharField(max_length=255)
     agent_responding = models.BooleanField(default=True)
     timezone = models.CharField(max_length=255, blank=True, null=True, default=None)
+    current_agent = models.ForeignKey(User, blank=True, null=True, default=None, on_delete=models.SET_DEFAULT)
     customer_name = models.CharField(max_length=255, blank=True, null=True)
     customer_username = models.CharField(max_length=255, blank=True, null=True)
     customer_pic = models.ImageField(blank=True, null=True)

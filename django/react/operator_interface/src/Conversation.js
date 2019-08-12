@@ -97,7 +97,8 @@ export default class Conversation extends Component {
                         trailingIcon={<MaterialIcon role="button" icon="send"/>}
                     ><Input
                         value={this.state.value}
-                        disabled={this.props.conversation.agent_responding}
+                        disabled={this.props.conversation.agent_responding ||
+                        !this.props.conversation.current_user_responding}
                         onChange={(e) => this.setState({value: e.currentTarget.value})}/>
                     </TextField>
                 </div>

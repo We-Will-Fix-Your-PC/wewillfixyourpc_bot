@@ -98,6 +98,8 @@ class OperatorConsumer(AsyncJsonWebsocketConsumer):
             "type": "conversation",
             "id": conversation.id,
             "agent_responding": conversation.agent_responding,
+            "current_user_responding": conversation.current_agent.id == self.user.id
+            if conversation.current_agent else False,
             "platform": conversation.platform,
             "customer_name": conversation.customer_name,
             "customer_username": conversation.customer_username,

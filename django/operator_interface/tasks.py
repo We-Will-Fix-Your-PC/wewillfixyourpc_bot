@@ -87,8 +87,15 @@ def process_event(cid, event):
 def hand_back(cid):
     conversation = models.Conversation.objects.get(id=cid)
     conversation.agent_responding = True
+    conversation.current_agent = None
     conversation.save()
     consumers.conversation_saved(None, conversation)
+    message = models.Message(
+        message_id=uuid.uuid4(), conversation=conversation, direction=models.Message.TO_CUSTOMER,
+        text=f"You've been handed back to the automated assistant.\n"
+             f"You can always request an agent at any time you wish.")
+    message.save()
+    process_message(message.id)
 
 
 @shared_task
@@ -96,6 +103,7 @@ def take_over(cid, uid):
     conversation = models.Conversation.objects.get(id=cid)
     user = User.objects.get(id=uid)
     conversation.agent_responding = False
+    conversation.current_agent = user
     conversation.save()
     consumers.conversation_saved(None, conversation)
     message = models.Message(

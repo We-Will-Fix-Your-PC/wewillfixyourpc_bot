@@ -107,8 +107,13 @@ def deauthorise(request):
 @csrf_exempt
 def webhook(request):
     if request.method == "GET":
+        crc_token = request.GET.get('crc_token')
+
+        if not crc_token:
+            return HttpResponseBadRequest()
+
         sha256_hash_digest = hmac.new(settings.TWITTER_CONSUMER_SECRET.encode(),
-                                      msg=request.GET.get('crc_token').encode(),
+                                      msg=crc_token.encode(),
                                       digestmod=hashlib.sha256).digest()
 
         # construct response data with base64 encoded hash
