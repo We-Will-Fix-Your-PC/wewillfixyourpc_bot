@@ -47,7 +47,12 @@ def send_push_notification(sid, data):
 
 @shared_task
 def send_message_notifications(data):
-    subscriptions = models.NotificationSubscription.objects.all()
+    if data["type"] == "alert":
+        subscriptions = models.NotificationSubscription.objects.all()
+    else:
+        conversation = models.Conversation.objects.get(id=data["cid"])
+        subscriptions = models.NotificationSubscription.objects.filter(user=conversation.current_agent)
+
     for subscription in subscriptions:
         send_push_notification.delay(subscription.id, data)
 
@@ -65,6 +70,7 @@ def process_message(mid):
         else:
             send_message_notifications({
                 "type": "message",
+                "cid": message.conversation.id,
                 "name": message.conversation.customer_name,
                 "text": message.text
             })
@@ -96,6 +102,16 @@ def hand_back(cid):
              f"You can always request an agent at any time you wish.")
     message.save()
     process_message(message.id)
+
+
+@shared_task
+def end_conversation(cid):
+    conversation = models.Conversation.objects.get(id=cid)
+    conversation.agent_responding = True
+    conversation.current_agent = None
+    conversation.save()
+    consumers.conversation_saved(None, conversation)
+    process_event.delay(cid, "end")
 
 
 @shared_task

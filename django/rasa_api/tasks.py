@@ -87,6 +87,7 @@ def handle_text(conversation, text):
 
                     operator_interface.tasks.send_message_notifications.delay({
                         "type": "alert",
+                        "cid": conversation.id,
                         "name": conversation.customer_name,
                         "text": "Human needed!"
                     })

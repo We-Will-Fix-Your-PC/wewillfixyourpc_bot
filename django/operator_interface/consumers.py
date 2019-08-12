@@ -230,7 +230,7 @@ class OperatorConsumer(AsyncJsonWebsocketConsumer):
             await self.make_message(cid, text)
         elif message["type"] == "endConv":
             cid = message["cid"]
-            operator_interface.tasks.process_event.delay(cid, "end")
+            operator_interface.tasks.end_conversation.delay(cid)
         elif message["type"] == "finishConv":
             cid = message["cid"]
             operator_interface.tasks.hand_back.delay(cid)
