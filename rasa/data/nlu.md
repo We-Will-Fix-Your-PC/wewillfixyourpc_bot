@@ -625,7 +625,8 @@
 - unlock my phone
 - unlock my [nokia](brand:Nokia) from [ee](network)
 - unlock
-- do you do sim unlock
+- do you do sim unlock?
+- can you sim unlock my phone?
 
 ## synonym:1
 - one

@@ -34,7 +34,7 @@ metadata:
 data:
   HOST: bot.cardifftec.uk
   DJANGO_SETTINGS_MODULE: wewillfixyourpc_bot.settings
-  EXTERNAL_URL: "https://bot.cardifftec.uk/"
+  EXTERNAL_URL: "https://bot.cardifftec.uk"
   CELERY_RESULT_BACKEND: "redis://redis"
   RASA_HTTP_URL: "http://rasa:5005"
   SENTRY_ENVIRONMENT: "prod"

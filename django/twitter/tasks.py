@@ -38,7 +38,7 @@ def handle_twitter_message(mid, psid, message, user):
                     fs = DefaultStorage()
                     file_name = fs.save(orig_file_name, BytesIO(media_r.content))
                     message_m.image = fs.base_url + file_name
-                    
+
             message_m.save()
             handle_mark_twitter_message_read.delay(psid, mid)
             operator_interface.tasks.process_message.delay(message_m.id)
