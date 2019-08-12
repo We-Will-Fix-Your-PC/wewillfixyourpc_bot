@@ -174,12 +174,11 @@ def send_twitter_message(mid):
         init_r.raise_for_status()
         media_id = init_r.json()["media_id"]
 
-        append_r = requests.post("https://upload.twitter.com/1.1/media/upload.json", auth=creds, data={
+        append_r = requests.post("https://upload.twitter.com/1.1/media/upload.json", auth=creds, files={
             "command": "APPEND",
             "media_id": media_id,
             "segment_index": 0,
             "media": image,
-
         })
         append_r.raise_for_status()
 
