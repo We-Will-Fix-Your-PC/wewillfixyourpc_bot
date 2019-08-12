@@ -99,7 +99,10 @@ class OrderCard extends Component {
             <Button onClick={() => this.setState({isOpen: true})}>Add item</Button>
             <div className="summary">
                 <div><span>Total:</span> {this.total().toFixed(2)} GBP</div>
-                <Button onClick={this.send} disabled={!this.state.items.length}>
+                <Button onClick={this.send} disabled={
+                    !this.state.items.length || this.props.conversation.agent_responding ||
+                    !this.props.conversation.current_user_responding
+                }>
                     Send</Button>
             </div>
             <Dialog
