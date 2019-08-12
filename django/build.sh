@@ -7,7 +7,7 @@ yarn build
 cd ../..
 
 cd react/payments_form || exit
-yarn webpack --confif webpack.prod.js
+yarn webpack --config webpack.prod.js
 cd ../..
 
 docker build -t "theenbyperor/wewillfixyourpcbot_django:$VERSION" .

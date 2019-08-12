@@ -9,7 +9,7 @@ import SVG from 'react-inlinesvg';
 import CardForm from './cardForm';
 import GPayButton from './gpayButton';
 
-const API_ROOT = process.env.NODE_ENV  === 'production' ? 'https://bot.cardifftec.uk' : 'https://04978659.eu.ngrok.io/';
+const API_ROOT = process.env.NODE_ENV  === 'production' ? 'https://bot.cardifftec.uk/' : 'https://wewillfixyourpc-bot.eu.ngrok.io/';
 
 const basicCardInstrument = {
     supportedMethods: 'basic-card',
