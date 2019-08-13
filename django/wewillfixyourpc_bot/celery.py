@@ -13,7 +13,8 @@ from django.conf import settings
 if not settings.DEBUG:
     sentry_sdk.init(
         "https://efc22f89d34a46d0adffb302181ed3f9@sentry.io/1471674", environment=settings.SENTRY_ENVIRONMENT,
-        integrations=[CeleryIntegration(), DjangoIntegration()]
+        integrations=[CeleryIntegration(), DjangoIntegration()],
+        release=os.getenv("RELEASE", None)
     )
 
 app = Celery('wewillfixyourpc_bot')
