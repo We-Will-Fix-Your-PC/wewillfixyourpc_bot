@@ -92,6 +92,9 @@ def handle_text(conversation, text):
                         "text": "Human needed!"
                     })
                     continue
+                elif event_type == "request_phone":
+                    message.text = custom["text"]
+                    message.request_phone = True
                 else:
                     continue
             else:

@@ -11,8 +11,9 @@ class Utterance(models.Model):
 
 class UtteranceResponse(models.Model):
     utterance = models.ForeignKey(Utterance, on_delete=models.CASCADE)
-    text = models.TextField(blank=True)
-    image = models.ImageField(blank=True)
+    text = models.TextField(blank=True, null=True)
+    custom_json = models.TextField(blank=True, null=True)
+    image = models.ImageField(blank=True, null=True)
 
     def __str__(self):
         return f"#{self.id}"

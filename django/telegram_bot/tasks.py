@@ -7,6 +7,7 @@ from celery import shared_task
 from django.conf import settings
 from django.core.files.storage import DefaultStorage
 from django.core.files.uploadedfile import InMemoryUploadedFile
+from django.shortcuts import reverse
 
 import operator_interface.consumers
 import operator_interface.tasks
@@ -16,6 +17,7 @@ from operator_interface.models import Conversation, Message
 @shared_task
 def handle_telegram_message(message):
     text = message.get("text")
+    contact = message.get("contact")
     photo = message.get("photo")
     sticker = message.get("sticker")
     document = message.get("document")
@@ -39,6 +41,8 @@ def handle_telegram_message(message):
                             operator_interface.tasks.process_event.delay(conversation.id, "WELCOME")
                         else:
                             operator_interface.tasks.process_event.delay(conversation.id, command)
+                    else:
+                        message_m.text = text
             else:
                 message_m.text = text
         elif photo or sticker:
@@ -67,6 +71,8 @@ def handle_telegram_message(message):
             message_m.text = f"<a href=\"{fs.base_url + file_url}\" target=\"_blank\">{file_name}</a>"
             if caption:
                 message.text = caption
+        elif contact:
+            message_m.text = contact["phone_number"]
         else:
             return
         message_m.save()
@@ -119,16 +125,57 @@ def update_telegram_profile(chat_id, cid):
 
 @shared_task
 def send_telegram_message(mid):
+    message = Message.objects.get(id=mid)
+
     def send(data, method):
         quick_replies = []
         for suggestion in message.messagesuggestion_set.all():
-            quick_replies.append([suggestion.suggested_response])
+            quick_replies.append([{
+                "text": suggestion.suggested_response
+            }])
+
+        if message.request_phone:
+            quick_replies.append([{
+                "text": "Send my phone number",
+                "request_contact": True
+            }])
+
         if len(quick_replies) > 0:
             data["reply_markup"] = {
                 "keyboard": quick_replies,
                 "resize_keyboard": True,
                 "one_time_keyboard": True,
                 "selective": True,
+            }
+        else:
+            data["reply_markup"] = {
+                "remove_keyboard": True,
+                "selective": True,
+            }
+
+        if message.payment_request:
+            data["reply_markup"] = {
+                "inline_keyboard": [
+                    [{
+                        "text": "Pay",
+                        "url": settings.EXTERNAL_URL_BASE + reverse(
+                            "payment:telegram_payment", kwargs={"payment_id": message.payment_request.id}
+                        ),
+                        "pay": True
+                    }]
+                ]
+            }
+        elif message.payment_confirm:
+            data["text"] = "You can view your receipt using the link below"
+            data["reply_markup"] = {
+                "inline_keyboard": [
+                    [{
+                        "text": "View receipt",
+                        "url": settings.EXTERNAL_URL_BASE + reverse(
+                            "payment:receipt", kwargs={"payment_id": message.payment_confirm.id}
+                        ),
+                    }]
+                ]
             }
 
         r = requests.post(f"https://api.telegram.org/bot{settings.TELEGRAM_TOKEN}/{method}", json=data)
@@ -146,7 +193,6 @@ def send_telegram_message(mid):
             message.save()
             operator_interface.consumers.message_saved(None, message)
 
-    message = Message.objects.get(id=mid)
     if not message.image:
         data = {
             "chat_id": message.conversation.platform_id,

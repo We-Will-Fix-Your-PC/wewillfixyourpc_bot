@@ -107,6 +107,7 @@ class Message(models.Model):
                                         related_name='request_message')
     payment_confirm = models.ForeignKey(payment.models.Payment, on_delete=models.SET_NULL, blank=True, null=True,
                                         related_name='confirm_message')
+    request_phone = models.BooleanField(default=False)
 
     class Meta:
         ordering = ('timestamp',)

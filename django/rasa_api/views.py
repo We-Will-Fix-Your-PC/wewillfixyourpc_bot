@@ -51,14 +51,23 @@ def nlg(request):
     responses = utterance.utteranceresponse_set.all()
     response = random.choice(responses)
 
-    return HttpResponse(json.dumps({
-        "text": response.text,
-        "image": response.image.url if response.image else None,
-        "buttons": list(map(lambda b: {
+    out = {}
+
+    if response.text:
+        out["text"] = response.text
+    if response.custom_json:
+        out["custom"] = json.loads(response.custom_json)
+    if response.image:
+        out["image"] = response.image.url
+
+    buttons = utterance.utterancebutton_set.all()
+    if len(buttons) >= 1:
+        out["buttons"] = [{
             "title": b.title,
             "payload": b.payload
-        }, utterance.utterancebutton_set.all()))
-    }), content_type='application/json')
+        } for b in buttons]
+
+    return HttpResponse(json.dumps(out), content_type='application/json')
 
 
 def model(request, environment_id):
