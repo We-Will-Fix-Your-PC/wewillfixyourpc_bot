@@ -115,6 +115,9 @@ spec:
             - secretRef:
                 name: email-creds
               prefix: "EMAIL_"
+          env:
+            - name: RELEASE
+              value: theenbyperor/wewillfixyourpcbot_django:(version)
       containers:
         - name: gunicorn
           image: theenbyperor/wewillfixyourpcbot_django:(version)
@@ -162,6 +165,9 @@ spec:
             - secretRef:
                 name: email-creds
               prefix: "EMAIL_"
+          env:
+            - name: RELEASE
+              value: theenbyperor/wewillfixyourpcbot_django:(version)
         - name: daphne
           image: theenbyperor/wewillfixyourpcbot_django:(version)
           imagePullPolicy: Always
@@ -207,6 +213,9 @@ spec:
             - secretRef:
                 name: email-creds
               prefix: "EMAIL_"
+          env:
+            - name: RELEASE
+              value: theenbyperor/wewillfixyourpcbot_django:(version)
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -276,8 +285,14 @@ spec:
                 name: twitter-secrets
               prefix: "TWITTER_"
             - secretRef:
+                name: telegram-secrets
+              prefix: "TELEGRAM_"
+            - secretRef:
                 name: email-creds
               prefix: "EMAIL_"
+          env:
+            - name: RELEASE
+              value: theenbyperor/wewillfixyourpcbot_django:(version)
 ---
 apiVersion: v1
 kind: Service
