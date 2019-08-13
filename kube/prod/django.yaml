@@ -110,6 +110,9 @@ spec:
                 name: twitter-secrets
               prefix: "TWITTER_"
             - secretRef:
+                name: telegram-secrets
+              prefix: "TELEGRAM_"
+            - secretRef:
                 name: email-creds
               prefix: "EMAIL_"
       containers:
@@ -154,6 +157,9 @@ spec:
                 name: twitter-secrets
               prefix: "TWITTER_"
             - secretRef:
+                name: telegram-secrets
+              prefix: "TELEGRAM_"
+            - secretRef:
                 name: email-creds
               prefix: "EMAIL_"
         - name: daphne
@@ -195,6 +201,9 @@ spec:
             - secretRef:
                 name: twitter-secrets
               prefix: "TWITTER_"
+            - secretRef:
+                name: telegram-secrets
+              prefix: "TELEGRAM_"
             - secretRef:
                 name: email-creds
               prefix: "EMAIL_"
