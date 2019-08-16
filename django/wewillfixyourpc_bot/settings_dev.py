@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'facebook',
     'twitter',
     'telegram_bot',
+    'azure_bot',
     'operator_interface',
     'payment',
     'rasa_api',
@@ -163,8 +164,13 @@ with open(os.path.join(BASE_DIR, "secrets/telegram.json")) as f:
     telegram_conf = json.load(f)
 with open(os.path.join(BASE_DIR, "secrets/worldpay.json")) as f:
     worldpay_conf = json.load(f)
+with open(os.path.join(BASE_DIR, "secrets/azure.json")) as f:
+    azure_conf = json.load(f)
 with open(os.path.join(BASE_DIR, 'secrets/gpay-key-test.pem'), 'rb') as f:
     gpay_priv_key_test = f.read()
+
+AZURE_APP_ID = azure_conf["app-id"]
+AZURE_APP_PASSWORD = azure_conf["app-password"]
 
 FACEBOOK_VERIFY_TOKEN = facebook_conf["verify_token"]
 FACEBOOK_ACCESS_TOKEN = facebook_conf["access_token"]
@@ -224,6 +230,10 @@ LOGGING = {
             'level': 'DEBUG',
         },
         'telegram_bot': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+        },
+        'azure_bot': {
             'handlers': ['console'],
             'level': 'DEBUG',
         },

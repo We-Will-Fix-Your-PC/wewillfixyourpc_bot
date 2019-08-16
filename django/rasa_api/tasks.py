@@ -59,7 +59,7 @@ def handle_text(conversation, text):
             if not data.get("recipient_id"):
                 continue
 
-            platform, platform_id = data["recipient_id"].split(":")
+            platform, platform_id = data["recipient_id"].split(":", 1)
             conversation = Conversation.objects.get(platform=platform, platform_id=platform_id)
             message = Message(conversation=conversation, direction=Message.TO_CUSTOMER, message_id=uuid.uuid4())
 

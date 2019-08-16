@@ -11,6 +11,7 @@ import facebook.tasks
 import rasa_api.tasks
 import telegram_bot.tasks
 import twitter.tasks
+import azure_bot.tasks
 from . import consumers, models
 from django.contrib.auth.models import User
 
@@ -82,6 +83,8 @@ def process_message(mid):
             twitter.tasks.send_twitter_message(mid)
         elif conversation.platform == models.Conversation.TELEGRAM:
             telegram_bot.tasks.send_telegram_message(mid)
+        elif conversation.platform == models.Conversation.AZURE:
+            azure_bot.tasks.send_azure_message(mid)
 
 
 @shared_task

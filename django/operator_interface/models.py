@@ -29,14 +29,17 @@ class Conversation(models.Model):
     FACEBOOK = 'FB'
     TWITTER = 'TW'
     TELEGRAM = 'TG'
+    AZURE = 'AZ'
     PLATFORM_CHOICES = (
         (FACEBOOK, 'Facebook'),
         (TWITTER, 'Twitter'),
         (TELEGRAM, 'Telegram'),
+        (AZURE, 'Azure'),
     )
 
     platform = models.CharField(max_length=2, choices=PLATFORM_CHOICES)
     platform_id = models.CharField(max_length=255)
+    platform_from_id = models.TextField(blank=True, default="")
     agent_responding = models.BooleanField(default=True)
     timezone = models.CharField(max_length=255, blank=True, null=True, default=None)
     current_agent = models.ForeignKey(User, blank=True, null=True, default=None, on_delete=models.SET_DEFAULT)
@@ -55,7 +58,7 @@ class Conversation(models.Model):
 
     @classmethod
     def get_or_create_conversation(cls, platform, platform_id, customer_name=None, customer_username=None,
-                                   customer_pic=None):
+                                   customer_pic=None, from_id=None):
         try:
             conv = cls.objects.get(platform=platform, platform_id=platform_id)
             if customer_name is not None:
@@ -64,11 +67,13 @@ class Conversation(models.Model):
                 conv.customer_username = customer_username
             if customer_pic is not None:
                 conv.customer_pic = customer_pic
+            if from_id is not None:
+                conv.platform_from_id = from_id
             conv.save()
             return conv
         except cls.DoesNotExist:
             conv = cls(platform=platform, platform_id=platform_id, customer_name=customer_name,
-                       customer_username=customer_username, customer_pic=None)
+                       customer_username=customer_username, customer_pic=customer_pic, platform_from_id=from_id)
             conv.save()
             return conv
 
