@@ -89,6 +89,13 @@ def process_message(mid):
 
 @shared_task
 def process_event(cid, event):
+    if event == "WELCOME":
+        conversation = models.Conversation.objects.get(id=cid)
+        conversation.agent_responding = True
+        conversation.current_agent = None
+        conversation.save()
+        consumers.conversation_saved(None, conversation)
+
     rasa_api.tasks.handle_event(cid, event)
 
 
