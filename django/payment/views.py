@@ -267,6 +267,10 @@ def take_worldpay_payment(request, payment_id):
             "type": "Card"
         }, **order_data)
 
+        if payment_o.environment != models.Payment.ENVIRONMENT_LIVE:
+            return HttpResponse(json.dumps({
+                "state": "SUCCESS"
+            }))
     else:
         raise SuspiciousOperation()
 
