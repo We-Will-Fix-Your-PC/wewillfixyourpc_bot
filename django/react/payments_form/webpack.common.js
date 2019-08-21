@@ -3,7 +3,7 @@ const webpack = require('webpack');
 
 module.exports = {
     entry: {
-        payment: "./src/payment.js"
+        payment: ['whatwg-fetch', "./src/payment.js"]
     },
     module: {
         rules: [

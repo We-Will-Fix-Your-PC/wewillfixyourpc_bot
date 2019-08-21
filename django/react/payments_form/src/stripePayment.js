@@ -1,4 +1,5 @@
 import React, {Component} from 'react';
+import 'whatwg-fetch';
 import {CardElement, Elements, injectStripe, StripeProvider, PaymentRequestButtonElement} from 'react-stripe-elements';
 import {API_ROOT} from "./payment";
 import * as Sentry from "@sentry/browser";

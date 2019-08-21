@@ -1,4 +1,5 @@
 import React, {Component} from 'react';
+import 'whatwg-fetch';
 import uuid from "uuid";
 import * as Sentry from "@sentry/browser";
 import SVG from "react-inlinesvg";
