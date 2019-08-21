@@ -113,32 +113,6 @@ def payment(request, payment_id):
 
 
 @csrf_exempt
-def complete_payment(request):
-    if request.method != "POST":
-        raise SuspiciousOperation()
-
-    token = request.META.get('HTTP_AUTHORIZATION')
-
-    try:
-        models.PaymentToken.objects.get(token=token)
-    except models.PaymentToken.DoesNotExist:
-        raise PermissionDenied()
-
-    payment_id = request.POST.get("order_id")
-    payment_o = get_object_or_404(models.Payment, id=payment_id)
-
-    if payment_o.state != payment_o.STATE_PAID:
-        raise Http404()
-
-    payment_o.state = models.Payment.STATE_COMPLETE
-    payment_o.save()
-
-    return HttpResponse(json.dumps({
-        "status": "OK"
-    }))
-
-
-@csrf_exempt
 def take_worldpay_payment(request, payment_id):
     if not request.session.get("sess_id"):
         request.session["sess_id"] = str(uuid.uuid4())
@@ -248,7 +222,7 @@ def take_worldpay_payment(request, payment_id):
         order_data = dict(token=body["token"], **order_data)
     elif body.get("googleData"):
         try:
-            message = gpay.unseal_google_token(body["googleData"],
+            message = gpay.unseal_google_token(body["googleData"]["tokenizationData"]["token"],
                                                test=payment_o.environment != models.Payment.ENVIRONMENT_LIVE)
         except gpay.GPayError as e:
             sentry_sdk.capture_exception(e)
@@ -270,6 +244,9 @@ def take_worldpay_payment(request, payment_id):
         }, **order_data)
 
         if payment_o.environment != models.Payment.ENVIRONMENT_LIVE:
+            payment_o.state = models.Payment.STATE_PAID
+            payment_o.payment_method = f"{body['googleData']['description']}"
+            payment_o.save()
             return HttpResponse(json.dumps({
                 "state": "SUCCESS"
             }))

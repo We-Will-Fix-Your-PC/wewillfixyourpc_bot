@@ -188,10 +188,10 @@ export default class WorldpayPayment extends Component {
     handleError(err, message) {
         if (err) {
             console.error(err);
-             const eventId = Sentry.captureException(err);
-             this.setState({
-                 errId: eventId
-             })
+            const eventId = Sentry.captureException(err);
+            this.setState({
+                errId: eventId
+            })
         }
         let error_msg = (message === undefined) ? "Something went wrong" : message;
         this.setState({
@@ -313,11 +313,11 @@ export default class WorldpayPayment extends Component {
     }
 
     makeGooglePayment() {
-        this.setState({
-            loading: true,
-        });
         const paymentDataRequest = this.googlePaymentRequest();
         this.state.googlePaymentsClient.loadPaymentData(paymentDataRequest).then((paymentData) => {
+            this.setState({
+                loading: true,
+            });
             this.takeGooglePayment({
                 details: paymentData,
                 payerEmail: paymentData.email,
@@ -366,7 +366,7 @@ export default class WorldpayPayment extends Component {
             },
             name: billingAddress.name,
             accepts: this.props.acceptsHeader,
-            googleData: res.details.paymentMethodData.tokenizationData.token
+            googleData: res.details.paymentMethodData
         };
         this.takePayment(res, data);
     }
@@ -507,7 +507,7 @@ export default class WorldpayPayment extends Component {
                 <div className="buttons">
                     <button onClick={this.handleTryAgain}>Try again</button>
                     {this.state.errId ? <button onClick={() => {
-                        Sentry.showReportDialog({ eventId: this.state.errId })
+                        Sentry.showReportDialog({eventId: this.state.errId})
                     }}>Report feedback</button> : null}
                 </div>
             </React.Fragment>;
