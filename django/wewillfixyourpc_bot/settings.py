@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'facebook',
     'twitter',
     'telegram_bot',
+    'azure_bot',
     'operator_interface',
     'payment',
     'rasa_api',

@@ -183,6 +183,7 @@ TWITTER_ACCESS_TOKEN_SECRET = twitter_conf["access_token_secret"]
 TWITTER_ENVNAME = "main"
 
 TELEGRAM_TOKEN = telegram_conf["token"]
+TELEGRAM_PAYMENT_TOKEN = telegram_conf["payment_token"]
 
 WORLDPAY_TEST_KEY = worldpay_conf["test_key"]
 WORLDPAY_LIVE_KEY = worldpay_conf["live_key"]

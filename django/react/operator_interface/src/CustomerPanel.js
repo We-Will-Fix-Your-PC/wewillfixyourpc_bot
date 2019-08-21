@@ -54,7 +54,7 @@ export default class CustomerPanel extends Component {
             {this.state.activeTab === 1 ?
                 <div className="ordering">
                     <h3>Current order</h3>
-                    <OrderCard cid={this.props.conversation.id}/>
+                    <OrderCard conversation={this.props.conversation}/>
                     <h3>Order History</h3>
                     <div className="orderHistory">
                         {this.props.conversation.payments.map(p => {

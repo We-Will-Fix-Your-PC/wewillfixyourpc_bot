@@ -11,6 +11,7 @@ from django.shortcuts import reverse
 
 import operator_interface.consumers
 import operator_interface.tasks
+import payment.models
 from operator_interface.models import Conversation, Message
 
 
@@ -86,7 +87,34 @@ def handle_telegram_message_typing_on(cid):
         "chat_id": conversation.platform_id,
         "action": "typing"
     })
-    r.raise_for_status()
+    if r.status_code != 200 or not r.json()["ok"]:
+        logging.error(f"Error sending telegram typing on: {r.status_code} {r.text}")
+
+
+@shared_task
+def handle_telegram_pre_checkout_query(query):
+    ok = True
+    error = None
+
+    try:
+        p = payment.models.Payment.objects.get(id=query.get("invoice_payload"))
+        if p.state != payment.models.Payment.STATE_OPEN:
+            ok = False
+            error = "Already paid"
+    except payment.models.Payment.DoesNotExist:
+        ok = False
+        error = "Invalid order"
+
+    data = {
+        "pre_checkout_query_id": query.get("id"),
+        "ok": ok
+    }
+    if error:
+        data["error"] = error
+
+    r = requests.post(f"https://api.telegram.org/bot{settings.TELEGRAM_TOKEN}/answerPreCheckoutQuery", json=data)
+    if r.status_code != 200 or not r.json()["ok"]:
+        logging.error(f"Error sending telegram pre checkout query answer: {r.status_code} {r.text}")
 
 
 @shared_task
@@ -127,7 +155,7 @@ def update_telegram_profile(chat_id, cid):
 def send_telegram_message(mid):
     message = Message.objects.get(id=mid)
 
-    def send(data, method):
+    def send(data, method, reply_markup=True):
         quick_replies = []
         for suggestion in message.messagesuggestion_set.all():
             quick_replies.append([{
@@ -140,32 +168,21 @@ def send_telegram_message(mid):
                 "request_contact": True
             }])
 
-        if len(quick_replies) > 0:
-            data["reply_markup"] = {
-                "keyboard": quick_replies,
-                "resize_keyboard": True,
-                "one_time_keyboard": True,
-                "selective": True,
-            }
-        else:
-            data["reply_markup"] = {
-                "remove_keyboard": True,
-                "selective": True,
-            }
+        if reply_markup:
+            if len(quick_replies) > 0:
+                data["reply_markup"] = {
+                    "keyboard": quick_replies,
+                    "resize_keyboard": True,
+                    "one_time_keyboard": True,
+                    "selective": True,
+                }
+            else:
+                data["reply_markup"] = {
+                    "remove_keyboard": True,
+                    "selective": True,
+                }
 
-        if message.payment_request:
-            data["reply_markup"] = {
-                "inline_keyboard": [
-                    [{
-                        "text": "Pay",
-                        "url": settings.EXTERNAL_URL_BASE + reverse(
-                            "payment:telegram_payment", kwargs={"payment_id": message.payment_request.id}
-                        ),
-                        "pay": True
-                    }]
-                ]
-            }
-        elif message.payment_confirm:
+        if message.payment_confirm:
             data["text"] = "You can view your receipt using the link below"
             data["reply_markup"] = {
                 "inline_keyboard": [
@@ -193,7 +210,37 @@ def send_telegram_message(mid):
             message.save()
             operator_interface.consumers.message_saved(None, message)
 
-    if not message.image:
+    if message.payment_request:
+        data = {
+            "chat_id": message.conversation.platform_id,
+            "provider_token": settings.TELEGRAM_PAYMENT_TOKEN,
+            "prices": [{
+                "label": f"{i.quantity}x {i.title}",
+                "amount": int((i.quantity*i.price)*100)
+            } for i in message.payment_request.paymentitem_set.all()],
+            "send_email_to_provider": (
+                False if message.payment_request.customer and message.payment_request.customer.email else True
+            ),
+            "send_phone_number_to_provider": (
+                False if message.payment_request.customer and message.payment_request.customer.phone else True
+            ),
+            "need_phone_number": (
+                False if message.payment_request.customer and message.payment_request.customer.phone else True
+            ),
+            "need_email": (
+                False if message.payment_request.customer and message.payment_request.customer.email else True
+            ),
+            "need_name": (
+                False if message.payment_request.customer and message.payment_request.customer.name else True
+            ),
+            "title": "We Will Fix Your PC order",
+            "description": message.text,
+            "payload": message.payment_request.id,
+            "currency": "GBP",
+            "start_parameter": message.payment_request.id
+        }
+        send(data, "sendInvoice", False)
+    elif not message.image:
         data = {
             "chat_id": message.conversation.platform_id,
             "text": message.text

@@ -98,5 +98,7 @@ def webhook(request):
         tasks.handle_azure_contact_relation_update.delay(data)
     elif event_type == "conversationUpdate":
         tasks.handle_azure_conversation_update(data)
+    elif event_type == "message":
+        tasks.handle_azure_message.delay(data)
 
     return HttpResponse("")

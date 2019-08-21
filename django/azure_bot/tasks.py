@@ -1,13 +1,16 @@
-from celery import shared_task
-
 import datetime
 import json
+import logging
+import dateutil.parser
+
 import requests
+from celery import shared_task
+from django.conf import settings
+from django.utils import timezone
+
 import operator_interface.consumers
 import operator_interface.tasks
 from operator_interface.models import Conversation, Message
-from django.conf import settings
-
 from . import models
 
 
@@ -31,7 +34,7 @@ def get_access_token():
     valid_tokens = []
 
     for token in tokens:
-        if token.expires_at <= datetime.datetime.now():
+        if token.expires_at <= timezone.now():
             token.delete()
         else:
             valid_tokens.append(token.token)
@@ -43,16 +46,37 @@ def get_access_token():
         "grant_type": "client_credentials",
         "client_id": settings.AZURE_APP_ID,
         "client_secret": settings.AZURE_APP_PASSWORD,
-        "oauth": "https://api.botframework.com/.default"
+        "scope": "https://api.botframework.com/.default"
     })
     r.raise_for_status()
     data = r.json()
 
     token = models.AccessToken(token=data["access_token"])
-    token.expires_at = datetime.datetime.now() + datetime.timedelta(seconds=data["expires_in"])
+    token.expires_at = timezone.now() + datetime.timedelta(seconds=data["expires_in"])
     token.save()
 
     return token.token
+
+
+@shared_task
+def handle_azure_message(msg):
+    conversation = event_to_conversation(msg)
+    mid = msg["id"]
+    timestamp = msg["timestamp"]
+    text = msg.get("text")
+
+    if not Message.message_exits(conversation, mid):
+        message_m = Message(
+            conversation=conversation, message_id=mid, direction=Message.FROM_CUSTOMER,
+            timestamp=dateutil.parser.parse(timestamp))
+
+        if text:
+            message_m.text = text
+        else:
+            return
+
+        message_m.save()
+        operator_interface.tasks.process_message.delay(message_m.id)
 
 
 @shared_task
@@ -85,5 +109,39 @@ def send_azure_message(mid):
 
     r = requests.post(endpoint, headers={
         "Authorization": f"Bearer {access_token}"
+    }, json={
+        "type": "message",
+        "from": {
+            "id": additional_id["from"]
+        },
+        "conversation": {
+            "id": message.conversation.platform_id
+        },
+        "recipient": {
+            "id": additional_id["to"]
+        },
+        "text": message.text,
     })
-    print(r.content)
+    if r.status_code != 200:
+        logging.error(f"Error sending azure message: {r.status_code} {r.text}")
+        requests.post(endpoint, headers={
+            "Authorization": f"Bearer {access_token}"
+        }, json={
+            "type": "message",
+            "from": {
+                "id": additional_id["from"]
+            },
+            "conversation": {
+                "id": message.conversation.platform_id
+            },
+            "recipient": {
+                "id": additional_id["to"]
+            },
+            "text": "Sorry, I'm having some difficulty processing your request. Please try again later"
+        }).raise_for_status()
+    else:
+        r = r.json()
+        message.message_id = r["id"]
+        message.delivered = True
+        message.save()
+        operator_interface.consumers.message_saved(None, message)

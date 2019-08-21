@@ -11,6 +11,7 @@
 {% if is_open_payment %}
     <div id="payment" class="payment"></div>
     <script src="https://pay.google.com/gp/p/js/pay.js"></script>
+    <script src="https://js.stripe.com/v3/"></script>
     <script src="{% static 'payment/js/payment.js' %}"></script>
     <script>
         window.onload = function () {

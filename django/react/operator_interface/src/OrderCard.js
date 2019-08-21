@@ -71,7 +71,7 @@ class OrderCard extends Component {
     send() {
         this.props.sock.send(JSON.stringify({
             type: "requestPayment",
-            cid: this.props.cid,
+            cid: this.props.conversation.id,
             items: this.state.items
         }));
         this.setState({

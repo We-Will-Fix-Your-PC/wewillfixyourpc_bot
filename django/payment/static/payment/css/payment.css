@@ -47,6 +47,10 @@
     align-items: center; }
     .payment .buttons > div {
       margin: 10px 0; }
+  .payment .StripeElement {
+    max-width: 500px;
+    width: 100%;
+    margin: 20px 0; }
   .payment .CardForm {
     align-self: stretch; }
     .payment .CardForm .card-list {

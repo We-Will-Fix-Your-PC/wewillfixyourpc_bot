@@ -1,4 +1,5 @@
 const path = require("path");
+const webpack = require('webpack');
 
 module.exports = {
     entry: {
@@ -28,4 +29,7 @@ module.exports = {
         publicPath: "/static/payment/js/",
         filename: "[name].js"
     },
+    plugins: [
+        new webpack.EnvironmentPlugin( { ...process.env } )
+    ]
 };

@@ -16,6 +16,7 @@
     "react-dom": "^16.8.6",
     "react-fontawesome": "^1.6.1",
     "react-inlinesvg": "^1.1.4",
+    "react-stripe-elements": "^4.0.1",
     "svg-inline-loader": "^0.8.0",
     "uuid": "^3.3.2",
     "webpack": "^4.38.0",

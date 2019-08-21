@@ -40,6 +40,10 @@ def payment_saved(sender, instance: models.Payment, **kwargs):
         tasks.process_payment.delay(instance.id)
 
 
+def apple_mechantid(request):
+    return render(request, "payment/apple-developer-merchantid-domain-association")
+
+
 def get_client_ip(request):
     x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
     if x_forwarded_for:
