@@ -9,7 +9,7 @@ import StripePayment from './stripePayment';
 export const API_ROOT = process.env.BASE_URL ? process.env.BASE_URL :
     process.env.NODE_ENV  === 'production' ? 'https://bot.cardifftec.uk/' : 'https://wewillfixyourpc-bot.eu.ngrok.io/';
 
-const payment_provider = "STRIPE";
+const payment_provider = process.env.PAYMENT_PROVIDER ? process.env.PAYMENT_PROVIDER : "STRIPE";
 
 window.addEventListener("onload", () => {
     Sentry.init({dsn: "https://3407347031614995bc8207f089a10f92@sentry.io/1518060"});

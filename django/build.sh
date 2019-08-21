@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 
+PAYMENT_PROVIDER="WORLDPAY";
+export PAYMENT_PROVIDER
+
 VERSION=$(sentry-cli releases propose-version)
 
 cd react/operator_interface || exit
