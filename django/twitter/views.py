@@ -10,6 +10,7 @@ import requests
 import requests_oauthlib
 import urllib.parse
 import logging
+import sentry_sdk
 from . import models
 from . import tasks
 
@@ -24,7 +25,8 @@ def get_creds():
         return None
     try:
         auth = json.loads(config.auth)
-    except json.JSONDecodeError:
+    except json.JSONDecodeError as e:
+        sentry_sdk.capture_exception(e)
         return None
     if auth.get("access_token") is None:
         return None

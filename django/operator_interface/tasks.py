@@ -1,5 +1,6 @@
 import json
 import uuid
+import sentry_sdk
 
 from asgiref.sync import async_to_sync
 from celery import shared_task
@@ -40,10 +41,9 @@ def send_push_notification(sid, data):
             }
         )
     except WebPushException as e:
+        sentry_sdk.capture_exception(e)
         if e.response.status_code in [404, 410]:
             subscription.delete()
-        else:
-            print(e.response.text)
 
 
 @shared_task

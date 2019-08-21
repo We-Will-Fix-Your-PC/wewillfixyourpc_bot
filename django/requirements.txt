@@ -16,6 +16,7 @@ pytz
 jwt
 pywebpush
 sentry-sdk
+sentry-sdk[flask]
 inflect
 cryptography
 rasa_sdk

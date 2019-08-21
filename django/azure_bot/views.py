@@ -1,5 +1,6 @@
 import json
 import logging
+import sentry_sdk
 
 import jwt.algorithms
 import jwt.exceptions
@@ -17,7 +18,8 @@ logger = logging.getLogger(__name__)
 def webhook(request):
     try:
         data = json.loads(request.body)
-    except json.JSONDecodeError:
+    except json.JSONDecodeError as e:
+        sentry_sdk.capture_exception(e)
         return HttpResponseBadRequest()
 
     authorization = request.META.get('HTTP_AUTHORIZATION')  # type: str
@@ -53,7 +55,8 @@ def webhook(request):
                                  issuer="https://api.botframework.com")
             if jwt_msg["serviceUrl"] == data["serviceUrl"]:
                 authorized = True
-        except jwt.exceptions.InvalidTokenError:
+        except jwt.exceptions.InvalidTokenError as e:
+            sentry_sdk.capture_exception(e)
             pass
 
     if not authorized:
@@ -85,6 +88,7 @@ def webhook(request):
                             "https://login.microsoftonline.comf8cdef31-a31e-4b4a-93e4-5f571e91255a/v2.0":
                         authorized = True
                 except jwt.exceptions.InvalidTokenError as e:
+                    sentry_sdk.capture_exception(e)
                     continue
 
         if not authorized:

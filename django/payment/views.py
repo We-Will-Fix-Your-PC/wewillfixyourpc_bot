@@ -2,6 +2,7 @@ import decimal
 import json
 import uuid
 import hmac
+import sentry_sdk
 
 import requests
 from django.conf import settings
@@ -249,7 +250,8 @@ def take_worldpay_payment(request, payment_id):
         try:
             message = gpay.unseal_google_token(body["googleData"],
                                                test=payment_o.environment != models.Payment.ENVIRONMENT_LIVE)
-        except gpay.GPayError:
+        except gpay.GPayError as e:
+            sentry_sdk.capture_exception(e)
             raise SuspiciousOperation()
 
         if message["paymentMethod"] != "CARD":

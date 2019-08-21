@@ -3,6 +3,7 @@ from django.views.decorators.csrf import csrf_exempt
 from . import tasks
 import json
 import logging
+import sentry_sdk
 
 logger = logging.getLogger(__name__)
 
@@ -11,7 +12,8 @@ logger = logging.getLogger(__name__)
 def webhook(request):
     try:
         data = json.loads(request.body)
-    except json.JSONDecodeError:
+    except json.JSONDecodeError as e:
+        sentry_sdk.capture_exception(e)
         return HttpResponseBadRequest()
 
     logger.debug(f"Got event from telegram webhook: {data}")
