@@ -313,9 +313,11 @@ export default class WorldpayPayment extends Component {
     }
 
     makeGooglePayment() {
+        this.setState({
+            loading: true,
+        });
         const paymentDataRequest = this.googlePaymentRequest();
         this.state.googlePaymentsClient.loadPaymentData(paymentDataRequest).then((paymentData) => {
-            console.log(paymentData);
             this.takeGooglePayment({
                 details: paymentData,
                 payerEmail: paymentData.email,
