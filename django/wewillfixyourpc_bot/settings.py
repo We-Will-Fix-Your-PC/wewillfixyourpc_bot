@@ -163,6 +163,9 @@ CELERY_ACCEPT_CONTENT = ["json"]
 with open(os.path.join(BASE_DIR, '/gpay-keys/gpay-key-test.pem'), 'rb') as f:
     gpay_priv_key_test = f.read()
 
+AZURE_APP_ID = os.getenv("AZURE_APP_ID")
+AZURE_APP_PASSWORD = os.getenv("AZURE_APP_PASSWORD")
+
 FACEBOOK_VERIFY_TOKEN = os.getenv("FACEBOOK_VERIFY_TOKEN")
 FACEBOOK_ACCESS_TOKEN = os.getenv("FACEBOOK_ACCESS_TOKEN")
 
