@@ -17,6 +17,7 @@ jwt
 pywebpush
 sentry-sdk
 sentry-sdk[flask]
+blinker
 inflect
 cryptography
 rasa_sdk
