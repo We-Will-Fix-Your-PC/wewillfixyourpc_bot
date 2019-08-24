@@ -28,9 +28,12 @@ class Customer(models.Model):
 
     @classmethod
     def find_customer(cls, *args, **kwargs):
-        customer = cls.objects.filter(*args, **kwargs)
+        customer = cls.objects.filter(email=kwargs.get("email"))
         if len(customer) > 0:
             customer = customer[0]
+            for k, v in kwargs.items():
+                setattr(customer, k, v)
+            customer.save()
         else:
             customer = cls(*args, **kwargs)
             customer.save()

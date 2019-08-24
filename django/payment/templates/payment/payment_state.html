@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Payment</title>
+</head>
+<body>
+<form action="{{ redirect_url }}" method="POST" id="paymentform">
+    {% csrf_token %}
+    <input type="hidden" name="payment_state" value="{{ payment_state }}"/>
+    <input type="hidden" name="payment_id" value="{{ payment_id }}"/>
+</form>
+<script>
+    window.onload = function () {
+        document.getElementById("paymentform").submit();
+    }
+</script>
+</body>
+</html>

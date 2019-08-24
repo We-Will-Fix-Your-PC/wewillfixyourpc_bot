@@ -17,9 +17,14 @@ const basicCardInstrument = {
     }
 };
 
+
+const masterPassTestId = "5dc2ffcbc3154881a9f4a5f63c9ab2b1";
+const masterPassTestUrl = "https://wewillfixyourpc-bot.eu.ngrok.io/payment/masterpass-test/";
+
 const worldPayTestKey = "T_C_52bc5b16-562d-4198-95d4-00b91f30fe2c";
 const worldPayLiveKey = "L_C_4a900284-cafb-41fd-a544-8478429f539b";
 
+const masterPassAllowedCardNetworks = ["master,amex,visa"];
 const allowedCardNetworks = ["AMEX", "MASTERCARD", "VISA"];
 const allowedCardAuthMethods = ["PAN_ONLY"];
 const testTokenizationSpecification = {
@@ -87,6 +92,7 @@ export default class WorldpayPayment extends Component {
         this.canUsePaymentRequests = this.canUsePaymentRequests.bind(this);
         this.makePaymentRequest = this.makePaymentRequest.bind(this);
         this.makeGooglePayment = this.makeGooglePayment.bind(this);
+        this.makeMasterPassPayment = this.makeMasterPassPayment.bind(this);
         this.onFormSubmit = this.onFormSubmit.bind(this);
         this.takeBasicPayment = this.takeBasicPayment.bind(this);
         this.takeGooglePayment = this.takeGooglePayment.bind(this);
@@ -100,7 +106,6 @@ export default class WorldpayPayment extends Component {
     updatePayment() {
         this.setState({
             payment: null,
-            err: null,
             selectedMethod: null,
             threedsData: null,
             complete: false,
@@ -182,6 +187,16 @@ export default class WorldpayPayment extends Component {
     }
 
     componentDidMount() {
+        if (this.props.state === "failure") {
+            this.handleError(null, "Payment failed");
+        } else if (this.props.state === "success") {
+            this.setState({
+                complete: true,
+                loading: false,
+            });
+            this.props.onComplete(this.props.paymentId);
+            return;
+        }
         this.updatePayment();
         window.addEventListener("message", this.handleMessage, false);
     }
@@ -329,6 +344,22 @@ export default class WorldpayPayment extends Component {
             if (err.statusCode !== "CANCELED") {
                 this.handleError(err);
             }
+        });
+    }
+
+    makeMasterPassPayment() {
+        const token = (this.state.payment.environment === "L") ? "" : masterPassTestId;
+        const base_url = (this.state.payment.environment === "L") ? "" : masterPassTestUrl;
+        masterpass.checkout({
+            "checkoutId": token,
+            "allowedCardTypes": masterPassAllowedCardNetworks,
+            "amount": this.paymentTotal().toString(),
+            "currency": "GBP",
+            "suppress3Ds": false,
+            "suppressShippingAddress": true,
+            "cartId": this.state.payment.id,
+            "validityPeriodMinutes": 3,
+            "callbackUrl": base_url + `${this.state.payment.id}/${btoa(window.location)}`,
         });
     }
 
@@ -498,6 +529,9 @@ export default class WorldpayPayment extends Component {
 
     handleTryAgain(e) {
         e.preventDefault();
+        this.setState({
+            err: null
+        });
         this.updatePayment();
     }
 
@@ -520,8 +554,7 @@ export default class WorldpayPayment extends Component {
         } else if (this.state.threedsData !== null) {
             return <iframe src={this.state.threedsData.frame} width={390} height={400}/>
         } else {
-            if ((this.state.canUsePaymentRequest || this.state.isGooglePayReady)
-                && this.state.selectedMethod !== "form") {
+            if (this.state.selectedMethod !== "form") {
                 return <div className="buttons">
                     {this.state.isGooglePayReady ?
                         <GPayButton paymentsClient={this.state.googlePaymentsClient}
@@ -529,6 +562,11 @@ export default class WorldpayPayment extends Component {
                     {this.state.canUsePaymentRequest ? <button onClick={this.makePaymentRequest}>
                         Autofill from browser
                     </button> : null}
+                    <div className="masterpass">
+                        <img src="https://masterpass.com/dyn/img/btn/global/mp_chk_btn_290x048px.svg" alt="MasterPass"
+                            onClick={this.makeMasterPassPayment} width={240}/>
+                        <a href="https://www.mastercard.com/mc_us/wallet/learnmore/en/GB/">Learn more</a>
+                    </div>
                     <a href="" onClick={(e) => {
                         e.preventDefault();
                         this.setState({selectedMethod: "form"})

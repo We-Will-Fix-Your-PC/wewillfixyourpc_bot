@@ -39,9 +39,9 @@ actions:
 entities:
 - brand
 - date
-- imei
-- device_repair
 - device_model
+- device_repair
+- imei
 - name
 - network
 - number
@@ -53,24 +53,24 @@ forms:
 - repair_form
 - unlock_form
 intents:
+- rate
+- greet
+- end
+- deny
+- repair
 - name
 - email
 - affirm
-- deny
 - unlock
 - brand
 - phone_number
 - network
 - imei
-- repair
-- greet
 - support_opening_hours
-- rate
 - support_contact_phone
 - support_location
 - ask_mood
 - ipad_model
-- end
 - support_contact_email
 - iphone_model
 - out_of_scope
@@ -91,15 +91,17 @@ intents:
 - iphone_repair
 - mood_unhappy
 slots:
+  asked_once:
+    type: bool
   brand:
-    type: unfeaturized
-  email:
-    type: unfeaturized
-  imei:
     type: unfeaturized
   device_model:
     type: unfeaturized
   device_repair:
+    type: unfeaturized
+  email:
+    type: unfeaturized
+  imei:
     type: unfeaturized
   name:
     type: unfeaturized
@@ -114,5 +116,3 @@ slots:
     type: unfeaturized
   unlockable:
     type: bool
-  asked_once:
-    type: unfeaturized

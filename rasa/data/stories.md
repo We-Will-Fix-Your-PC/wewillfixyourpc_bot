@@ -511,3 +511,86 @@
     - utter_anything_else
 * deny
     - utter_goodbye
+
+## interactive_story_1
+* repair{"device_model": "iphone 8"}
+    - slot{"device_model": "iphone 8"}
+    - repair_form
+    - form{"name": "repair_form"}
+    - slot{"device_model": "iphone 8"}
+    - slot{"device_model": "iphone 8"}
+    - slot{"requested_slot": "device_repair"}
+* greet
+    - action_deactivate_form
+    - form{"name": null}
+    - slot{"requested_slot": null}
+    - greet
+* end
+    - utter_goodbye
+* rate{"number": "1"}
+    - rate_slot
+    - slot{"rating": "1"}
+    - rate_form
+    - form{"name": "rate_form"}
+    - slot{"rating": 1}
+    - form{"name": null}
+    - slot{"requested_slot": null}
+    - utter_thanks_end
+    - action_restart
+
+## interactive_story_2
+* repair{"device_model": "iPhone 7", "device_repair": "screen"}
+    - slot{"device_model": "iPhone 7"}
+    - slot{"device_repair": "screen"}
+    - repair_form
+    - form{"name": "repair_form"}
+    - slot{"device_model": "iphone 7"}
+    - slot{"device_repair": "screen"}
+    - slot{"device_model": "iphone 7"}
+    - slot{"device_repair": "screen"}
+    - form{"name": null}
+    - slot{"requested_slot": null}
+    - repair
+    - slot{"device_model": null}
+    - slot{"device_repair": null}
+    - utter_anything_else
+* deny
+    - utter_goodbye
+
+## interactive_story_4
+* repair{"device_model": "iPhone 3", "device_repair": "screen"}
+    - slot{"device_model": "iPhone 3"}
+    - slot{"device_repair": "screen"}
+    - repair_form
+    - form{"name": "repair_form"}
+    - slot{"device_model": "iphone 3"}
+    - slot{"device_repair": "screen"}
+    - slot{"device_model": "iphone 3"}
+    - slot{"device_repair": "screen"}
+    - form{"name": null}
+    - slot{"requested_slot": null}
+    - repair
+    - slot{"device_model": null}
+    - slot{"device_repair": null}
+
+## interactive_story_5
+* repair{"brand": "iphone", "device_repair": "water damage"}
+    - slot{"brand": "iphone"}
+    - slot{"device_repair": "water damage"}
+    - repair_form
+    - form{"name": "repair_form"}
+    - slot{"brand": "iphone"}
+    - slot{"device_repair": "water"}
+    - slot{"brand": "iphone"}
+    - slot{"device_repair": "water"}
+    - slot{"requested_slot": "device_model"}
+* form: repair{"device_model": "iPhone 6", "number": 6}
+    - slot{"device_model": "iPhone 6"}
+    - form: repair_form
+    - slot{"device_model": "iphone 6"}
+    - form{"name": null}
+    - slot{"requested_slot": null}
+    - repair
+    - slot{"device_model": null}
+    - slot{"device_repair": null}
+    - utter_anything_else

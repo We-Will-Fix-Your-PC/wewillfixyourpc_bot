@@ -172,6 +172,30 @@
 - No
 - No
 - No
+- No
+
+## intent:device_model
+- [iphone xs](device_model)
+- [xr](device_model)
+- [4s](device_model)
+- it's a [iphone 6s](device_model)
+- [4S](device_model)
+- [4S](device_model:iPhone 4S)
+- [ipad air](device_model:iPad air)
+- [air](device_model:iPad air)
+- [pro](device_model:iPad pro)
+- [air](device_model:iPad air)
+
+## intent:device_repair
+- [charging port](device_repair)
+- [charge](device_repair:charging port)
+- [charger](device_repair:charging port)
+- [charger port](device_repair:charging port)
+- [charging dock](device_repair:charging port)
+- [dock](device_repair:charging port)
+- [battery](device_repair)
+- [not charging](device_repair:battery)
+- [not holding charge](device_repair:battery)
 
 ## intent:easteregg_fox_sounds
 - can you answer me what does the fox say
@@ -254,6 +278,8 @@
 - um okay thank you good bye
 - end
 - /end
+- goodbye
+- goodbye
 
 ## intent:greet
 - Good evening!
@@ -309,6 +335,7 @@
 - Hello
 - Hello
 - hello
+- hello
 
 ## intent:imei
 - [354403064522046](imei)
@@ -321,31 +348,6 @@
 - stupid bot
 - you're awful
 - that was shit
-
-## intent:device_model
-
-## intent:device_model
-- [iphone xs](device_model)
-- [xr](device_model)
-- [4s](device_model)
-- it's a [iphone 6s](device_model)
-- [4S](device_model)
-- [4S](device_model:iPhone 4S)
-- [ipad air](device_model:iPad air)
-- [air](device_model:iPad air)
-- [pro](device_model:iPad pro)
-- [air](device_model:iPad air)
-
-## intent:device_repair
-- [charging port](device_repair)
-- [charge](device_repair:charging port)
-- [charger](device_repair:charging port)
-- [charger port](device_repair:charging port)
-- [charging dock](device_repair:charging port)
-- [dock](device_repair:charging port)
-- [battery](device_repair)
-- [not charging](device_repair:battery)
-- [not holding charge](device_repair:battery)
 
 ## intent:mood_unhappy
 - my day was horrible
@@ -428,6 +430,7 @@
 - eight
 - nine
 - ten
+- [1](number)
 
 ## intent:repair
 - [iphone se](device_model:iPhone SE) [screen](device_repair)
@@ -517,6 +520,13 @@
 - Can you fix [home buttons](device_repair) for an [iPhone 7](device_model)?
 - Hi are you able to replace [iphone](brand) [microphones](device_repair:charging port)?
 - Hi. I have an [iPhone 8plus](device_model). Need a new front [screen](device_repair) in white. How much please?
+- Hi how much are new [batteries](device_repair:battery) for [iPhone 6](device_model) please ?
+- [iphone 8](device_model)
+- do you fix [iphone 7](device_model:iPhone 7) [screen](device_repair)
+- help, ive broken my [iphone 3](device_model) [screen](device_repair)
+- help, ive broken my [iphone 3](device_model:iPhone 3) [screen](device_repair)
+- ive dropped my [iphone](brand) [in wa](device_repair:water damage)ter now it no longer turns on
+- [iphone 6](device_model:iPhone 6)
 
 ## intent:request_human
 - escalate
@@ -614,6 +624,7 @@
 - open
 - open
 - when are you open?
+- Available later?
 
 ## intent:unlock
 - unlock [nokia](brand) 7 plus from [ee](network)
@@ -698,6 +709,7 @@
 ## synonym:battery
 - not charging
 - not holding charge
+- batteries
 
 ## synonym:charging port
 - charge
@@ -705,6 +717,7 @@
 - charger port
 - charging dock
 - dock
+- microphones
 - microphone
 
 ## synonym:ee
@@ -1000,10 +1013,16 @@
 ## synonym:iPhone XS Max
 - XS Max
 
+## synonym:ipad air
+- iPad air
+
 ## synonym:screen
 - digitiser
 - glass
 - lcd
+
+## synonym:sony
+- SOny
 
 ## regex:imei
 - [0-9]{15}

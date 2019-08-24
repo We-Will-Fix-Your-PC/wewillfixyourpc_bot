@@ -166,8 +166,12 @@ with open(os.path.join(BASE_DIR, "secrets/worldpay.json")) as f:
     worldpay_conf = json.load(f)
 with open(os.path.join(BASE_DIR, "secrets/azure.json")) as f:
     azure_conf = json.load(f)
+with open(os.path.join(BASE_DIR, "secrets/masterpass.json")) as f:
+    masterpass_conf = json.load(f)
 with open(os.path.join(BASE_DIR, 'secrets/gpay-key-test.pem'), 'rb') as f:
     gpay_priv_key_test = f.read()
+with open(os.path.join(BASE_DIR, 'secrets/masterpass-test.p12'), 'rb') as f:
+    masterpass_test_p12 = f.read()
 
 AZURE_APP_ID = azure_conf["app-id"]
 AZURE_APP_PASSWORD = azure_conf["app-password"]
@@ -187,6 +191,10 @@ TELEGRAM_PAYMENT_TOKEN = telegram_conf["payment_token"]
 
 WORLDPAY_TEST_KEY = worldpay_conf["test_key"]
 WORLDPAY_LIVE_KEY = worldpay_conf["live_key"]
+
+MASTERPASS_TEST_KEY = masterpass_conf["test_key"]
+MASTERPASS_TEST_KEY_PASS = masterpass_conf["test_key_pass"]
+MASTERPASS_TEST_P12_KEY = masterpass_test_p12
 
 GPAY_TEST_PRIVATE_KEYS = [gpay_priv_key_test]
 

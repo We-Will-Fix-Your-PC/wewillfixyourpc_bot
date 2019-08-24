@@ -112,6 +112,9 @@ spec:
             - secretRef:
                 name: email-creds
               prefix: "EMAIL_"
+            - secretRef:
+                name: azure-creds
+              prefix: "AZURE_"
       containers:
         - name: gunicorn
           image: theenbyperor/wewillfixyourpcbot_django:(version)
@@ -156,6 +159,9 @@ spec:
             - secretRef:
                 name: email-creds
               prefix: "EMAIL_"
+            - secretRef:
+                name: azure-creds
+              prefix: "AZURE_"
         - name: daphne
           image: theenbyperor/wewillfixyourpcbot_django:(version)
           imagePullPolicy: Always
@@ -170,7 +176,6 @@ spec:
               name: static
             - mountPath: "/app/media/"
               name: media
-
           envFrom:
             - configMapRef:
                 name: django-conf
@@ -199,6 +204,9 @@ spec:
             - secretRef:
                 name: email-creds
               prefix: "EMAIL_"
+            - secretRef:
+                name: azure-creds
+              prefix: "AZURE_"
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -270,6 +278,9 @@ spec:
             - secretRef:
                 name: email-creds
               prefix: "EMAIL_"
+            - secretRef:
+                name: azure-creds
+              prefix: "AZURE_"
 ---
 apiVersion: v1
 kind: Service

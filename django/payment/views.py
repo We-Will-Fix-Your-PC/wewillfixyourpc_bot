@@ -1,22 +1,24 @@
+import base64
 import decimal
+import hmac
 import json
 import uuid
-import hmac
-import sentry_sdk
+import datetime
 
 import requests
+import sentry_sdk
 from django.conf import settings
-from django.core.exceptions import PermissionDenied, SuspiciousOperation
+from django.core.exceptions import SuspiciousOperation
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.http import Http404, HttpResponse
-from django.shortcuts import get_object_or_404, render, reverse
+from django.shortcuts import get_object_or_404, redirect, render, reverse
 from django.views.decorators.clickjacking import xframe_options_exempt
 from django.views.decorators.csrf import csrf_exempt
 
 import operator_interface.models
 import operator_interface.tasks
-from . import gpay, models, tasks
+from . import gpay, mastercard, models, tasks
 
 
 @receiver(post_save, sender=models.Payment)
@@ -54,6 +56,14 @@ def get_client_ip(request):
     return ip
 
 
+def payment_state_form(request):
+    return render(request, "payment/payment_state.html", {
+        "redirect_url": base64.b64decode(request.GET.get("redirect_url")).decode(),
+        "payment_state": request.GET.get("state"),
+        "payment_id": request.GET.get("payment_id")
+    })
+
+
 def render_payment(request, payment_id, template):
     if not request.session.get("sess_id"):
         request.session["sess_id"] = str(uuid.uuid4())
@@ -61,9 +71,14 @@ def render_payment(request, payment_id, template):
 
     payment_o = get_object_or_404(models.Payment, id=payment_id)
 
-    return render(request, template,
-                  {"payment_id": payment_id, "accepts_header": request.META.get('HTTP_ACCEPT'),
-                   "is_open_payment": payment_o.state == models.Payment.STATE_OPEN})
+    return render(request, template, {
+        "payment_id": payment_id,
+        "accepts_header": request.META.get('HTTP_ACCEPT'),
+        "is_open_payment": payment_o.state == models.Payment.STATE_OPEN or
+        request.POST.get("payment_state") == "success",
+        "test": payment_o.state != models.Payment.ENVIRONMENT_LIVE,
+        "state": request.POST.get("payment_state")
+    })
 
 
 @xframe_options_exempt
@@ -84,7 +99,7 @@ def receipt(request, payment_id):
         "subtotal": (payment_o.total / decimal.Decimal('1.2'))
                   .quantize(decimal.Decimal('.01'), rounding=decimal.ROUND_DOWN),
         "tax": (payment_o.total * decimal.Decimal('0.2'))
-                        .quantize(decimal.Decimal('.01'), rounding=decimal.ROUND_DOWN)
+                  .quantize(decimal.Decimal('.01'), rounding=decimal.ROUND_DOWN)
     })
 
 
@@ -174,18 +189,17 @@ def take_worldpay_payment(request, payment_id):
         else:
             raise Http404()
 
+    email = body.get("email")
+    phone = body.get("phone")
+    name = body.get("payerName")
+    payment_o.customer = models.Customer.find_customer(email=email, phone=phone, name=name)
+    payment_o.save()
+
     token = settings.WORLDPAY_LIVE_KEY if payment_o.environment == models.Payment.ENVIRONMENT_LIVE \
         else settings.WORLDPAY_TEST_KEY
 
     description = payment_o.description
     total = int(payment_o.total * 100)
-
-    if payment_o.customer is None:
-        email = body.get("email")
-        phone = body.get("phone")
-        name = body.get("payerName")
-        payment_o.customer = models.Customer.find_customer(email=email, phone=phone, name=name)
-        payment_o.save()
 
     billingAddress = {}
     if body.get("billingAddress"):
@@ -257,7 +271,6 @@ def take_worldpay_payment(request, payment_id):
         "Authorization": token
     }, json=order_data)
     data = r.json()
-    print(data)
 
     if data.get("paymentStatus") is None:
         return HttpResponse(json.dumps({
@@ -349,3 +362,143 @@ def threeds_complete(request, payment_id):
         return render(request, "payment/3ds_complete.html", {"payment_id": payment_id, "3ds_approved": True})
     else:
         return render(request, "payment/3ds_complete.html", {"payment_id": payment_id, "3ds_approved": False})
+
+
+def take_masterpass_payment_live(request, payment_id, redirect_url):
+    return take_masterpass_payment(request, payment_id, redirect_url, "https://api.mastercard.com/")
+
+
+def take_masterpass_payment_test(request, payment_id, redirect_url):
+    auth = mastercard.MastercardAuth(settings.MASTERPASS_TEST_KEY, settings.MASTERPASS_TEST_P12_KEY,
+                                     settings.MASTERPASS_TEST_KEY_PASS)
+    return take_masterpass_payment(request, payment_id, redirect_url, "https://sandbox.api.mastercard.com/", auth)
+
+
+def take_masterpass_payment(request, payment_id, redirect_url_b64, base_url, auth):
+    if not request.session.get("sess_id"):
+        request.session["sess_id"] = str(uuid.uuid4())
+        request.session.save()
+
+    payment_o = get_object_or_404(models.Payment, id=payment_id)
+
+    if payment_o.state != payment_o.STATE_OPEN:
+        raise Http404()
+
+    redirect_url = base64.b64decode(redirect_url_b64).decode()
+    mp_status = request.GET.get("mpstatus")
+    transaction_id = request.GET.get("oauth_verifier")
+    description = payment_o.description
+    total = int(payment_o.total * 100)
+
+    if mp_status != "success":
+        return redirect(redirect_url)
+
+    def handle_redirect(state):
+        state_form_url = reverse("payment:payment_state")
+        state_form_url = f"{state_form_url}?redirect_url={redirect_url_b64}&state={state}&payment_id={payment_id}"
+        return redirect(state_form_url)
+
+    def handle_postback(success: bool):
+        r = requests.post(f"{base_url}masterpass/postback", auth=auth, json={
+            "transactionId": transaction_id,
+            "currency": "GBP",
+            "amount": float(payment_o.total),
+            "paymentDate": datetime.datetime.now().isoformat(),
+            "paymentSuccessful": success,
+            "paymentCode": "UNAVLB"
+        })
+        print(r.text)
+        r.raise_for_status()
+
+    r = requests.get(f"{base_url}masterpass/paymentdata/{transaction_id}", auth=auth, params={
+        "checkoutId": "5dc2ffcbc3154881a9f4a5f63c9ab2b1",
+        "cartId": payment_id
+    })
+    body = r.json()
+
+    if r.status_code != 200:
+        return handle_redirect("failure")
+
+    card = body["card"]
+    personalInfo = body["personalInfo"]
+
+    email = personalInfo.get("recipientEmailAddress")
+    phone = personalInfo.get("recipientPhone")
+    name = personalInfo.get("recipientName")
+    try:
+        payment_o.customer = models.Customer.find_customer(email=email, phone=phone, name=name)
+        payment_o.save()
+    except ValueError:
+        pass
+
+    billingAddress = {
+        "address1": card["billingAddress"]["line1"],
+        "postalCode": card["billingAddress"]["postalCode"],
+        "city": card["billingAddress"]["city"],
+        "countryCode": card["billingAddress"]["country"],
+        "state": card["billingAddress"]["subdivision"],
+        "telephoneNumber": phone
+    }
+    if card["billingAddress"].get("line2"):
+        billingAddress["address2"] = card["billingAddress"]["line2"]
+    if card["billingAddress"].get("line3"):
+        billingAddress["address3"] = card["billingAddress"]["line3"]
+    order_data = {
+        "orderType": "ECOM",
+        "orderDescription": description,
+        "customerOrderCode": payment_o.id,
+        "amount": total,
+        "currencyCode": "GBP",
+        "name": name,
+        "shopperEmailAddress": payment_o.customer.email,
+        "billingAddress": billingAddress,
+        "shopperIpAddress": get_client_ip(request),
+        "shopperUserAgent": request.META["HTTP_USER_AGENT"],
+        "shopperAcceptHeader": request.META.get("HTTP_ACCEPT"),
+        "shopperSessionId": request.session.get("sess_id", ""),
+        # "is3DSOrder": True,
+        "authorizeOnly": total == 0,
+        "paymentMethod": {
+            "name": card["cardHolderName"],
+            "expiryMonth": card["expiryMonth"],
+            "expiryYear": card["expiryYear"],
+            "cardNumber": card["accountNumber"],
+            "cvc": card.get("cvc"),
+            "type": "Card"
+        }
+    }
+
+    method_description = card["brandName"]
+    if card.get("lastFour"):
+        method_description += f" {card['lastFour']}"
+    else:
+        method_description += f" {card['accountNumber'][:-4]}"
+
+    if payment_o.environment != models.Payment.ENVIRONMENT_LIVE:
+        handle_postback(True)
+        payment_o.state = models.Payment.STATE_PAID
+        payment_o.payment_method = method_description
+        payment_o.save()
+        return handle_redirect("success")
+
+    r = requests.post("https://api.worldpay.com/v1/orders", headers={
+        "Authorization": settings.WORLDPAY_LIVE_KEY
+    }, json=order_data)
+    data = r.json()
+    print(data)
+
+    if data.get("paymentStatus") is None:
+        handle_postback(False)
+        return handle_redirect("failure")
+    elif data["paymentStatus"] in ["SUCCESS", "AUTHORIZED"]:
+        handle_postback(True)
+        payment_o.state = models.Payment.STATE_PAID
+        payment_o.payment_method = method_description
+        payment_o.save()
+        return handle_redirect("success")
+    elif data["paymentStatus"] == "FAILED":
+        handle_postback(False)
+        return handle_redirect("failure")
+    else:
+        handle_postback(False)
+        return handle_redirect("unknown")

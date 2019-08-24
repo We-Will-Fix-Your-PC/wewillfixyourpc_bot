@@ -30,3 +30,4 @@ daphne
 python-Levenshtein
 python-magic
 pyjwt
+mastercard-oauth1-signer

@@ -9,23 +9,23 @@ import StripePayment from './stripePayment';
 export const API_ROOT = process.env.BASE_URL ? process.env.BASE_URL :
     process.env.NODE_ENV  === 'production' ? 'https://bot.cardifftec.uk/' : 'https://wewillfixyourpc-bot.eu.ngrok.io/';
 
-const payment_provider = process.env.PAYMENT_PROVIDER ? process.env.PAYMENT_PROVIDER : "STRIPE";
+const payment_provider = process.env.PAYMENT_PROVIDER ? process.env.PAYMENT_PROVIDER : "WORLDPAY";
 
 window.addEventListener("onload", () => {
     Sentry.init({dsn: "https://3407347031614995bc8207f089a10f92@sentry.io/1518060"});
 });
 
-window.makePaymentForm = (container, payment_id, on_complete, accepts_header) => {
+window.makePaymentForm = (container, payment_id, on_complete, accepts_header, state) => {
     if (payment_provider === "WORLDPAY") {
         ReactDOM.render(<WorldpayPayment acceptsHeader={accepts_header} paymentId={payment_id}
-                                         onComplete={on_complete}/>, container);
+                                         onComplete={on_complete} state={state} />, container);
     } else if (payment_provider === "STRIPE") {
-        ReactDOM.render(<StripePayment paymentId={payment_id} onComplete={on_complete}/>, container);
+        ReactDOM.render(<StripePayment paymentId={payment_id} onComplete={on_complete} state={state}/>, container);
     }
 };
-window.makePaymentFormFromData = (container, payment, on_complete, accepts_header) => {
+window.makePaymentFormFromData = (container, payment, on_complete, accepts_header, state) => {
     if (payment_provider === "WORLDPAY") {
         ReactDOM.render(<WorldpayPayment acceptsHeader={accepts_header} payment={payment}
-                                         onComplete={on_complete}/>, container);
+                                         onComplete={on_complete} state={state}/>, container);
     }
 };

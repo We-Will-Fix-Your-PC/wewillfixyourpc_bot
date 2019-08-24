@@ -3,7 +3,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Messenger payment</title>
+    <title>Payment</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="{% static 'payment/css/payment.css' %}">
 </head>
@@ -11,6 +11,11 @@
 {% if is_open_payment %}
     <div id="payment" class="payment"></div>
     <script src="https://pay.google.com/gp/p/js/pay.js"></script>
+    {% if test %}
+        <script src="https://sandbox.masterpass.com/integration/merchant.js"></script>
+    {% else %}
+        <script src="https://masterpass.com/integration/merchant.js"></script>
+    {% endif %}
     <script src="https://js.stripe.com/v3/"></script>
     <script src="{% static 'payment/js/payment.js' %}"></script>
     <script>
@@ -19,7 +24,7 @@
                 window.makePaymentForm(document.getElementById("payment"), "{{ payment_id }}", () => {
                     console.log("Closing payment window");
                     window.close();
-                }, "{{ accepts_header }}");
+                }, "{{ accepts_header }}", "{{ state }}");
             }
         };
     </script>

@@ -45,8 +45,14 @@
     flex-direction: column;
     justify-content: center;
     align-items: center; }
+    .payment .buttons img {
+      cursor: pointer; }
     .payment .buttons > div {
       margin: 10px 0; }
+  .payment .masterpass {
+    display: flex;
+    flex-direction: column;
+    align-items: center; }
   .payment .StripeElement {
     max-width: 500px;
     width: 100%;
