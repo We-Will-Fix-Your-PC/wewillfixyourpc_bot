@@ -434,7 +434,7 @@ export default class WorldpayPayment extends Component {
                 if (resp.state === "SUCCESS") {
                     res.complete('success')
                         .then(() => {
-                            this.onComplete();
+                            this.onComplete(data.email ? data.email : this.state.payment.customer.email);
                         })
                         .catch(err => this.handleError(err))
                 } else if (resp.state === "3DS") {
@@ -503,12 +503,12 @@ export default class WorldpayPayment extends Component {
         });
     }
 
-    onComplete() {
+    onComplete(email) {
         this.setState({
             complete: true,
             loading: false,
         });
-        this.props.onComplete(this.state.payment.id)
+        this.props.onComplete(this.state.payment.id, email)
     }
 
     handleMessage(event) {
