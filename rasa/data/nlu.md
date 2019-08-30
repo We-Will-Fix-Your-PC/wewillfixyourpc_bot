@@ -517,6 +517,7 @@
 - Can you fix [home buttons](device_repair) for an [iPhone 7](device_model)?
 - Hi are you able to replace [iphone](brand) [microphones](device_repair:charging port)?
 - Hi. I have an [iPhone 8plus](device_model). Need a new front [screen](device_repair) in white. How much please?
+- Hi there, wanted a quote for a laptop [screen](device_repair) replacement. It’s a [Lenovo](brand) [Yoga 510-14ISK](device_model). Thank you.
 
 ## intent:request_human
 - escalate

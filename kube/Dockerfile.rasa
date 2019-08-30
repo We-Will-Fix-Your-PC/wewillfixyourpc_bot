@@ -2,6 +2,6 @@ FROM python:3.7-slim
 
 SHELL ["/bin/bash", "-c"]
 
-RUN apt-get update && apt-get install -y build-essential && pip install rasa tensorflow==1.14.0 && apt-get purge -y build-essential
+RUN apt-get update && apt-get install -y build-essential libpq-dev python-dev && pip install rasa tensorflow==1.14.0 psycopg2 && apt-get purge -y build-essential
 
 ENTRYPOINT ["rasa"]
