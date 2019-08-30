@@ -13,7 +13,7 @@ requests_oauthlib
 Pillow
 redis
 pytz
-jwt
+pyjwt
 pywebpush
 sentry-sdk
 inflect
