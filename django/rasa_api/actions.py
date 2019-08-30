@@ -420,7 +420,7 @@ def validate_brand(value: Text, dispatcher: CollectingDispatcher, tracker: Track
         value.lower(), brand, lambda v: fuzzywuzzy.utils.full_process(getattr(v, "name", v))
     )
 
-    if not top_choice:
+    if not top_choice or top_choice[1] <= 50:
         if not asked_once:
             dispatcher.utter_message("Hmmm 🤔, I don't recognise that brand")
             return {"brand": None, "asked_once": True}
@@ -449,7 +449,7 @@ def validate_device_model(value: Text, dispatcher: CollectingDispatcher, tracker
         functools.partial(fuzzywuzzy.fuzz.WRatio, full_process=False)
     )
 
-    if not top_choice:
+    if not top_choice or top_choice[1] <= 50:
         if not asked_once:
             dispatcher.utter_message("Hmmm 🤔, I don't recognise that model")
             return {"device_model": None, "asked_once": True}
@@ -498,7 +498,12 @@ class RepairForm(FormAction):
 
     def validate_device_model(self, value: Text, dispatcher: CollectingDispatcher, tracker: Tracker,
                               domain: Dict[Text, Any]) -> Optional[Dict[Text, Any]]:
-        return validate_device_model(value, dispatcher, tracker)
+        brand = tracker.get_slot("brand")
+        brand = brand if brand else ""
+        if brand.lower() in ["iphone", "ipad", ""]:
+            return validate_device_model(value, dispatcher, tracker)
+        else:
+            return {"device_model": None}
 
     def validate_device_repair(self, value: Text, dispatcher: CollectingDispatcher, tracker: Tracker,
                                domain: Dict[Text, Any]) -> Optional[Dict[Text, Any]]:
