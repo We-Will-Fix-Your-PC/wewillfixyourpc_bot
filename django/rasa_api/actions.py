@@ -403,11 +403,11 @@ class ActionRepair(Action):
                 for r in repair_strs:
                     dispatcher.utter_message(r)
             else:
-                dispatcher.utter_message(f"Sorry, but we do not fix {device_model} {p.plural(repair.display_name)}")
+                dispatcher.utter_template("utter_unknown_repair", tracker)
             return [rasa_sdk.events.SlotSet("device_model", None),
                     rasa_sdk.events.SlotSet("device_repair", None)]
 
-        dispatcher.utter_message("Sorry, we don't fix those")
+        dispatcher.utter_template("utter_unknown_repair", tracker)
         return [rasa_sdk.events.SlotSet("device_model", None),
                 rasa_sdk.events.SlotSet("device_repair", None)]
 
