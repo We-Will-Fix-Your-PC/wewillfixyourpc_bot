@@ -472,9 +472,11 @@ class RepairForm(FormAction):
 
     @staticmethod
     def required_slots(tracker: Tracker) -> List[Text]:
+        brand = tracker.get_slot("brand")
+        brand = brand if brand else ""
         if tracker.get_slot("device_model") is not None:
             return ["device_model", "device_repair"]
-        elif tracker.get_slot("brand").lower() in ["iphone", "ipad"]:
+        elif brand.lower() in ["iphone", "ipad"]:
             return ["brand", "device_model", "device_repair"]
         else:
             return ["brand"]
