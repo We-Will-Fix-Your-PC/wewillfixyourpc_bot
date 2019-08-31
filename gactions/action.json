@@ -1,0 +1,26 @@
+{
+  "actions": [
+    {
+      "description": "Default Welcome Intent",
+      "name": "MAIN",
+      "fulfillment": {
+        "conversationName": "wwfypc-bot"
+      },
+      "intent": {
+        "name": "actions.intent.MAIN",
+        "trigger": {
+          "queryPatterns": [
+            "talk to We Will Fix Your PC"
+          ]
+        }
+      }
+    }
+  ],
+  "conversations": {
+    "wwfypc-bot": {
+      "name": "wwfypc-bot",
+      "url": "https://wewillfixyourpc-bot.eu.ngrok.io/gactions/webhook/"
+    }
+  },
+  "locale": "en"
+}

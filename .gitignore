@@ -220,3 +220,4 @@ fabric.properties
 node_modules
 
 django/secrets/
+gactions/creds.data
