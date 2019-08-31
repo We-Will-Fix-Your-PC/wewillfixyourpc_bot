@@ -380,15 +380,11 @@ class ActionRepair(Action):
         device_model = tracker.get_slot("device_model")
         repair_name = tracker.get_slot("device_repair")
 
-        print(device_model, repair_name)
-
         time.sleep(3)
 
         device_models = models.Model.objects.filter(name__startswith=device_model.lower()) if device_model else []
         repair = next(models.RepairType.objects.filter(name=repair_name.lower()).iterator(), None) \
             if repair_name else None
-
-        print(device_models, repair)
 
         if len(device_models) >= 1 and repair is not None:
             repair_strs = []
