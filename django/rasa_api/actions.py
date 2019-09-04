@@ -469,13 +469,9 @@ class ActionRepair(Action):
         device_model = tracker.get_slot("device_model")
         repair_name = tracker.get_slot("device_repair")
 
-        print(device_model, repair_name)
-
         device_models = models.Model.objects.filter(name__startswith=device_model.lower()) if device_model else []
         repair = next(models.RepairType.objects.filter(name=repair_name.lower()).iterator(), None) \
             if repair_name else None
-
-        print(device_models, repair)
 
         if len(device_models) >= 1 and repair is not None:
             repair_strs = []
@@ -490,11 +486,11 @@ class ActionRepair(Action):
                 for r in repair_strs:
                     dispatcher.utter_message(r)
             else:
-                dispatcher.utter_message(f"Sorry, but we do not fix {device_model} {p.plural(repair.display_name)}.")
+                dispatcher.utter_template("utter_unknown_repair", tracker)
             return [rasa_sdk.events.SlotSet("device_model", None),
                     rasa_sdk.events.SlotSet("device_repair", None)]
 
-        dispatcher.utter_message("Sorry, we don't fix those.")
+        dispatcher.utter_template("utter_unknown_repair", tracker)
         return [rasa_sdk.events.SlotSet("device_model", None),
                 rasa_sdk.events.SlotSet("device_repair", None)]
 
@@ -507,7 +503,7 @@ def validate_brand(value: Text, dispatcher: CollectingDispatcher, tracker: Track
         value.lower(), brand, lambda v: fuzzywuzzy.utils.full_process(getattr(v, "name", v))
     )
 
-    if not top_choice:
+    if not top_choice or top_choice[1] <= 50:
         if not asked_once:
             dispatcher.utter_message("Hmmm 🤔, I don't recognise that brand.")
             return {"brand": None, "asked_once": True}
@@ -536,7 +532,7 @@ def validate_device_model(value: Text, dispatcher: CollectingDispatcher, tracker
         functools.partial(fuzzywuzzy.fuzz.WRatio, full_process=False)
     )
 
-    if not top_choice:
+    if not top_choice or top_choice[1] <= 50:
         if not asked_once:
             dispatcher.utter_message("Hmmm 🤔, I don't recognise that model")
             return {"device_model": None, "asked_once": True}
@@ -559,9 +555,11 @@ class RepairForm(FormAction):
 
     @staticmethod
     def required_slots(tracker: Tracker) -> List[Text]:
+        brand = tracker.get_slot("brand")
+        brand = brand if brand else ""
         if tracker.get_slot("device_model") is not None:
             return ["device_model", "device_repair"]
-        elif tracker.get_slot("brand").lower() in ["iphone", "ipad"]:
+        elif brand.lower() in ["iphone", "ipad"]:
             return ["brand", "device_model", "device_repair"]
         else:
             return ["brand"]
@@ -583,7 +581,12 @@ class RepairForm(FormAction):
 
     def validate_device_model(self, value: Text, dispatcher: CollectingDispatcher, tracker: Tracker,
                               domain: Dict[Text, Any]) -> Optional[Dict[Text, Any]]:
-        return validate_device_model(value, dispatcher, tracker)
+        brand = tracker.get_slot("brand")
+        brand = brand if brand else ""
+        if brand.lower() in ["iphone", "ipad", ""]:
+            return validate_device_model(value, dispatcher, tracker)
+        else:
+            return {"device_model": None}
 
     def validate_device_repair(self, value: Text, dispatcher: CollectingDispatcher, tracker: Tracker,
                                domain: Dict[Text, Any]) -> Optional[Dict[Text, Any]]:
