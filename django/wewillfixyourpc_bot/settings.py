@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     'operator_interface',
     'payment',
     'rasa_api',
+    'gactions',
     'corsheaders',
 ]
 
@@ -182,6 +183,8 @@ WORLDPAY_LIVE_KEY = os.getenv("WORLDPAY_LIVE_KEY")
 
 GPAY_TEST_PRIVATE_KEYS = [gpay_priv_key_test]
 
+GOOGLE_PROJECT_ID = "we-will-fix-your-pc-c0198"
+
 PUSH_PRIV_KEY = os.getenv("PUSH_PRIV_KEY")
 
 RASA_HTTP_URL = os.getenv("RASA_HTTP_URL", "http://localhost:5005")
@@ -232,9 +235,9 @@ LOGGING = {
             'handlers': ['console'],
             'level': 'INFO',
         },
-        'dialogflow_client': {
+        'gactions': {
             'handlers': ['console'],
-            'level': 'INFO',
+            'level': 'DEBUG',
         },
         'rasa_api': {
             'handlers': ['console'],

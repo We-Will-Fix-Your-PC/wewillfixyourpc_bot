@@ -1,0 +1,60 @@
+@import url('https://fonts.googleapis.com/css?family=Roboto&display=swap');
+
+$orange: #ff7300;
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-family: "Roboto", sans-serif;
+}
+
+img {
+  max-width: 400px;
+}
+
+input, select {
+  border: #aaa 1px solid;
+  padding: 10px;
+  font-size: 20px;
+  align-self: stretch;
+  border-radius: 5px;
+  background: #fff;
+  width: 100%;
+}
+
+button {
+  background-color: $orange;
+  border: none;
+  padding: 10px;
+  color: #fff;
+  font-size: 20px;
+  align-self: stretch;
+  transition: background-color .1s ease-in-out;
+  border-radius: 5px;
+  margin: 10px 0;
+
+  &:hover {
+    background-color: darken($orange, 10%);
+  }
+}
+
+form {
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-auto-rows: auto;
+  align-self: center;
+  width: 750px;
+  max-width: 100%;
+
+  ul.errorlist {
+    list-style-type: none;
+    margin-bottom: 0;
+    padding-left: 0;
+    color: darkred;
+  }
+}

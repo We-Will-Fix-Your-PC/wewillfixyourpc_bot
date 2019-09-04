@@ -162,7 +162,7 @@ def send_telegram_message(mid):
                 "text": suggestion.suggested_response
             }])
 
-        if message.request_phone:
+        if message.request == "phone":
             quick_replies.append([{
                 "text": "Send my phone number",
                 "request_contact": True

@@ -29,6 +29,7 @@ urlpatterns = [
     path('facebook/', include('facebook.urls', namespace='facebook')),
     path('telegram/', include('telegram_bot.urls', namespace='telegram')),
     path('azure/', include('azure_bot.urls', namespace='azure')),
+    path('gactions/', include('gactions.urls', namespace='gactions')),
     path('payment/', include('payment.urls', namespace='payment')),
     path('.well-known/apple-developer-merchantid-domain-association', payment.views.apple_mechantid),
     path('', include('operator_interface.urls', namespace='operator')),

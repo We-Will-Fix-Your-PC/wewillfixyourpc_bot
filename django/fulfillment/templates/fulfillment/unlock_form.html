@@ -1,0 +1,32 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Phone Unlocking</title>
+    <link rel="stylesheet" href="{% static 'fulfillment/css/form.css' %}">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body>
+<img src="{% static 'wwfypc-logo-wd.png' %}" alt="">
+<form action="" method="post">
+    <h3>
+        Let's complete your order of unlocking a {{ form_o.phone_unlock.brand }} {{ form_o.phone_unlock.device_name }}
+        from {{ form_o.network_name }}
+    </h3>
+    <table>
+        <tr>
+            <th>Price</th>
+            <td>{{ form_o.phone_unlock.price }}</td>
+        </tr>
+        <tr>
+            <th>Time</th>
+            <td>{{ form_o.phone_unlock.time }}</td>
+        </tr>
+    </table>
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Submit</button>
+</form>
+</body>
+</html>

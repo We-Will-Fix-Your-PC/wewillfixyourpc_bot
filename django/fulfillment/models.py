@@ -1,6 +1,7 @@
 from django.db import models
 from phonenumber_field.modelfields import PhoneNumberField
 from djsingleton.models import SingletonModel
+import uuid
 
 
 class ContactDetails(SingletonModel):
@@ -113,3 +114,11 @@ class Repair(models.Model):
 
     def __str__(self):
         return f"{self.device} {self.repair}"
+
+
+class UnlockForm(models.Model):
+    id = models.CharField(max_length=255, primary_key=True, default=uuid.uuid4)
+    phone_unlock = models.ForeignKey(PhoneUnlock, on_delete=models.CASCADE)
+    network_name = models.CharField(max_length=255)
+    name = models.CharField(max_length=255, blank=True, null=True)
+    email = models.EmailField(max_length=255, blank=True, null=True)
