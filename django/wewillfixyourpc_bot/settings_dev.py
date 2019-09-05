@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     'operator_interface',
     'payment',
     'rasa_api',
+    'gactions',
     'corsheaders',
 ]
 
@@ -198,10 +199,9 @@ MASTERPASS_TEST_P12_KEY = masterpass_test_p12
 
 GPAY_TEST_PRIVATE_KEYS = [gpay_priv_key_test]
 
-GOOGLE_CREDENTIALS_FILE = "secrets/WeWillFixYourPC.json"
-GOOGLE_PROJECT_ID = "wewillfixyourpc-8df73"
+GOOGLE_PROJECT_ID = "we-will-fix-your-pc-c0198"
 
-RASA_HTTP_URL = "http://localhost:5005"
+RASA_HTTP_URL = "http://172.30.0.13:5005"
 
 DEFAULT_PAYMENT_ENVIRONMENT = "T"
 
@@ -246,7 +246,7 @@ LOGGING = {
             'handlers': ['console'],
             'level': 'DEBUG',
         },
-        'dialogflow_client': {
+        'gactions': {
             'handlers': ['console'],
             'level': 'DEBUG',
         },

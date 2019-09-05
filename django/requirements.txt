@@ -13,7 +13,7 @@ requests_oauthlib
 Pillow
 redis
 pytz
-jwt
+pyjwt
 pywebpush
 sentry-sdk
 sentry-sdk[flask]
@@ -31,3 +31,4 @@ python-Levenshtein
 python-magic
 pyjwt
 mastercard-oauth1-signer
+google-auth

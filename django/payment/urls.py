@@ -6,6 +6,7 @@ urlpatterns = [
     path('fb/<payment_id>/', views.fb_payment, name='fb_payment'),
     path('twitter/<payment_id>/', views.twitter_payment, name='twitter_payment'),
     path('telegram/<payment_id>/', views.twitter_payment, name='telegram_payment'),
+    path('gactions/<payment_id>/', views.twitter_payment, name='gactions_payment'),
     path('receipt/<payment_id>/', views.receipt, name='receipt'),
     path('worldpay/<payment_id>/', views.take_worldpay_payment),
     path('masterpass/<payment_id>/<redirect_url>/', views.take_masterpass_payment_live),

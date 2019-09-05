@@ -83,7 +83,7 @@ def handle_facebook_message(psid, message):
                 if len(similar_messages) == 0:
                     message_m = Message(
                         conversation=conversation, message_id=mid, text=text if text else "",
-                        direction=Message.TO_CUSTOMER)
+                        direction=Message.TO_CUSTOMER, delivered=True)
                     message_m.save()
                     operator_interface.tasks.send_message_to_interface.delay(message_m.id)
 

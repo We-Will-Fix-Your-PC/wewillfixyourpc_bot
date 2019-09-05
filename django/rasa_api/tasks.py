@@ -1,5 +1,6 @@
 from django.conf import settings
 from celery import shared_task
+import celery.result
 import operator_interface.tasks
 import requests
 import json
@@ -22,7 +23,7 @@ def handle_message(mid):
     if text:
         logging.info(f"Got message of \"{text}\" to process with rasa")
 
-        handle_text(conversation, text)
+        return handle_text(conversation, text)
 
 
 @shared_task
@@ -32,21 +33,25 @@ def handle_event(cid, event):
     logging.info(f"Got event of \"{event}\" to process with rasa")
 
     if event == "WELCOME":
-        handle_text(conversation, "/greet")
+        return handle_text(conversation, "/greet")
     else:
-        handle_text(conversation, f"/{event}")
+        return handle_text(conversation, f"/{event}")
 
 
 def handle_text(conversation, text):
     operator_interface.tasks.process_typing.delay(conversation.id)
 
+    sender = f"{conversation.platform}:{conversation.platform_id}"
+    if conversation.noonce:
+        sender += f":{conversation.noonce}"
     r = requests.post(f"{settings.RASA_HTTP_URL}/webhooks/rest/webhook?stream=true", json={
-        "sender": f"{conversation.platform}:{conversation.platform_id}",
+        "sender": sender,
         "message": text
     }, stream=True)
     r.raise_for_status()
 
     items = r.iter_lines(None, True)
+    out_data = []
     for item in items:
         if item:
             try:
@@ -59,8 +64,6 @@ def handle_text(conversation, text):
             if not data.get("recipient_id"):
                 continue
 
-            platform, platform_id = data["recipient_id"].split(":", 1)
-            conversation = Conversation.objects.get(platform=platform, platform_id=platform_id)
             message = Message(conversation=conversation, direction=Message.TO_CUSTOMER, message_id=uuid.uuid4())
 
             if data.get("text"):
@@ -92,9 +95,13 @@ def handle_text(conversation, text):
                         "text": "Human needed!"
                     })
                     continue
-                elif event_type == "request_phone":
-                    message.text = custom["text"]
-                    message.request_phone = True
+                elif event_type == "request":
+                    message.text = custom.get("text")
+                    message.request = custom.get("request")
+                elif event_type == "card":
+                    message.card = json.dumps(custom.get("card"))
+                elif event_type == "restart":
+                    message.end = True
                 else:
                     continue
             else:
@@ -106,4 +113,6 @@ def handle_text(conversation, text):
                     suggestion = MessageSuggestion(message=message, suggested_response=button["payload"])
                     suggestion.save()
 
-            operator_interface.tasks.process_message(message.id)
+            out_data.append(operator_interface.tasks.process_message(message.id))
+
+    return out_data

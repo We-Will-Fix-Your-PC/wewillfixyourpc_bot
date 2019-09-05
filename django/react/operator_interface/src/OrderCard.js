@@ -100,8 +100,7 @@ class OrderCard extends Component {
             <div className="summary">
                 <div><span>Total:</span> {this.total().toFixed(2)} GBP</div>
                 <Button onClick={this.send} disabled={
-                    !this.state.items.length || this.props.conversation.agent_responding ||
-                    !this.props.conversation.current_user_responding
+                    !this.state.items.length || !this.props.conversation.can_message()
                 }>
                     Send</Button>
             </div>

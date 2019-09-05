@@ -27,7 +27,7 @@ def conversation_saved(sender, instance: operator_interface.models.Conversation,
 @receiver(post_save, sender=operator_interface.models.Message)
 def message_saved(sender, instance: operator_interface.models.Conversation, **kwargs):
     async_to_sync(channel_layer.group_send)("operator_interface", {
-        "type": "message",
+        "type": "message_update",
         "mid": instance.id
     })
 
@@ -54,6 +54,10 @@ class OperatorConsumer(AsyncJsonWebsocketConsumer):
         self.user = None
 
     async def message(self, event):
+        message = await self.get_message(event["mid"])
+        await self.send_conversation(message.conversation)
+
+    async def message_update(self, event):
         message = await self.get_message(event["mid"])
         await self.send_message(message)
 
@@ -92,23 +96,30 @@ class OperatorConsumer(AsyncJsonWebsocketConsumer):
             "image": message.image,
             "read": message.read,
             "delivered": message.delivered,
-            "conversation_id": message.conversation.id,
             "payment_request": message.payment_request.id if message.payment_request else None,
             "payment_confirm": message.payment_confirm.id if message.payment_confirm else None,
+            "conversation_id": message.conversation.id,
         })
-        conversation = await self.get_conversation(message.conversation_id)
-        await self.send_conversation(conversation)
 
     async def send_conversation(self, conversation: operator_interface.models.Conversation):
         pic = static("operator_interface/img/default_profile_normal.png")
         if conversation.customer_pic:
             pic = conversation.customer_pic.url
+
+        messages = conversation.message_set.all()
+        payments = []
+        for m in messages:
+            if m.payment_request and m.payment_request.id not in payments:
+                payments.append(m.payment_request.id)
+            if m.payment_confirm and m.payment_confirm.id not in payments:
+                payments.append(m.payment_confirm.id)
+
         await self.send_json({
             "type": "conversation",
             "id": conversation.id,
             "agent_responding": conversation.agent_responding,
-            "current_user_responding": conversation.current_agent.id == self.user.id
-            if conversation.current_agent else False,
+            "current_user_responding":
+                conversation.current_agent.id == self.user.id if conversation.current_agent else False,
             "platform": conversation.platform,
             "customer_name": conversation.customer_name,
             "customer_username": conversation.customer_username,
@@ -118,6 +129,8 @@ class OperatorConsumer(AsyncJsonWebsocketConsumer):
             "customer_phone": conversation.customer_phone.as_national if conversation.customer_phone else None,
             "customer_locale": conversation.customer_locale,
             "customer_gender": conversation.customer_gender,
+            "messages": [m.id for m in messages],
+            "payments": payments
         })
 
     async def send_payment(self, payment: payment.models.Payment):
@@ -210,8 +223,19 @@ class OperatorConsumer(AsyncJsonWebsocketConsumer):
         if message["type"] == "resyncReq":
             last_message = message["lastMessage"]
             last_message = datetime.datetime.fromtimestamp(last_message)
+            conversations = set()
             for message in await self.get_messages(last_message):
-                await self.send_message(message)
+                if message.conversation not in conversations:
+                    conversations.add(message.conversation)
+            for conversation in conversations:
+                await self.send_conversation(conversation)
+        elif message["type"] == "getMessage":
+            msg_id = message["id"]
+            try:
+                msg = await self.get_message(msg_id)
+                await self.send_message(msg)
+            except operator_interface.models.Message.DoesNotExist:
+                pass
         elif message["type"] == "getConversation":
             conv_id = message["id"]
             try:

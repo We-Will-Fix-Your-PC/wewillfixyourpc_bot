@@ -30,16 +30,19 @@ class Conversation(models.Model):
     TWITTER = 'TW'
     TELEGRAM = 'TG'
     AZURE = 'AZ'
+    GOOGLE_ACTIONS = 'GA'
     PLATFORM_CHOICES = (
         (FACEBOOK, 'Facebook'),
         (TWITTER, 'Twitter'),
         (TELEGRAM, 'Telegram'),
         (AZURE, 'Azure'),
+        (GOOGLE_ACTIONS, 'Actions on Google'),
     )
 
     platform = models.CharField(max_length=2, choices=PLATFORM_CHOICES)
     platform_id = models.CharField(max_length=255)
-    platform_from_id = models.TextField(blank=True, default="")
+    platform_from_id = models.TextField(blank=True, null=True, default="")
+    noonce = models.CharField(max_length=255, blank=True, null=True)
     agent_responding = models.BooleanField(default=True)
     timezone = models.CharField(max_length=255, blank=True, null=True, default=None)
     current_agent = models.ForeignKey(User, blank=True, null=True, default=None, on_delete=models.SET_DEFAULT)
@@ -112,7 +115,9 @@ class Message(models.Model):
                                         related_name='request_message')
     payment_confirm = models.ForeignKey(payment.models.Payment, on_delete=models.SET_NULL, blank=True, null=True,
                                         related_name='confirm_message')
-    request_phone = models.BooleanField(default=False)
+    card = models.TextField(blank=True, null=True)
+    request = models.CharField(max_length=255, null=True, blank=True)
+    end = models.BooleanField(default=False, null=True)
 
     class Meta:
         ordering = ('timestamp',)

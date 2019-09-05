@@ -67,7 +67,7 @@ def process_message(mid):
 
     if message.direction == models.Message.FROM_CUSTOMER:
         if conversation.agent_responding:
-            rasa_api.tasks.handle_message(mid)
+            return rasa_api.tasks.handle_message(mid)
         else:
             send_message_notifications({
                 "type": "message",
@@ -85,6 +85,10 @@ def process_message(mid):
             telegram_bot.tasks.send_telegram_message(mid)
         elif conversation.platform == models.Conversation.AZURE:
             azure_bot.tasks.send_azure_message(mid)
+        elif conversation.platform == models.Conversation.GOOGLE_ACTIONS:
+            return mid
+
+    return None
 
 
 @shared_task
@@ -96,7 +100,7 @@ def process_event(cid, event):
         conversation.save()
         consumers.conversation_saved(None, conversation)
 
-    rasa_api.tasks.handle_event(cid, event)
+    return rasa_api.tasks.handle_event(cid, event)
 
 
 @shared_task

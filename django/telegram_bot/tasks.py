@@ -127,7 +127,17 @@ def update_telegram_profile(chat_id, cid):
     r = r.json()
     if r["ok"]:
         r = r["result"]
-        name = r['title'] if r.get("title") else f"{r['first_name']} {r['last_name']}"
+        if r.get('title'):
+            name = r['title']
+        else:
+            first_name = r.get('first_name')
+            last_name = r.get('last_name')
+            name = []
+            if first_name:
+                name.append(first_name)
+            if last_name:
+                name.append(last_name)
+            name = " ".join(name)
         username = r.get('username')
         profile_pic = r.get("photo")
 
@@ -162,7 +172,7 @@ def send_telegram_message(mid):
                 "text": suggestion.suggested_response
             }])
 
-        if message.request_phone:
+        if message.request == "phone":
             quick_replies.append([{
                 "text": "Send my phone number",
                 "request_contact": True

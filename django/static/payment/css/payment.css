@@ -2,6 +2,11 @@
 * {
   box-sizing: border-box; }
 
+body > img {
+  max-width: 400px;
+  margin: 0 auto;
+  display: block; }
+
 .payment {
   display: flex;
   flex-direction: column;

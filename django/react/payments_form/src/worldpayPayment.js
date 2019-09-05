@@ -34,12 +34,27 @@ const testTokenizationSpecification = {
         publicKey: "BMfHP71Jz1LtG0G0rUENWmInA1+gHndceODwxKOvJvKHPOaqKWZfkJIB2Ga8fWFg4HbQC7fKju8J7x23hOEqJ74="
     }
 };
+const liveTokenizationSpecification = {
+    type: 'DIRECT',
+    parameters: {
+        protocolVersion: "ECv2",
+        publicKey: ""
+    }
+};
 
 const googlePaymentTestBaseRequest = {
     apiVersion: 2,
     apiVersionMinor: 0,
     merchantInfo: {
         merchantName: 'We Will Fix Your PC'
+    },
+};
+const googlePaymentLiveBaseRequest = {
+    apiVersion: 2,
+    apiVersionMinor: 0,
+    merchantInfo: {
+        merchantId: "00669933340577918746",
+        merchantName: 'We Will Fix Your PC',
     },
 };
 
@@ -64,6 +79,17 @@ const googlePaymentTestDataRequest = {
                 googlePayBaseCardPaymentMethod)
         ]
     }, googlePaymentTestBaseRequest)
+};
+
+const googlePaymentLiveDataRequest = {
+    supportedMethods: 'https://google.com/pay',
+    data: Object.assign({
+        environment: 'PRODUCTION',
+        allowedPaymentMethods: [
+            Object.assign({tokenizationSpecification: liveTokenizationSpecification},
+                googlePayBaseCardPaymentMethod)
+        ]
+    }, googlePaymentLiveBaseRequest)
 };
 
 export default class WorldpayPayment extends Component {
@@ -121,7 +147,31 @@ export default class WorldpayPayment extends Component {
                     canUsePaymentRequest: value
                 }))
                 .catch(err => this.handleError(err));
-            if (resp.environment === "T") {
+            if (resp.environment !== "T") {
+                const paymentsClient = new window.google.payments.api.PaymentsClient({environment: 'PRODUCTION'});
+                this.setState({
+                    googlePaymentsClient: paymentsClient
+                });
+                const isReadyToPayRequest = Object.assign({}, googlePaymentLiveBaseRequest);
+                isReadyToPayRequest.allowedPaymentMethods = [googlePayBaseCardPaymentMethod];
+                paymentsClient.isReadyToPay(isReadyToPayRequest)
+                    .then(resp => {
+                        if (resp.result) {
+                            this.setState({
+                                isGooglePayReady: true
+                            });
+                            paymentsClient.prefetchPaymentData(this.googlePaymentRequest());
+                        } else {
+                            this.setState({
+                                isGooglePayReady: false
+                            });
+                        }
+                    })
+                    .catch(err => this.handleError(err));
+                this.setState({
+                    isGooglePayReady: false,
+                });
+            } else {
                 const paymentsClient = new window.google.payments.api.PaymentsClient({environment: 'TEST'});
                 this.setState({
                     googlePaymentsClient: paymentsClient
@@ -142,10 +192,6 @@ export default class WorldpayPayment extends Component {
                         }
                     })
                     .catch(err => this.handleError(err));
-            } else {
-                this.setState({
-                    isGooglePayReady: false,
-                });
             }
         };
 
@@ -266,7 +312,7 @@ export default class WorldpayPayment extends Component {
     }
 
     makePaymentRequest() {
-        let methods = [];
+        let methods = [googlePaymentLiveDataRequest];
         if (this.state.payment.environment === "T") {
             methods = [googlePaymentTestDataRequest];
         }
