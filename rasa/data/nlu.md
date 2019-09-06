@@ -187,6 +187,12 @@
 - [pro](device_model:iPad pro)
 - [air](device_model:iPad air)
 
+## intent:resolve_entity
+- [1](mention)
+- The [first](mention) one
+- Take the [last](mention) one
+- Number [two](mention)
+
 ## intent:device_repair
 - [charging port](device_repair)
 - [charge](device_repair:charging port)
@@ -388,7 +394,6 @@
 - [ee](network)
 - [three](network)
 - Three
-- [three](number:3)
 
 ## intent:opinion+negative
 - ugh
@@ -528,7 +533,7 @@
 - do you fix [iphone 7](device_model:iPhone 7) [screen](device_repair)
 - help, ive broken my [iphone 3](device_model) [screen](device_repair)
 - help, ive broken my [iphone 3](device_model:iPhone 3) [screen](device_repair)
-- ive dropped my [iphone](brand) [in wa](device_repair:water damage)ter now it no longer turns on
+- ive dropped my [iphone](brand) [in water](device_repair:water damage) now it no longer turns on
 - [iphone 6](device_model:iPhone 6)
 
 ## intent:request_human

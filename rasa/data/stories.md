@@ -155,6 +155,71 @@
     - form{"name": "repair_form"}
     - form{"name": null}
     - repair
+> repairable
+
+## repairable
+> repairable
+    - slot{"repairable": false}
+    - utter_ask_book
+* deny
+> anything_else
+
+## repairable
+> repairable
+    - slot{"repairable": false}
+    - utter_ask_book
+* affirm
+> repair_book
+
+## repair - sign in
+> repair_book
+    - slot{"sign_in_supported": true}
+    - sign_in
+> repair_sign_in
+
+## repair - sign in success
+> repair_sign_in
+* sign_in
+> repair_book_2
+
+## repair - sign in error
+> repair_sign_in
+* sign_in_error
+  - utter_sign_in_error
+> anything_else
+
+## repair - sign in cancel
+> repair_sign_in
+* sign_in_cancelled
+> anything_else
+
+## repair - no sign in
+> repair_book
+    - slot{"sign_in_supported": false}
+> repair_book_2
+
+## actually book repair
+> repair_book_2
+    - repair_book_check
+> repair_book_3
+
+## actually book repair loop
+> repair_book_3
+    - slot{"repairable": false}
+* resolve_entity OR device_model
+    - repair_book_clarify
+> repair_book_3
+
+## actually book repair loop break
+> repair_book_3
+   - slot{"repairable": true}
+   - repair_book_form
+   - repair_book
+> anything_else
+
+## not repairable
+> repairable
+    - slot{"repairable": false}
 > anything_else
 
 ## unlock
@@ -166,30 +231,30 @@
 
 ## unlockable
 > unlockable
-    - slot{"unlockable": true, "input_supported": "text"}
-> unlock_ask_order
+    - slot{"unlockable": true, "input_supported": "web_form"}
+    - utter_ask_order
+* affirm
+> unlock
 
 ## unlockable
 > unlockable
-    - slot{"unlockable": true, "input_supported": "web_form"}
-> unlock_ask_order
+    - slot{"unlockable": true, "input_supported": "text"}
+    - utter_ask_order
+* affirm
+> unlock
 
 ## unlockable
 > unlockable
     - slot{"unlockable": true, "input_supported": "voice", "highest_input_supported": "web_form"}
-> unlock_ask_order
+    - utter_ask_order
+* affirm
+> unlock
 
 ## unlockable
 > unlockable
     - slot{"unlockable": true, "input_supported": "voice", "highest_input_supported": "voice"}
     - utter_order_not_available
 > anything_else
-
-## unlockable ask order
-> unlock_ask_order
-    - utter_ask_order
-* affirm
-> unlock
 
 ## unlock - sign in
 > unlock
@@ -224,26 +289,6 @@
     - utter_unlock_explain
 > unlock_order_form
 
-## unlock order voice
-> unlock_order
-    - update_info_slots
-    - utter_unlock_explain
-    - slot{"input_supported": "voice"}
-> unlock_order_move_web_form 
-
-## unlock order move
-> unlock_order_move_web_form
-    - move_to_web_form_device
-* moved_to_new_device
-    - update_info_slots
-> unlock_order_form
-
-## unlock order no move
-> unlock_order_move_web_form
-    - move_to_web_form_device
-* move_to_new_device_refused
-> anything_else
-
 ## unlock order form
 > unlock_order_form
     - slot{"input_supported": "text"}
@@ -256,6 +301,21 @@
 > unlock_order_form
     - slot{"input_supported": "web_form"}
     - unlock_order_web_form
+
+## unlock order move
+> unlock_order_form
+    - slot{"input_supported": "voice"}
+    - move_to_web_form_device
+* move_to_new_device_refused
+> anything_else
+
+## unlock order move
+> unlock_order_form
+    - slot{"input_supported": "voice"}
+    - move_to_web_form_device
+* moved_to_new_device
+    - update_info_slots
+> unlock_order_form
 
 ## not unlockable
 > unlockable

@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Rasa Core Visualisation</title>
+    <script src="https://dagrejs.github.io/project/dagre-d3/latest/dagre-d3.min.js"></script>
+    <script src="https://dagrejs.github.io/project/dagre/latest/dagre.min.js"></script>
+    <script src="https://d3js.org/d3.v4.js"></script>
+    <script src="https://dagrejs.github.io/project/graphlib-dot/v0.6.3/graphlib-dot.js"></script>
+</head>
+<body>
+<div id="errormsg" style="color: #b00"></div>
+<svg>
+    <style>
+        .node.invisible > rect {
+            display: none;
+        }
+
+        .node.start > rect {
+            fill: #7f7;
+            rx: 30;
+            ry: 18;
+        }
+
+        .node.end > rect {
+            fill: #f77;
+            rx: 30;
+            ry: 18;
+        }
+
+        .node:not(.active) > rect, .node:not(.active) > .label {
+            opacity: 0.4;
+        }
+
+        .edgePath:not(.active) path {
+            opacity: 0.4;
+        }
+
+        .node.ellipsis > rect {
+            fill: #CCC;
+        }
+
+        .node.intent > rect {
+            fill: #7ff;
+        }
+
+        .node.dashed > rect {
+            stroke-dasharray: 5;
+        }
+
+        text {
+            font-weight: 300;
+            font-family: "Helvetica Neue", Helvetica, Arial, sans-serf, serif;
+            font-size: 14px;
+            color: #1f1d1d;
+        }
+
+        .node rect {
+            stroke: #444;
+            fill: #fff;
+            stroke-width: 1.5px;
+        }
+
+        .edgePath path {
+            stroke: #333;
+            stroke-width: 1.5px;
+        }
+
+        svg {
+            position: fixed;
+            top: 10px;
+            left: 0;
+            height: 100%;
+            width: 100%
+        }
+    </style>
+    <g></g>
+</svg>
+<script>
+
+  function serveGraph() {
+    let oldInputGraphValue;
+
+    const url = 'visualization.dot';
+    const refreshInterval = 500;
+
+    // trigger a refresh by fetching an updated graph
+    setInterval(function () {
+      fetch(url).then(r => r.text()).then(dot => {
+        document.getElementById('errormsg').innerHTML = '';
+        if (oldInputGraphValue === dot) return;
+
+        oldInputGraphValue = dot;
+        drawGraph(dot);
+      }).catch(err => {
+        document.getElementById('errormsg').innerHTML =
+          'Failed to update plot. (' + err.message + ')';
+      });
+    }, refreshInterval);
+  }
+
+  function drawGraph(graph) {
+    let g = graphlibDot.read(graph);
+    // Set margins, if not present
+    if (!g.graph().hasOwnProperty("marginx") &&
+      !g.graph().hasOwnProperty("marginy")) {
+      g.graph().marginx = 20;
+      g.graph().marginy = 20;
+    }
+    g.graph().transition = function (selection) {
+      return selection.transition().duration(300);
+    };
+    // Render the graph into svg g
+    d3.select("svg g").call(render, g);
+  }
+  // Set up zoom support
+  const svg = d3.select("svg"),
+    inner = d3.select("svg g"),
+    zoom = d3.zoom().on("zoom", function () {
+      inner.attr("transform", d3.event.transform);
+    });
+  svg.call(zoom);
+
+  // Create and configure the renderer
+  const render = dagreD3.render();
+
+  let isClient = false;
+  isClient = true;
+
+  if (isClient) {
+    // Mark all nodes and their edges as active
+    cssRules = document.styleSheets[0].cssRules;
+    cssRules[3].style.opacity = 1;
+    cssRules[4].style.opacity = 1;
+
+    let graph;
+    graph = `digraph  {
+0 [class="start active", fillcolor=green, fontsize=12, label=START, style=filled];
+"-1" [class=end, fillcolor=red, fontsize=12, label=END, style=filled];
+1 [class="", fontsize=12, label=utter_good_value];
+2 [class="", fontsize=12, label=utter_ask_continue];
+3 [class="", fontsize=12, label=utter_mood];
+4 [class="", fontsize=12, label=utter_weather];
+5 [class="", fontsize=12, label=utter_history];
+6 [class="", fontsize=12, label=utter_explain_whatspossible];
+8 [class="", fontsize=12, label=utter_woodchuck];
+9 [class="", fontsize=12, label=utter_fox_sounds];
+10 [class="", fontsize=12, label=utter_meaning_of_life];
+11 [class="", fontsize=12, label=utter_why_chicken_cross_road];
+12 [class="", fontsize=12, label=utter_cant_help];
+13 [class="", fontsize=12, label=utter_can_do];
+14 [class="", fontsize=12, label=support_contact_email];
+15 [class="", fontsize=12, label=utter_anything_else];
+18 [class="", fontsize=12, label=request_human];
+26 [class="", fontsize=12, label=unlock_lookup_form];
+27 [class="", fontsize=12, label=unlock_lookup];
+28 [class="", fontsize=12, label=update_info_slots];
+29 [class="", fontsize=12, label=utter_ask_order];
+30 [class="", fontsize=12, label=sign_in];
+31 [class="", fontsize=12, label=update_info_slots];
+32 [class="", fontsize=12, label=utter_unlock_explain];
+33 [class="", fontsize=12, label=unlock_order_web_form];
+78 [class="", fontsize=12, label=move_to_web_form_device];
+79 [class="", fontsize=12, label=update_info_slots];
+128 [class="", fontsize=12, label=utter_positive_feedback_reaction];
+130 [class="", fontsize=12, label=cat_pic];
+131 [class="", fontsize=12, label=utter_restart];
+132 [class="", fontsize=12, label=repair_form];
+133 [class="", fontsize=12, label=action_deactivate_form];
+134 [class="", fontsize=12, label=greet];
+136 [class="", fontsize=12, label=utter_sign_in_error];
+137 [class="", fontsize=12, label=utter_anything_else];
+141 [class="", fontsize=12, label=support_opening_hours];
+144 [class="", fontsize=12, label=support_contact];
+150 [class="", fontsize=12, label=support_contact_phone];
+153 [class="", fontsize=12, label=support_location];
+157 [class="", fontsize=12, label=repair];
+163 [class="", fontsize=12, label=utter_order_not_available];
+344 [class="", fontsize=12, label=unlock_order_form];
+345 [class="", fontsize=12, label=unlock_order];
+346 [class="", fontsize=12, label=unlock_clear];
+495 [class="", fontsize=12, label=repair_form];
+501 [class="", fontsize=12, label=action_deactivate_form];
+502 [class="", fontsize=12, label=update_info_slots];
+503 [class="", fontsize=12, label=greet];
+507 [class="", fontsize=12, label=utter_anything_else];
+509 [class="", fontsize=12, label=utter_anything_else];
+510 [class="", fontsize=12, label=utter_goodbye];
+542 [class="", fontsize=12, label=utter_can_do];
+555 [class="", fontsize=12, label=utter_goodbye];
+556 [class="", fontsize=12, label=rate_slot];
+557 [class="", fontsize=12, label=rate_form];
+558 [class="", fontsize=12, label=utter_thanks_end];
+559 [class="", fontsize=12, label=action_restart];
+569 [class="", fontsize=12, label=utter_anything_else];
+2339 [class="", fontsize=12, label=move_to_web_form_device];
+2968 [class=intent, fillcolor=lightblue, label="that's\ a\ bit\ pricey", shape=rect, style=filled];
+2969 [class=intent, fillcolor=lightblue, label="Do\ you\ feel\ good\?", shape=rect, style=filled];
+2970 [class=intent, fillcolor=lightblue, label="Do\ you\ have\ good\ weather\?", shape=rect, style=filled];
+2971 [class=intent, fillcolor=lightblue, label="i\ want\ to\ get\ to\ know\ your\ owner", shape=rect, style=filled];
+2972 [class=intent, fillcolor=lightblue, label="what\ can\ you\ help\ me\ with\?", shape=rect, style=filled];
+2973 [class=intent, fillcolor=lightblue, label="how\ many\ chucks\ would\ a\ woodchuck\ chuck\ if\ a\ woodchuck\ could\ chuck\ wood", shape=rect, style=filled];
+2974 [class=intent, fillcolor=lightblue, label="what\ does\ the\ fox\ say", shape=rect, style=filled];
+2975 [class=intent, fillcolor=lightblue, label="tell\ me\ the\ meaning\ of\ life", shape=rect, style=filled];
+2976 [class=intent, fillcolor=lightblue, label="tell\ me\ why\ did\ the\ chicken\ cross\ the\ road", shape=rect, style=filled];
+2977 [class=intent, fillcolor=lightblue, label="My\ PCs\ broken", shape=rect, style=filled];
+2978 [class=intent, fillcolor=lightblue, label=email, shape=rect, style=filled];
+2979 [class=intent, fillcolor=lightblue, label="speak\ to\ human", shape=rect, style=filled];
+2980 [class=intent, fillcolor=lightblue, label="this\ is\ leading\ to\ nothing", shape=rect, style=filled];
+2981 [class=intent, fillcolor=lightblue, label="can\ you\ unlock\ my\ phone\ from\ VOXI\?", shape=rect, style=filled];
+2982 [class=intent, fillcolor=lightblue, label=excellent, shape=rect, style=filled];
+2983 [class=intent, fillcolor=lightblue, label=understood, shape=rect, style=filled];
+2984 [class=intent, fillcolor=lightblue, label="not\ so\ good", shape=rect, style=filled];
+2985 [class=intent, fillcolor=lightblue, label="thank\ you\ goodbye\ noise", shape=rect, style=filled];
+2986 [class=intent, fillcolor=lightblue, label="ive\ dropped\ my\ iphone\ in\ water\ now\ it\ no\ longer\ turns\ on", shape=rect, style=filled];
+2987 [class=intent, fillcolor=lightblue, label="/sign_in_error", shape=rect, style=filled];
+2988 [class=intent, fillcolor=lightblue, label="When\ are\ you\ open\ Saturday\?", shape=rect, style=filled];
+2989 [class=intent, fillcolor=lightblue, label="How\ can\ I\ contact\ you\?", shape=rect, style=filled];
+2990 [class=intent, fillcolor=lightblue, label="What's\ your\ number\?", shape=rect, style=filled];
+2991 [class=intent, fillcolor=lightblue, label=locatin, shape=rect, style=filled];
+2992 [class=intent, fillcolor=lightblue, label=heya, shape=rect, style=filled];
+2993 [class=intent, fillcolor=lightblue, label="unintelligible\ thank\ you\ goodbye", shape=rect, style=filled];
+2994 [class=intent, fillcolor=lightblue, label="woah!\ that's\ expensive", shape=rect, style=filled];
+2995 [class=intent, fillcolor=lightblue, label="/sign_in_cancelled", shape=rect, style=filled];
+2996 [class=intent, fillcolor=lightblue, label="/sign_in_cancelled", shape=rect, style=filled];
+2997 [class=intent, fillcolor=lightblue, label="don't", shape=rect, style=filled];
+2998 [class=intent, fillcolor=lightblue, label=Yes, shape=rect, style=filled];
+2999 [class=intent, fillcolor=lightblue, label="Can\ you\ fix\ my\ macbook", shape=rect, style=filled];
+3000 [class=intent, fillcolor=lightblue, label="yep\ that's\ ok", shape=rect, style=filled];
+3001 [class=intent, fillcolor=lightblue, label=nah, shape=rect, style=filled];
+3002 [class=intent, fillcolor=lightblue, label=No, shape=rect, style=filled];
+3003 [class=intent, fillcolor=lightblue, label="do\ it", shape=rect, style=filled];
+3004 [class=intent, fillcolor=lightblue, label=Yes, shape=rect, style=filled];
+3005 [class=intent, fillcolor=lightblue, label="/sign_in", shape=rect, style=filled];
+3006 [class=intent, fillcolor=lightblue, label="/sign_in_error", shape=rect, style=filled];
+3007 [class=intent, fillcolor=lightblue, label="/sign_in_cancelled", shape=rect, style=filled];
+3008 [class=intent, fillcolor=lightblue, label="/sign_in_cancelled", shape=rect, style=filled];
+3009 [class=intent, fillcolor=lightblue, label="/moved_to_new_device", shape=rect, style=filled];
+3010 [class=intent, fillcolor=lightblue, label="/move_to_new_device_refused", shape=rect, style=filled];
+3011 [class=intent, fillcolor=lightblue, label="/move_to_new_device_refused", shape=rect, style=filled];
+3012 [class=intent, fillcolor=lightblue, label="Good\ evening!", shape=rect, style=filled];
+3013 [class=intent, fillcolor=lightblue, label="okay\ thank\ you\ good\ bye", shape=rect, style=filled];
+3014 [class=intent, fillcolor=lightblue, label="thank\ you\ good\ bye", shape=rect, style=filled];
+3015 [class=intent, fillcolor=lightblue, label="nah\ I'm\ good", shape=rect, style=filled];
+3016 [class=intent, fillcolor=lightblue, label=screen, shape=rect, style=filled];
+3017 [class=intent, fillcolor=lightblue, label="Good\ morning", shape=rect, style=filled];
+3018 [class=intent, fillcolor=lightblue, label=location, shape=rect, style=filled];
+3019 [class=intent, fillcolor=lightblue, label=open, shape=rect, style=filled];
+3020 [class=intent, fillcolor=lightblue, label="When\ do\ you\ open\ today\?", shape=rect, style=filled];
+3021 [class=intent, fillcolor=lightblue, label="Where\ are\ you\ located\?", shape=rect, style=filled];
+3022 [class=intent, fillcolor=lightblue, label="I\ think\ so", shape=rect, style=filled];
+3023 [class=intent, fillcolor=lightblue, label="thanks\ but\ no", shape=rect, style=filled];
+3024 [class=intent, fillcolor=lightblue, label="no\ way\ no", shape=rect, style=filled];
+3025 [class=intent, fillcolor=lightblue, label="what's\ your\ phone\?", shape=rect, style=filled];
+3026 [class=intent, fillcolor=lightblue, label="I\ don't\ mind", shape=rect, style=filled];
+3027 [class=intent, fillcolor=lightblue, label=yep, shape=rect, style=filled];
+3028 [class=intent, fillcolor=lightblue, label="When\ do\ you\ close\?", shape=rect, style=filled];
+3029 [class=intent, fillcolor=lightblue, label=7, shape=rect, style=filled];
+3030 [class=intent, fillcolor=lightblue, label="/repair\{\"device_model\":\ \"iPhone\ 6S\",\ \"device_repair\":\ \"battery\",\ \"number\":\ 6\}", shape=rect, style=filled];
+3031 [class=intent, fillcolor=lightblue, label=1, shape=rect, style=filled];
+3032 [class=intent, fillcolor=lightblue, label="definitely\ not", shape=rect, style=filled];
+3033 [class=intent, fillcolor=lightblue, label=Yes, shape=rect, style=filled];
+3034 [class=intent, fillcolor=lightblue, label="/move_to_new_device_refused", shape=rect, style=filled];
+3035 [class=intent, fillcolor=lightblue, label="/move_to_new_device_refused", shape=rect, style=filled];
+0 -> 2968  [class="", key=0];
+0 -> 2969  [class="", key=0];
+0 -> 2970  [class="", key=0];
+0 -> 2971  [class="", key=0];
+0 -> 2972  [class="", key=0];
+0 -> 2973  [class="", key=0];
+0 -> 2974  [class="", key=0];
+0 -> 2975  [class="", key=0];
+0 -> 2976  [class="", key=0];
+0 -> 2977  [class="", key=0];
+0 -> 2978  [class="", key=0];
+0 -> 2979  [class="", key=0];
+0 -> 2980  [class="", key=0];
+0 -> 2981  [class="", key=0];
+0 -> 2982  [class="", key=0];
+0 -> 2983  [class="", key=0];
+0 -> 2984  [class="", key=0];
+0 -> 2985  [class="", key=0];
+0 -> 2986  [class="", key=0];
+0 -> 2987  [class="", key=0];
+0 -> 2988  [class="", key=0];
+0 -> 2989  [class="", key=0];
+0 -> 2990  [class="", key=0];
+0 -> 2991  [class="", key=0];
+0 -> 2992  [class="", key=0];
+0 -> 2993  [class="", key=0];
+0 -> 2994  [class="", key=0];
+0 -> 2995  [class="", key=0];
+0 -> 2996  [class="", key=0];
+1 -> 2  [class="", key=NONE, label=""];
+2 -> "-1"  [class="", key=NONE, label=""];
+3 -> "-1"  [class="", key=NONE, label=""];
+4 -> "-1"  [class="", key=NONE, label=""];
+5 -> "-1"  [class="", key=NONE, label=""];
+6 -> "-1"  [class="", key=NONE, label=""];
+8 -> "-1"  [class="", key=NONE, label=""];
+9 -> "-1"  [class="", key=NONE, label=""];
+10 -> "-1"  [class="", key=NONE, label=""];
+11 -> "-1"  [class="", key=NONE, label=""];
+12 -> 2997  [class="", key=0];
+12 -> 2998  [class="", key=0];
+13 -> "-1"  [class="", key=NONE, label=""];
+14 -> 15  [class="", key=NONE, label=""];
+15 -> 2999  [class="", key=0];
+15 -> 3000  [class="", key=0];
+15 -> 3001  [class="", key=0];
+15 -> 3002  [class="", key=0];
+18 -> "-1"  [class="", key=NONE, label=""];
+26 -> 27  [class="", key=NONE, label=""];
+27 -> 28  [class="", key=NONE, label=""];
+28 -> 29  [class="", key=NONE, label=""];
+28 -> 163  [class="", key=NONE, label=""];
+28 -> 346  [class="", key=NONE, label=""];
+29 -> 3003  [class="", key=0];
+29 -> 3004  [class="", key=0];
+30 -> 3005  [class="", key=0];
+30 -> 3006  [class="", key=0];
+30 -> 3007  [class="", key=0];
+30 -> 3008  [class="", key=0];
+31 -> 32  [class="", key=NONE, label=""];
+32 -> 33  [class="", key=NONE, label=""];
+32 -> 78  [class="", key=NONE, label=""];
+32 -> 344  [class="", key=NONE, label=""];
+33 -> "-1"  [class="", key=NONE, label=""];
+78 -> 3009  [class="", key=0];
+78 -> 3010  [class="", key=0];
+78 -> 3011  [class="", key=0];
+79 -> 33  [class="", key=NONE, label=""];
+79 -> 344  [class="", key=NONE, label=""];
+79 -> 78  [class="", key=NONE, label=""];
+79 -> 2339  [class="", key=NONE, label=""];
+128 -> "-1"  [class="", key=NONE, label=""];
+130 -> "-1"  [class="", key=NONE, label=""];
+131 -> "-1"  [class="", key=NONE, label=""];
+132 -> 157  [class="", key=NONE, label=""];
+132 -> 3012  [class="", key=0];
+133 -> 134  [class="", key=NONE, label=""];
+134 -> 3013  [class="", key=0];
+134 -> 3014  [class="", key=0];
+136 -> 137  [class="", key=NONE, label=""];
+136 -> 569  [class="", key=NONE, label=""];
+137 -> 3015  [class="", key=0];
+141 -> 137  [class="", key=NONE, label=""];
+141 -> 509  [class="", key=NONE, label=""];
+144 -> 137  [class="", key=NONE, label=""];
+144 -> 569  [class="", key=NONE, label=""];
+150 -> 137  [class="", key=NONE, label=""];
+150 -> 569  [class="", key=NONE, label=""];
+153 -> 137  [class="", key=NONE, label=""];
+153 -> 507  [class="", key=NONE, label=""];
+157 -> 137  [class="", key=NONE, label=""];
+157 -> 569  [class="", key=NONE, label=""];
+157 -> 3016  [class="", key=0];
+163 -> 137  [class="", key=NONE, label=""];
+163 -> 569  [class="", key=NONE, label=""];
+344 -> 345  [class="", key=NONE, label=""];
+345 -> 346  [class="", key=NONE, label=""];
+346 -> 137  [class="", key=NONE, label=""];
+346 -> 569  [class="", key=NONE, label=""];
+495 -> 157  [class="", key=NONE, label=""];
+501 -> 502  [class="", key=NONE, label=""];
+502 -> 503  [class="", key=NONE, label=""];
+503 -> 3017  [class="", key=0];
+503 -> 3018  [class="", key=0];
+503 -> 3019  [class="", key=0];
+507 -> 3020  [class="", key=0];
+507 -> 3021  [class="", key=0];
+507 -> 3022  [class="", key=0];
+507 -> 3023  [class="", key=0];
+509 -> 3024  [class="", key=0];
+509 -> 3025  [class="", key=0];
+509 -> 3026  [class="", key=0];
+509 -> 3027  [class="", key=0];
+510 -> 3028  [class="", key=0];
+510 -> 3029  [class="", key=0];
+542 -> 3030  [class="", key=0];
+555 -> 3031  [class="", key=0];
+556 -> 557  [class="", key=NONE, label=""];
+557 -> 558  [class="", key=NONE, label=""];
+558 -> 559  [class="", key=NONE, label=""];
+559 -> "-1"  [class="", key=NONE, label=""];
+569 -> 3032  [class="", key=0];
+569 -> 3033  [class="", key=0];
+2339 -> 3034  [class="", key=0];
+2339 -> 3035  [class="", key=0];
+2968 -> 1  [class="", key=0];
+2969 -> 3  [class="", key=0];
+2970 -> 4  [class="", key=0];
+2971 -> 5  [class="", key=0];
+2972 -> 6  [class="", key=0];
+2973 -> 8  [class="", key=0];
+2974 -> 9  [class="", key=0];
+2975 -> 10  [class="", key=0];
+2976 -> 11  [class="", key=0];
+2977 -> 12  [class="", key=0];
+2978 -> 14  [class="", key=0];
+2979 -> 18  [class="", key=0];
+2980 -> 18  [class="", key=0];
+2981 -> 26  [class="", key=0];
+2982 -> 128  [class="", key=0];
+2983 -> 128  [class="", key=0];
+2984 -> 130  [class="", key=0];
+2985 -> 131  [class="", key=0];
+2986 -> 132  [class="", key=0];
+2987 -> 136  [class="", key=0];
+2988 -> 141  [class="", key=0];
+2989 -> 144  [class="", key=0];
+2990 -> 150  [class="", key=0];
+2991 -> 153  [class="", key=0];
+2992 -> 501  [class="", key=0];
+2993 -> 555  [class="", key=0];
+2994 -> 2  [class="", key=0];
+2995 -> 137  [class="", key=0];
+2996 -> 569  [class="", key=0];
+2997 -> 13  [class="", key=0];
+2998 -> 18  [class="", key=0];
+2999 -> 12  [class="", key=0];
+3000 -> 13  [class="", key=0];
+3001 -> 131  [class="", key=0];
+3002 -> 555  [class="", key=0];
+3003 -> 30  [class="", key=0];
+3004 -> 31  [class="", key=0];
+3005 -> 31  [class="", key=0];
+3006 -> 136  [class="", key=0];
+3007 -> 137  [class="", key=0];
+3008 -> 569  [class="", key=0];
+3009 -> 79  [class="", key=0];
+3010 -> 137  [class="", key=0];
+3011 -> 569  [class="", key=0];
+3012 -> 133  [class="", key=0];
+3013 -> 131  [class="", key=0];
+3014 -> 555  [class="", key=0];
+3015 -> 131  [class="", key=0];
+3016 -> 495  [class="", key=0];
+3017 -> 502  [class="", key=0];
+3018 -> 153  [class="", key=0];
+3019 -> 141  [class="", key=0];
+3020 -> 141  [class="", key=0];
+3021 -> 153  [class="", key=0];
+3022 -> 13  [class="", key=0];
+3023 -> 555  [class="", key=0];
+3024 -> 510  [class="", key=0];
+3025 -> 150  [class="", key=0];
+3026 -> 542  [class="", key=0];
+3027 -> 13  [class="", key=0];
+3028 -> 141  [class="", key=0];
+3029 -> 556  [class="", key=0];
+3030 -> 495  [class="", key=0];
+3031 -> 556  [class="", key=0];
+3032 -> 555  [class="", key=0];
+3033 -> 13  [class="", key=0];
+3034 -> 137  [class="", key=0];
+3035 -> 569  [class="", key=0];
+}
+`;
+    drawGraph(graph);
+  } else {
+    serveGraph();
+  }
+
+
+</script>
+</body>
+</html>
