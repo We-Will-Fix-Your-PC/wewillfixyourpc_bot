@@ -495,6 +495,21 @@ class ActionRepair(Action):
                 rasa_sdk.events.SlotSet("device_repair", None)]
 
 
+class ActionRepairBookCheck(Action):
+    def name(self) -> Text:
+        return "repair_book_check"
+
+    def run(self, dispatcher: CollectingDispatcher, tracker: Tracker, domain: Dict[Text, Any]) -> List[Dict[Text, Any]]:
+        device_model = tracker.get_slot("device_model")
+        repair_name = tracker.get_slot("device_repair")
+
+        device_models = models.Model.objects.filter(name__startswith=device_model.lower()) if device_model else []
+        repair = next(models.RepairType.objects.filter(name=repair_name.lower()).iterator(), None) \
+            if repair_name else None
+
+        return []
+
+
 def validate_brand(value: Text, dispatcher: CollectingDispatcher, tracker: Tracker):
     asked_once = tracker.get_slot("asked_once")
     asked_once = True if asked_once else False
