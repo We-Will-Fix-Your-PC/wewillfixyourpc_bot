@@ -1,9 +1,9 @@
 import base64
+import datetime
 import decimal
 import hmac
 import json
 import uuid
-import datetime
 
 import requests
 import sentry_sdk
@@ -75,7 +75,7 @@ def render_payment(request, payment_id, template):
         "payment_id": payment_id,
         "accepts_header": request.META.get('HTTP_ACCEPT'),
         "is_open_payment": payment_o.state == models.Payment.STATE_OPEN or
-        request.POST.get("payment_state") == "success",
+                           request.POST.get("payment_state") == "success",
         "test": payment_o.state != models.Payment.ENVIRONMENT_LIVE,
         "state": request.POST.get("payment_state")
     })
@@ -99,7 +99,7 @@ def receipt(request, payment_id):
         "subtotal": (payment_o.total / decimal.Decimal('1.2'))
                   .quantize(decimal.Decimal('.01'), rounding=decimal.ROUND_DOWN),
         "tax": (payment_o.total * decimal.Decimal('0.2'))
-                  .quantize(decimal.Decimal('.01'), rounding=decimal.ROUND_DOWN)
+            .quantize(decimal.Decimal('.01'), rounding=decimal.ROUND_DOWN)
     })
 
 
@@ -115,7 +115,7 @@ def payment(request, payment_id):
             "id": payment_o.customer.id,
             "name": payment_o.customer.name,
             "email": payment_o.customer.email,
-            "phone": payment_o.customer.phone.as_e164
+            "phone": payment_o.customer.phone.as_e164 if payment_o.customer.phone else None
         },
         "items": list(map(lambda i: {
             "id": i.id,

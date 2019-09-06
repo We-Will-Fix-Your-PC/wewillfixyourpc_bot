@@ -15,6 +15,10 @@ actions:
 - unlock_clear
 - unlock_lookup
 - unlock_order
+- update_info_slots
+- sign_in
+- move_to_web_form_device
+- unlock_order_web_form
 - utter_anything_else
 - utter_ask_continue
 - utter_ask_order
@@ -31,11 +35,14 @@ actions:
 - utter_mood
 - utter_positive_feedback_reaction
 - utter_respond_insult
+- utter_restart
+- utter_sign_in_error
 - utter_thanks_end
 - utter_unlock_explain
 - utter_weather
 - utter_why_chicken_cross_road
 - utter_woodchuck
+- utter_order_not_available
 entities:
 - brand
 - date
@@ -51,7 +58,8 @@ entities:
 forms:
 - rate_form
 - repair_form
-- unlock_form
+- unlock_lookup_form
+- unlock_order_form
 intents:
 - rate
 - greet
@@ -62,10 +70,14 @@ intents:
 - email
 - affirm
 - unlock
+- email
+- name
+- greet
+- rate
+- imei
 - brand
 - phone_number
 - network
-- imei
 - support_opening_hours
 - support_contact_phone
 - support_location
@@ -90,9 +102,17 @@ intents:
 - ask_history
 - iphone_repair
 - mood_unhappy
+- sign_in_error
+- sign_in_cancelled
+- sign_in
+- update_info_slots
+- device_repair
+- device_model
+- move_to_new_device_refused
+- moved_to_new_device
 slots:
   asked_once:
-    type: bool
+    type: unfeaturized
   brand:
     type: unfeaturized
   device_model:
@@ -103,6 +123,21 @@ slots:
     type: unfeaturized
   imei:
     type: unfeaturized
+  instant_response_required:
+    type: bool
+  sign_in_supported:
+    type: bool
+  input_supported:
+    type: categorical
+    values:
+    - voice
+    - web_form
+    - text
+  highest_input_supported:
+    type: categorical
+    values:
+    - voice
+    - web_form
   name:
     type: unfeaturized
   network:

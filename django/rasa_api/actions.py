@@ -469,6 +469,9 @@ class ActionRepair(Action):
         device_model = tracker.get_slot("device_model")
         repair_name = tracker.get_slot("device_repair")
 
+        not_repairable = rasa_sdk.events.SlotSet("repairable", False)
+        repairable = rasa_sdk.events.SlotSet("repairable", True)
+
         device_models = models.Model.objects.filter(name__startswith=device_model.lower()) if device_model else []
         repair = next(models.RepairType.objects.filter(name=repair_name.lower()).iterator(), None) \
             if repair_name else None
@@ -485,14 +488,17 @@ class ActionRepair(Action):
             if len(repair_strs):
                 for r in repair_strs:
                     dispatcher.utter_message(r)
+                return [repairable]
             else:
                 dispatcher.utter_template("utter_unknown_repair", tracker)
             return [rasa_sdk.events.SlotSet("device_model", None),
-                    rasa_sdk.events.SlotSet("device_repair", None)]
+                    rasa_sdk.events.SlotSet("device_repair", None),
+                    not_repairable]
 
         dispatcher.utter_template("utter_unknown_repair", tracker)
         return [rasa_sdk.events.SlotSet("device_model", None),
-                rasa_sdk.events.SlotSet("device_repair", None)]
+                rasa_sdk.events.SlotSet("device_repair", None),
+                not_repairable]
 
 
 class ActionRepairBookCheck(Action):
@@ -829,10 +835,12 @@ class UnlockOrderForm(FormAction):
 
     @staticmethod
     def required_slots(tracker: Tracker) -> List[Text]:
-        instant = tracker.get_slot("instant_response_required")
-        instant = True if instant else False
 
-        if instant:
+        conversation = sender_id_to_conversation(tracker.sender_id)
+        ask_phone = (False if conversation.platform == operator_interface.models.Conversation.GOOGLE_ACTIONS else True)\
+            if conversation else True
+
+        if not ask_phone:
             return ["name", "email", "imei"]
         else:
             return ["name", "phone_number", "email", "imei"]

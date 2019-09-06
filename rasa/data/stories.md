@@ -19,9 +19,8 @@
 > anything_else
     - utter_anything_else
 * deny
-    - utter_goodbye
-> rate
-
+> end
+ 
 ## next question ys
 > anything_else
     - utter_anything_else
@@ -30,8 +29,18 @@
 
 ## end
 * end
+> end
+
+## end - slow
+> end
+  - slot{"instant_response_required": false}
   - utter_goodbye
 > rate
+
+## end - fast
+> end
+  - slot{"instant_response_required": true}
+  - utter_restart
     
 ## rate
 > rate
@@ -47,8 +56,7 @@
 > cant_help    
   - utter_cant_help
 * affirm
-  - request_human
-  - pause
+> need_help
     
 ## cant help - no
 > cant_help    
@@ -60,11 +68,22 @@
 * out_of_scope
 > cant_help
 
+## sign in error
+* sign_in_error
+  - utter_sign_in_error
+> anything_else
+
+## sign in cancelled
+* sign_in_cancelled
+> anything_else
   
 ## request_human
 * request_human OR stop
+> need_help
+
+## need help 
+> need_help
     - request_human
-    - pause
   
 ## ask mood
 * ask_mood
@@ -140,28 +159,103 @@
 
 ## unlock
 * unlock
-    - utter_unlock_explain
-    - unlock_form
-    - form{"name": "repair_form"}
-    - form{"name": null}
+    - unlock_lookup_form
     - unlock_lookup
+    - update_info_slots
 > unlockable
 
 ## unlockable
 > unlockable
-    - slot{"unlockable": true}
+    - slot{"unlockable": true, "input_supported": "text"}
+> unlock_ask_order
+
+## unlockable
+> unlockable
+    - slot{"unlockable": true, "input_supported": "web_form"}
+> unlock_ask_order
+
+## unlockable
+> unlockable
+    - slot{"unlockable": true, "input_supported": "voice", "highest_input_supported": "web_form"}
+> unlock_ask_order
+
+## unlockable
+> unlockable
+    - slot{"unlockable": true, "input_supported": "voice", "highest_input_supported": "voice"}
+    - utter_order_not_available
+> anything_else
+
+## unlockable ask order
+> unlock_ask_order
     - utter_ask_order
 * affirm
+> unlock
+
+## unlock - sign in
+> unlock
+    - slot{"sign_in_supported": true}
+    - sign_in
+> unlock_sign_in
+
+## unlock - sign in success
+> unlock_sign_in
+* sign_in
+> unlock_order
+
+## unlock - sign in error
+> unlock_sign_in
+* sign_in_error
+  - utter_sign_in_error
+> anything_else
+
+## unlock - sign in cancel
+> unlock_sign_in
+* sign_in_cancelled
+> anything_else
+
+## unlock - no sign in
+> unlock
+    - slot{"sign_in_supported": false}
+> unlock_order
+
+## unlock order
+> unlock_order
+    - update_info_slots
+    - utter_unlock_explain
+> unlock_order_form
+
+## unlock order voice
+> unlock_order
+    - update_info_slots
+    - utter_unlock_explain
+    - slot{"input_supported": "voice"}
+> unlock_order_move_web_form 
+
+## unlock order move
+> unlock_order_move_web_form
+    - move_to_web_form_device
+* moved_to_new_device
+    - update_info_slots
+> unlock_order_form
+
+## unlock order no move
+> unlock_order_move_web_form
+    - move_to_web_form_device
+* move_to_new_device_refused
+> anything_else
+
+## unlock order form
+> unlock_order_form
+    - slot{"input_supported": "text"}
+    - unlock_order_form
     - unlock_order
     - unlock_clear
-
-## unlockable
-> unlockable
-    - slot{"unlockable": true}
-    - utter_ask_order
-* deny
-    - unlock_clear
 > anything_else
+
+## unlock order web form
+> unlock_order_form
+    - slot{"input_supported": "web_form"}
+    - unlock_order_web_form
 
 ## not unlockable
 > unlockable
@@ -257,8 +351,11 @@
 
 ## interactive_story_3
 * greet
+    - action_deactivate_form
+    - update_info_slots
     - greet
 * greet
+    - update_info_slots
     - greet
 * support_location
     - support_location
@@ -285,32 +382,6 @@
 * support_location
     - support_location
 > anything_else
-
-## interactive_story_6
-* end
-    - utter_goodbye
-* rate{"rating": "9", "CARDINAL": "9"}
-    - slot{"rating": "9"}
-    - rate_form
-    - form{"name": "rate_form"}
-    - slot{"rating": 9}
-    - slot{"rating": 9}
-    - form{"name": null}
-    - slot{"requested_slot": null}
-    - utter_thanks_end
-
-## interactive_story_7
-* end
-    - utter_goodbye
-* rate{"rating": "10", "CARDINAL": "10"}
-    - slot{"rating": "10"}
-    - rate_form
-    - form{"name": "rate_form"}
-    - slot{"rating": 10}
-    - slot{"rating": 10}
-    - form{"name": null}
-    - slot{"requested_slot": null}
-    - utter_thanks_end
 
 ## interactive_story_8
 * repair{"device_model": "iphone 6", "CARDINAL": "6"}
@@ -415,6 +486,8 @@
 
 ## interactive_story_1
 * greet
+    - action_deactivate_form
+    - update_info_slots
     - greet
 * support_opening_hours
     - support_opening_hours
@@ -434,85 +507,6 @@
 > anything_else
 
 ## interactive_story_1
-* unlock
-    - utter_unlock_explain
-    - unlock_form
-    - form{"name": "unlock_form"}
-    - slot{"requested_slot": "brand"}
-* form: brand{"brand": "sony"}
-    - slot{"brand": "sony"}
-    - form: unlock_form
-    - slot{"brand": "sony"}
-    - slot{"requested_slot": "network"}
-* form: network{"number": 3}
-    - form: unlock_form
-    - slot{"network": "three"}
-    - slot{"requested_slot": "name"}
-* form: name{"name": "Alfie Foster"}
-    - slot{"name": "Alfie Foster"}
-    - form: unlock_form
-    - slot{"name": "Alfie Foster"}
-    - slot{"requested_slot": "phone_number"}
-* form: phone_number{"phone-number": "07585461539", "number": "7585461539"}
-    - form: unlock_form
-    - slot{"phone_number": "+447585461539"}
-    - slot{"requested_slot": "email"}
-* form: email{"email": "bonzi@lordbonzi.pro"}
-    - slot{"email": "bonzi@lordbonzi.pro"}
-    - form: unlock_form
-    - slot{"email": "bonzi@lordbonzi.pro"}
-    - slot{"requested_slot": "imei"}
-* form: imei{"phone-number": "352632082920491", "imei": "352632082920491"}
-    - slot{"imei": "352632082920491"}
-    - form: unlock_form
-    - slot{"imei": "352632082920491"}
-    - form{"name": null}
-    - slot{"requested_slot": null}
-    - unlock_lookup
-    - slot{"unlockable": true}
-    - utter_ask_order
-* affirm
-    - unlock_order
-    - unlock_clear
-    - slot{"brand": null}
-    - slot{"device_model": null}
-    - slot{"network": null}
-    - slot{"imei": null}
-* unlock
-    - utter_unlock_explain
-    - unlock_form
-    - form{"name": "unlock_form"}
-    - slot{"name": "Alfie Foster"}
-    - slot{"phone_number": "+447585461539"}
-    - slot{"email": "bonzi@lordbonzi.pro"}
-    - slot{"requested_slot": "brand"}
-* form: brand{"brand": "iPad"}
-    - slot{"brand": "iPad"}
-    - form: unlock_form
-    - slot{"brand": "ipad"}
-    - slot{"requested_slot": "network"}
-* form: network{"number": "3"}
-    - form: unlock_form
-    - slot{"network": "three"}
-    - slot{"requested_slot": "imei"}
-* form: imei{"phone-number": "352632082920491", "imei": "352632082920491"}
-    - slot{"imei": "352632082920491"}
-    - form: unlock_form
-    - slot{"imei": "352632082920491"}
-    - form{"name": null}
-    - slot{"requested_slot": null}
-    - unlock_lookup
-    - slot{"unlockable": false}
-    - unlock_clear
-    - slot{"brand": null}
-    - slot{"device_model": null}
-    - slot{"network": null}
-    - slot{"imei": null}
-    - utter_anything_else
-* deny
-    - utter_goodbye
-
-## interactive_story_1
 * repair{"device_model": "iphone 8"}
     - slot{"device_model": "iphone 8"}
     - repair_form
@@ -526,17 +520,7 @@
     - slot{"requested_slot": null}
     - greet
 * end
-    - utter_goodbye
-* rate{"number": "1"}
-    - rate_slot
-    - slot{"rating": "1"}
-    - rate_form
-    - form{"name": "rate_form"}
-    - slot{"rating": 1}
-    - form{"name": null}
-    - slot{"requested_slot": null}
-    - utter_thanks_end
-    - action_restart
+> end
 
 ## interactive_story_2
 * repair{"device_model": "iPhone 7", "device_repair": "screen"}
@@ -553,9 +537,7 @@
     - repair
     - slot{"device_model": null}
     - slot{"device_repair": null}
-    - utter_anything_else
-* deny
-    - utter_goodbye
+> anything_else
 
 ## interactive_story_4
 * repair{"device_model": "iPhone 3", "device_repair": "screen"}
@@ -572,6 +554,7 @@
     - repair
     - slot{"device_model": null}
     - slot{"device_repair": null}
+> anything_else
 
 ## interactive_story_5
 * repair{"brand": "iphone", "device_repair": "water damage"}
@@ -593,4 +576,4 @@
     - repair
     - slot{"device_model": null}
     - slot{"device_repair": null}
-    - utter_anything_else
+> anything_else

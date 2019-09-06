@@ -55,6 +55,7 @@
 - Yes
 - Yes
 - Yes
+- Yes
 
 ## intent:ask_history
 - can you share your boss with me?
@@ -248,6 +249,7 @@
 - test@example.com
 - bla@gmail.com
 - bonzi@lordbonzi.pro
+- q@misell.cymru
 
 ## intent:end
 - bye
@@ -335,13 +337,13 @@
 - Hello
 - Hello
 - hello
-- hello
 
 ## intent:imei
 - [354403064522046](imei)
 - [358545080134606](imei)
 - [358545080134606](imei)
 - 352632082920491[](imei:352632082920491)
+- [111111111111119](imei)
 
 ## intent:insult
 - stupid
@@ -379,6 +381,7 @@
 - I'm [Adrian](name)
 - [Q](name)
 - [Alfie Foster](name)
+- [Q](name)
 
 ## intent:network
 - [VOXI](network)
@@ -430,7 +433,6 @@
 - eight
 - nine
 - ten
-- [1](number)
 
 ## intent:repair
 - [iphone se](device_model:iPhone SE) [screen](device_repair)
@@ -629,6 +631,7 @@
 
 ## intent:unlock
 - unlock [nokia](brand) 7 plus from [ee](network)
+- unlock my [Nokia](brand) from [EE](network)
 - unlock
 - unlock from [VOXI](network)
 - unlock [nokia](brand) 7 plus from [ee](network)
@@ -639,6 +642,7 @@
 - unlock
 - do you do sim unlock?
 - can you sim unlock my phone?
+- unlock my [Nokia](brand) from [EE](network)
 
 ## synonym:1
 - one
