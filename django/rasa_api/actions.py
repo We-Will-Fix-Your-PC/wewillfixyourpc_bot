@@ -501,6 +501,78 @@ class ActionRepair(Action):
                 not_repairable]
 
 
+class ActionRepairBookCheck(Action):
+    def name(self) -> Text:
+        return "repair_book_check"
+
+    def run(self, dispatcher: CollectingDispatcher, tracker: Tracker, domain: Dict[Text, Any]) -> List[Dict[Text, Any]]:
+        device_model = tracker.get_slot("device_model")
+        repair_name = tracker.get_slot("device_repair")
+
+        device_models = models.Model.objects.filter(name__startswith=device_model.lower()) if device_model else []
+        repair = next(models.RepairType.objects.filter(name=repair_name.lower()).iterator(), None) \
+            if repair_name else None
+
+        if len(device_models) > 1 and repair is not None:
+            dispatcher.utter_message("utter_clarify_model")
+            dispatcher.utter_custom_json({
+                "type": "selection",
+                "selection": {
+                    "title": "Device model",
+                    "items": [{
+                        "title": m.display_name,
+                        "key": f"device_mode:{m.id}"
+                    } for m in device_models]
+                }
+            })
+            return [rasa_sdk.events.SlotSet("repairable", False), rasa_sdk.events.SlotSet("list_items", device_models)]
+
+        return []
+
+
+class ActionRepairBookClarify(Action):
+    def name(self) -> Text:
+        return "repair_book_clarify"
+
+    def run(self, dispatcher: CollectingDispatcher, tracker: Tracker, domain: Dict[Text, Any]) -> List[Dict[Text, Any]]:
+        list_items = tracker.get_slot("list_items")
+        device_model = next((m for m in tracker.get_latest_entity_values("device_model") if m is not None), None)
+        try:
+            number = next((int(n) for n in tracker.get_latest_entity_values("number") if n is not None), None)
+        except ValueError:
+            number = None
+        try:
+            ordinal = next((int(o) for o in tracker.get_latest_entity_values("ordinal") if not None), None)
+        except ValueError:
+            ordinal = None
+
+        device_model = next(models.Model.objects.filter(name__startswith=device_model.lower()), None) \
+            if device_model else None
+
+        if device_model:
+            return [rasa_sdk.events.SlotSet("repairable", True)]
+        elif number or ordinal:
+            if ordinal and not number:
+                number = ordinal
+
+            if number < len(list_items):
+                return [rasa_sdk.events.SlotSet("repairable", True),
+                        rasa_sdk.events.SlotSet("device_model", list_items[number].name)]
+
+        dispatcher.utter_message("utter_clarify_model")
+        dispatcher.utter_custom_json({
+            "type": "selection",
+            "selection": {
+                "title": "Device model",
+                "items": [{
+                    "title": m.display_name,
+                    "key": f"device_mode:{m.id}"
+                } for m in list_items]
+            }
+        })
+        return []
+
+
 def validate_brand(value: Text, dispatcher: CollectingDispatcher, tracker: Tracker):
     asked_once = tracker.get_slot("asked_once")
     asked_once = True if asked_once else False
@@ -619,6 +691,33 @@ class RepairForm(FormAction):
             else:
                 return {"device_repair": value, "asked_once": False}
 
+class RepairBookForm(FormAction):
+    def name(self) -> Text:
+        return "repair_book_form"
+
+    @staticmethod
+    def required_slots(tracker: Tracker) -> List[Text]:
+        conversation = sender_id_to_conversation(tracker.sender_id)
+        ask_phone = (False if conversation.platform == operator_interface.models.Conversation.GOOGLE_ACTIONS else True) \
+            if conversation else True
+
+        if not ask_phone:
+            return ["name", "email", "date", "time"]
+        else:
+            return ["name", "phone_number", "email", "date", "time"]
+
+    def slot_mappings(self):
+        return {
+            "name": [self.from_entity(entity="name"), self.from_text()],
+            "phone_number": self.from_entity(entity="phone-number", not_intent=["imei"]),
+            "email": self.from_entity(entity="email"),
+            "date": self.from_entity(entity="time"),
+            "time": self.from_entity(entity="time"),
+        }
+
+    def submit(self, dispatcher: CollectingDispatcher, tracker: Tracker, domain: Dict[Text, Any]) -> List[Dict]:
+        dispatcher.utter_template('utter_booking', tracker)
+        return []
 
 class ActionUnlockLookup(Action):
     def name(self) -> Text:
@@ -820,7 +919,6 @@ class UnlockOrderForm(FormAction):
 
     @staticmethod
     def required_slots(tracker: Tracker) -> List[Text]:
-
         conversation = sender_id_to_conversation(tracker.sender_id)
         ask_phone = (False if conversation.platform == operator_interface.models.Conversation.GOOGLE_ACTIONS else True)\
             if conversation else True
