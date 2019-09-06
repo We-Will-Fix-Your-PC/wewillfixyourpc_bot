@@ -111,6 +111,8 @@ intents:
 - move_to_new_device_refused
 - moved_to_new_device
 slots:
+  list_items:
+    type: unfeaturized
   asked_once:
     type: unfeaturized
   brand:

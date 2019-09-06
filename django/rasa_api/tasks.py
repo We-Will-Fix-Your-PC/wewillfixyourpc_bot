@@ -100,6 +100,8 @@ def handle_text(conversation, text):
                     message.request = custom.get("request")
                 elif event_type == "card":
                     message.card = json.dumps(custom.get("card"))
+                elif event_type == "selection":
+                    message.selection = json.dumps(custom.get("selection"))
                 elif event_type == "restart":
                     message.end = True
                 else:

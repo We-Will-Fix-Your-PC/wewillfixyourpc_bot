@@ -742,22 +742,14 @@
 - ipad
 
 ## synonym:iPad 1
-- 1
-- 1st
-- 1st gen
 - iPad 1st
 - iPad 1st gen
 
 ## synonym:iPad 2
-- 2
-- 2nd
-- 2nd gen
 - iPad 2nd
 - iPad 2nd gen
 
 ## synonym:iPad 3
-- 3rd
-- 3rd gen
 - iPad 3rd
 - iPad 3rd gen
 
@@ -768,20 +760,14 @@
 - iPad 4th gen
 
 ## synonym:iPad 5
-- 2017
 - 2017 iPad
-- 5th
-- 5th gen
 - iPad 5
 - iPad 5th
 - iPad 5th gen
 
 ## synonym:iPad 6
 - iPad
-- 2018
 - 2018 iPad
-- 6th
-- 6th gen
 - iPad 6th
 - iPad 6th gen
 
