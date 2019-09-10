@@ -39,7 +39,7 @@ class Conversation(models.Model):
 
     platform = models.CharField(max_length=2, choices=PLATFORM_CHOICES)
     platform_id = models.CharField(max_length=255)
-    platform_from_id = models.TextField(blank=True, default="")
+    platform_from_id = models.TextField(blank=True, default="", null=True)
     agent_responding = models.BooleanField(default=True)
     timezone = models.CharField(max_length=255, blank=True, null=True, default=None)
     current_agent = models.ForeignKey(User, blank=True, null=True, default=None, on_delete=models.SET_DEFAULT)
