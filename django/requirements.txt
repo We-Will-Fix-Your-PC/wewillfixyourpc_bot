@@ -32,3 +32,4 @@ python-magic
 pyjwt
 mastercard-oauth1-signer
 google-auth
+mozilla-django-oidc

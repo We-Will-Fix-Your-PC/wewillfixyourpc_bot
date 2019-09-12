@@ -34,6 +34,7 @@ ALLOWED_HOSTS = ["*"]
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
+    'mozilla_django_oidc',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
@@ -61,6 +62,7 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'mozilla_django_oidc.middleware.SessionRefresh',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
@@ -87,6 +89,21 @@ TEMPLATES = [
 WSGI_APPLICATION = 'wewillfixyourpc_bot.wsgi.application'
 ASGI_APPLICATION = "wewillfixyourpc_bot.routing.application"
 
+AUTHENTICATION_BACKENDS = [
+    'operator_interface.oidc.OIDCAB',
+]
+
+OIDC_RP_SIGN_ALGO = "RS256"
+OIDC_RP_CLIENT_ID = "bot-server-dev"
+OIDC_RP_CLIENT_SECRET = ""
+OIDC_RP_SCOPES = "openid email profile address phone"
+OIDC_OP_JWKS_ENDPOINT = "https://account.cardifftec.uk/auth/realms/wwfypc/protocol/openid-connect/certs"
+OIDC_OP_AUTHORIZATION_ENDPOINT = "https://account.cardifftec.uk/auth/realms/wwfypc/protocol/openid-connect/auth"
+OIDC_OP_TOKEN_ENDPOINT = "https://account.cardifftec.uk/auth/realms/wwfypc/protocol/openid-connect/token"
+OIDC_OP_USER_ENDPOINT = "https://account.cardifftec.uk/auth/realms/wwfypc/protocol/openid-connect/userinfo"
+
+LOGIN_REDIRECT_URL = "/"
+LOGOUT_REDIRECT_URL = "/"
 
 # Database
 # https://docs.djangoproject.com/en/2.1/ref/settings/#databases
@@ -258,5 +275,9 @@ LOGGING = {
             'handlers': ['console'],
             'level': 'DEBUG',
         },
+        'mozilla_django_oidc': {
+            'handlers': ['console'],
+            'level': 'DEBUG'
+        }
     },
 }

@@ -2,8 +2,7 @@
 
 {% block content %}
     <div class="login">
-        <form method="post" action="{% url 'login' %}">
-            {% csrf_token %}
+        <div>
             {% if form.errors %}
                 <p>Your username and password didn't match. Please try again.</p>
             {% endif %}
@@ -16,31 +15,10 @@
                     <p>Please login to see this page.</p>
                 {% endif %}
             {% endif %}
-            <div class="mdc-text-field mdc-text-field--outlined" data-mdc-auto-init="MDCTextField">
-                <input type="text" name="username" class="mdc-text-field__input">
-                <div class="mdc-notched-outline">
-                    <div class="mdc-notched-outline__leading"></div>
-                    <div class="mdc-notched-outline__notch">
-                        <label for="tf-outlined" class="mdc-floating-label">Username</label>
-                    </div>
-                    <div class="mdc-notched-outline__trailing"></div>
-                </div>
-            </div>
-            <div class="mdc-text-field mdc-text-field--outlined" data-mdc-auto-init="MDCTextField">
-                <input type="password" name="password" class="mdc-text-field__input">
-                <div class="mdc-notched-outline">
-                    <div class="mdc-notched-outline__leading"></div>
-                    <div class="mdc-notched-outline__notch">
-                        <label for="tf-outlined" class="mdc-floating-label">Password</label>
-                    </div>
-                    <div class="mdc-notched-outline__trailing"></div>
-                </div>
-            </div>
-            <button class="mdc-button mdc-button--raised" type="submit">
+            <a class="mdc-button mdc-button--raised" href="{% url 'oidc_authentication_init' %}">
                 <span class="mdc-button__label">Login</span>
-            </button>
-            <input type="hidden" name="next" value="{{ next }}">
-        </form>
+            </a>
+        </div>
     </div>
 
     <style>
@@ -58,7 +36,7 @@
             align-items: center;
         }
 
-        .login > form {
+        .login > div {
             display: grid;
             grid-gap: 10px;
             border: solid 2px #aaa;
