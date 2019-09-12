@@ -45,6 +45,10 @@ data:
           return 403;
         }
 
+        location /sw.js {
+          alias /data/static/operator_interface/build/sw.js;
+        }
+
         location @proxy_to_app {
           proxy_pass      http://django:8000;
 
