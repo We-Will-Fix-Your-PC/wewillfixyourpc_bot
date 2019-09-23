@@ -15,3 +15,6 @@ cd ../..
 
 docker build -t "theenbyperor/wewillfixyourpcbot_django:$VERSION" .
 docker push "theenbyperor/wewillfixyourpcbot_django:$VERSION"
+
+sentry-cli releases --org we-will-fix-your-pc new -p bot-server $VERSION
+sentry-cli releases --org we-will-fix-your-pc set-commits --auto $VERSION
