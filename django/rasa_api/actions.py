@@ -4,7 +4,7 @@ import functools
 import json
 import random
 from io import BytesIO
-from typing import Any, Dict, List, Optional, Text, Union
+from typing import Any, Dict, List, Optional, Text, Union, Tuple
 
 import dateutil.parser
 import fuzzywuzzy.fuzz
@@ -12,6 +12,7 @@ import fuzzywuzzy.process
 import fuzzywuzzy.string_processing
 import fuzzywuzzy.utils
 import inflect
+import keycloak.exceptions
 import phonenumbers
 import pytz
 import rasa_sdk.events
@@ -28,6 +29,7 @@ from rasa_sdk.forms import FormAction
 import operator_interface.models
 import payment.models
 import rasa_api.models
+import keycloak_auth.clients
 from fulfillment import models
 
 tz = pytz.timezone('Europe/London')
@@ -87,6 +89,24 @@ def sender_id_to_conversation(sender_id):
             return None
 
 
+def update_user_info(conversation, **kwargs):
+    admin_client = keycloak_auth.clients.get_keycloak_admin_client()
+
+    if conversation.conversation_user_id:
+        try:
+            user = admin_client.users.by_id(conversation.conversation_user_id)
+        except keycloak.exceptions.KeycloakClientError:
+            return
+
+        if kwargs.get("attributes"):
+            user_data = user.get()
+            user_attributes = user_data.get("attributes", {})
+            kwargs["attributes"] = dict(**kwargs["attributes"], **user_attributes)
+
+        user.update(**kwargs)
+        conversation.save()
+
+
 class ActionRequestHuman(Action):
     def name(self) -> Text:
         return "request_human"
@@ -101,7 +121,6 @@ class ActionRequestHuman(Action):
             dispatcher.utter_custom_json({
                 "type": "request_human"
             })
-            return []
         else:
             config = models.ContactDetails.objects.get()
 
@@ -119,15 +138,16 @@ class ActionRequestHuman(Action):
                 }
             })
 
+        return []
+
 
 class ActionGreet(Action):
     def name(self) -> Text:
         return "greet"
 
     def run(self, dispatcher: CollectingDispatcher, tracker: Tracker, domain: Dict[Text, Any]) -> List[Dict[Text, Any]]:
-        utterance = rasa_api.models.Utterance.objects.get(name="utter_greet")
-        utterance_choice = random.choice(utterance.utteranceresponse_set.all()) \
-            # type: rasa_api.models.UtteranceResponse
+        utterance: rasa_api.models.Utterance = rasa_api.models.Utterance.objects.get(name="utter_greet")
+        utterance_choice: rasa_api.models.UtteranceResponse = random.choice(utterance.utteranceresponse_set.all())
 
         dispatcher.utter_message(utterance_choice.text)
 
@@ -152,7 +172,7 @@ class ActionUpdateInfoSlots(Action):
                 instant_response_required = True
                 supports_sign_in = True
                 input_supported = "voice"
-                platform_from_id = json.loads(conversation.platform_from_id)
+                platform_from_id = json.loads(conversation.additional_conversation_data)
                 for c in platform_from_id["surfaceCapabilities"]:
                     if c.get("name") == "actions.capability.WEB_BROWSER":
                         input_supported = "web_form"
@@ -160,12 +180,31 @@ class ActionUpdateInfoSlots(Action):
                     for c in s.get("capabilities", []):
                         if c.get("name") == "actions.capability.WEB_BROWSER":
                             highest_input_supported = "web_form"
-            if conversation.customer_name:
-                out.append(rasa_sdk.events.SlotSet("name", conversation.customer_name))
-            if conversation.customer_phone:
-                out.append(rasa_sdk.events.SlotSet("phone_number", conversation.customer_phone.as_e164))
-            if conversation.customer_email:
-                out.append(rasa_sdk.events.SlotSet("email", conversation.customer_email))
+
+            admin_client = keycloak_auth.clients.get_keycloak_admin_client()
+
+            if not conversation.conversation_user_id:
+                if conversation.conversation_name:
+                    out.append(rasa_sdk.events.SlotSet("name", conversation.conversation_name))
+            else:
+                try:
+                    user = admin_client.users.by_id(conversation.conversation_user_id).get()
+                except keycloak.exceptions.KeycloakClientError:
+                    user = {}
+
+                first_name = user.get("firstName", "")
+                last_name = user.get("lastName", "")
+                email = user.get("email", None)
+                name = f'{first_name} {last_name}'
+                attributes = user.get("attributes", {})
+                phone_number = next(iter(attributes.get("phone", [])), None)
+
+                out.append(rasa_sdk.events.SlotSet("name", name))
+
+                if phone_number:
+                    out.append(rasa_sdk.events.SlotSet("phone_number", phone_number))
+                if email:
+                    out.append(rasa_sdk.events.SlotSet("email", email))
 
         out.extend([
             rasa_sdk.events.SlotSet("instant_response_required", instant_response_required),
@@ -218,9 +257,8 @@ class ActionCatPic(Action):
         return "cat_pic"
 
     def run(self, dispatcher: CollectingDispatcher, tracker: Tracker, domain: Dict[Text, Any]) -> List[Dict[Text, Any]]:
-        utterance = rasa_api.models.Utterance.objects.get(name="utter_cheer_up")
-        utterance_choice = random.choice(utterance.utteranceresponse_set.all()) \
-            # type: rasa_api.models.UtteranceResponse
+        utterance: rasa_api.models.Utterance = rasa_api.models.Utterance.objects.get(name="utter_cheer_up")
+        utterance_choice: rasa_api.models.UtteranceResponse = random.choice(utterance.utteranceresponse_set.all())
 
         dispatcher.utter_message(utterance_choice.text)
 
@@ -285,7 +323,7 @@ class ActionOpeningHours(Action):
         return f"On {day_range} we are {self.format_hours(day[2])}."
 
     @staticmethod
-    def reduce_days(days):
+    def reduce_days(days: List[Tuple[str, str, models.OpeningHours]]):
         cur_day = 0
         while cur_day < len(days):
             next_day = cur_day + 1
@@ -514,18 +552,25 @@ class ActionRepairBookCheck(Action):
             if repair_name else None
 
         if len(device_models) > 1 and repair is not None:
-            dispatcher.utter_message("utter_clarify_model")
+            dispatcher.utter_template("utter_clarify_model", tracker)
             dispatcher.utter_custom_json({
                 "type": "selection",
                 "selection": {
                     "title": "Device model",
                     "items": [{
                         "title": m.display_name,
-                        "key": f"device_mode:{m.id}"
+                        "key": f"device_model:{m.id}"
                     } for m in device_models]
                 }
             })
-            return [rasa_sdk.events.SlotSet("repairable", False), rasa_sdk.events.SlotSet("list_items", device_models)]
+            return [
+                rasa_sdk.events.SlotSet("repairable", False),
+                rasa_sdk.events.SlotSet("list_items", [{
+                    "id": d.id,
+                    "name": d.name,
+                    "display_name": d.display_name
+                } for d in device_models])
+            ]
 
         return []
 
@@ -545,12 +590,23 @@ class ActionRepairBookClarify(Action):
             ordinal = next((int(o) for o in tracker.get_latest_entity_values("ordinal") if not None), None)
         except ValueError:
             ordinal = None
+        try:
+            mention = next((o.lower() for o in tracker.get_latest_entity_values("mention") if not None), None)
+        except ValueError:
+            mention = None
 
         device_model = next(models.Model.objects.filter(name__startswith=device_model.lower()), None) \
             if device_model else None
 
         if device_model:
             return [rasa_sdk.events.SlotSet("repairable", True)]
+        elif mention:
+            if mention == "last":
+                return [rasa_sdk.events.SlotSet("repairable", True),
+                        rasa_sdk.events.SlotSet("device_model", list_items[-1].name)]
+            elif mention == "first":
+                return [rasa_sdk.events.SlotSet("repairable", True),
+                        rasa_sdk.events.SlotSet("device_model", list_items[0].name)]
         elif number or ordinal:
             if ordinal and not number:
                 number = ordinal
@@ -691,6 +747,7 @@ class RepairForm(FormAction):
             else:
                 return {"device_repair": value, "asked_once": False}
 
+
 class RepairBookForm(FormAction):
     def name(self) -> Text:
         return "repair_book_form"
@@ -719,6 +776,7 @@ class RepairBookForm(FormAction):
         dispatcher.utter_template('utter_booking', tracker)
         return []
 
+
 class ActionUnlockLookup(Action):
     def name(self) -> Text:
         return "unlock_lookup"
@@ -744,30 +802,29 @@ class ActionUnlockLookup(Action):
             network_o = network_o[0]
             network_name = network_o.display_name
 
-        brand_o = next(models.Brand.objects.filter(name=brand.lower()).iterator(), None) \
-            # type: Optional[models.Brand]
+        brand_o: Optional[models.Brand] = next(models.Brand.objects.filter(name=brand.lower()).iterator(), None)
         if not brand_o:
             dispatcher.utter_message(f"Sorry, we can't unlock {brand} phones.")
             return [not_unlockable]
 
         if device_model is not None:
-            device_model_o = next(models.Model.objects.filter(name=device_model).iterator(), None) \
-                # type: Optional[models.Model]
+            device_model_o: Optional[models.Model] =\
+                next(models.Model.objects.filter(name=device_model).iterator(), None)
             if not device_model_o:
                 dispatcher.utter_message(f"Sorry, we can't unlock an {device_model}.")
                 return [not_unlockable]
         else:
             device_model_o = None
 
-        unlock_o = models.PhoneUnlock.objects.filter(
+        unlock_o: List[models.PhoneUnlock] = models.PhoneUnlock.objects.filter(
             network=network_o, brand=brand_o, device=device_model_o
-        )  # type: List[models.PhoneUnlock]
+        )
         if not len(unlock_o):
             dispatcher.utter_message(f"Sorry, we can't unlock a {brand_o.display_name} "
                                      f"{device_model if device_model else ''} from {network_name}.")
             return [not_unlockable]
         else:
-            unlock_o = unlock_o[0]  # type: models.PhoneUnlock
+            unlock_o: models.PhoneUnlock = unlock_o[0]
             dispatcher.utter_message(f"Unlocking a {brand_o.display_name} "
                                      f"{device_model_o.display_name if device_model_o else ''} "
                                      f"from {network_name} will cost £{unlock_o.price} and take {unlock_o.time}.")
@@ -779,13 +836,13 @@ class ActionOrderUnlock(Action):
         return "unlock_order"
 
     def run(self, dispatcher: CollectingDispatcher, tracker: Tracker, domain: Dict[Text, Any]) -> List[Dict[Text, Any]]:
-        brand = tracker.get_slot("brand")  # type: Text
-        device_model = tracker.get_slot("device_model")  # type: Text
-        network = tracker.get_slot("network")  # type: Text
-        name = tracker.get_slot("name")  # type: Text
-        phone_number = tracker.get_slot("phone_number")  # type: Text
-        email = tracker.get_slot("email")  # type: Text
-        imei = tracker.get_slot("imei")  # type: Text
+        brand: Text = tracker.get_slot("brand")
+        device_model: Text = tracker.get_slot("device_model")
+        network: Text = tracker.get_slot("network")
+        name: Text = tracker.get_slot("name")
+        phone_number: Text = tracker.get_slot("phone_number")
+        email: Text = tracker.get_slot("email")
+        imei: Text = tracker.get_slot("imei")
 
         try:
             network_o = models.Network.objects.get(name=network.lower())
@@ -1006,8 +1063,9 @@ class UnlockOrderForm(FormAction):
             conversation = sender_id_to_conversation(tracker.sender_id)
 
             if conversation:
-                conversation.customer_phone = phone
-                conversation.save()
+                update_user_info(conversation, attributes={
+                    "phone": phone
+                })
 
             return {"phone_number": phone}
 
@@ -1016,8 +1074,7 @@ class UnlockOrderForm(FormAction):
         conversation = sender_id_to_conversation(tracker.sender_id)
 
         if conversation:
-            conversation.customer_email = value
-            conversation.save()
+            update_user_info(conversation, email=value)
 
         return {"email": value}
 

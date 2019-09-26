@@ -188,10 +188,10 @@
 - [air](device_model:iPad air)
 
 ## intent:resolve_entity
-- [1](mention)
+- [1](number)
 - The [first](mention) one
 - Take the [last](mention) one
-- Number [two](mention)
+- Number [two](number:2)
 
 ## intent:device_repair
 - [charging port](device_repair)

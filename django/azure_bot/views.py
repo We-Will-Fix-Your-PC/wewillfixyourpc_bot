@@ -2,6 +2,7 @@ import json
 import logging
 import sentry_sdk
 
+import jwt
 import jwt.algorithms
 import jwt.exceptions
 import requests

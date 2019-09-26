@@ -13,6 +13,7 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+import django.views.generic
 from django.contrib import admin
 from django.urls import path, include
 from django.conf.urls.static import static
@@ -21,9 +22,11 @@ import os
 import payment.views
 
 urlpatterns = [
+    # path('admin/login/', django.views.generic.RedirectView.as_view(
+    #     pattern_name=settings.LOGIN_URL, permanent=True, query_string=True)),
     path('admin/', admin.site.urls),
     path('accounts/', include('django.contrib.auth.urls')),
-    path('oidc/', include('mozilla_django_oidc.urls')),
+    path('auth/', include('keycloak_auth.urls')),
     path('fulfillment/', include('fulfillment.urls', namespace='fulfillment')),
     path('rasa/', include('rasa_api.urls', namespace='rasa')),
     path('twitter/', include('twitter.urls', namespace='twitter')),

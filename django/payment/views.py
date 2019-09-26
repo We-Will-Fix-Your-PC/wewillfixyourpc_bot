@@ -365,7 +365,10 @@ def threeds_complete(request, payment_id):
 
 
 def take_masterpass_payment_live(request, payment_id, redirect_url):
-    return take_masterpass_payment(request, payment_id, redirect_url, "https://api.mastercard.com/")
+    # TODO: Live keys
+    auth = mastercard.MastercardAuth(settings.MASTERPASS_TEST_KEY, settings.MASTERPASS_TEST_P12_KEY,
+                                     settings.MASTERPASS_TEST_KEY_PASS)
+    return take_masterpass_payment(request, payment_id, redirect_url, "https://api.mastercard.com/", auth)
 
 
 def take_masterpass_payment_test(request, payment_id, redirect_url):

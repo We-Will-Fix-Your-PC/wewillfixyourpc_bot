@@ -17,10 +17,10 @@ export default class Conversation extends Component {
         this.messageObserverCallback = this.messageObserverCallback.bind(this);
 
         this.observer = new IntersectionObserver(this.messageObserverCallback, {
-                root: null,
-                rootMargin: '0px',
-                threshold: 0
-            });
+            root: null,
+            rootMargin: '0px',
+            threshold: 0
+        });
     }
 
     getSnapshotBeforeUpdate(prevProps, prevState) {
@@ -123,22 +123,28 @@ export default class Conversation extends Component {
                             return out
                         })}
                     </div>
-                    <TextField
-                        fullWidth
-                        outlined
-                        onTrailingIconSelect={() => {
-                            if (this.state.value.length && !this.props.conversation.can_message()) {
-                                this.props.conversation.send(this.state.value);
-                                this.setState({value: ""});
-                            }
-                        }}
-                        trailingIcon={<MaterialIcon role="button" icon="send"/>}
-                    >
-                        <Input
-                            value={this.state.value}
-                            disabled={!this.props.conversation.can_message()}
-                            onChange={(e) => this.setState({value: e.currentTarget.value})}/>
-                    </TextField>
+                    {this.props.conversation.can_interact() ?
+                        <TextField
+                            fullWidth
+                            outlined
+                            onTrailingIconSelect={() => {
+                                if (this.state.value.length && !this.props.conversation.can_message()) {
+                                    this.props.conversation.send(this.state.value);
+                                    this.setState({value: ""});
+                                }
+                            }}
+                            trailingIcon={<MaterialIcon role="button" icon="send"/>}
+                        >
+
+                            <Input
+                                value={this.state.value}
+                                disabled={!this.props.conversation.can_message()}
+                                onChange={(e) => this.setState({value: e.currentTarget.value})}
+                            />
+                        </TextField>
+                        :
+                        <div className="no-replies">Sender doesnt support replies</div>
+                    }
                 </div>
                 <div className="panel">
                     <CustomerPanel conversation={this.props.conversation}/>

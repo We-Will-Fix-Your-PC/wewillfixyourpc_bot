@@ -1,0 +1,8 @@
+django/__init__ /media/data/Users/BenjaminMisell/Documents/wewillfixyourpc_bot/django/.pytype/imports/default.pyi
+channels/routing /media/data/Users/BenjaminMisell/Documents/wewillfixyourpc_bot/django/.pytype/imports/default.pyi
+django/conf/__init__ /media/data/Users/BenjaminMisell/Documents/wewillfixyourpc_bot/django/.pytype/imports/default.pyi
+sentry_sdk/__init__ /media/data/Users/BenjaminMisell/Documents/wewillfixyourpc_bot/django/.pytype/imports/default.pyi
+sentry_sdk/integrations/celery /media/data/Users/BenjaminMisell/Documents/wewillfixyourpc_bot/django/.pytype/imports/default.pyi
+sentry_sdk/integrations/django/__init__ /media/data/Users/BenjaminMisell/Documents/wewillfixyourpc_bot/django/.pytype/imports/default.pyi
+sentry_sdk/integrations/redis /media/data/Users/BenjaminMisell/Documents/wewillfixyourpc_bot/django/.pytype/imports/default.pyi
+sentry_sdk/integrations/flask /media/data/Users/BenjaminMisell/Documents/wewillfixyourpc_bot/django/.pytype/imports/default.pyi

@@ -18,14 +18,16 @@ def event_to_conversation(msg):
     from_id = msg["conversation"]["id"]
     customer_name = msg["from"].get("name")
 
-    additional_id = json.dumps({
+    additional = json.dumps({
         "to": msg["from"]["id"],
         "from": msg["recipient"]["id"],
         "endpoint": msg["serviceUrl"]
     })
 
     conversation = Conversation.get_or_create_conversation(
-        Conversation.AZURE, from_id, customer_name=customer_name, from_id=additional_id)
+        Conversation.AZURE, from_id, conversation_name=customer_name
+    )
+    conversation.additional_conversation_data = additional
     return conversation
 
 

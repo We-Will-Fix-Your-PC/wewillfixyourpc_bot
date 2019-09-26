@@ -1,6 +1,7 @@
 import datetime
 import uuid
 
+import keycloak.exceptions
 from asgiref.sync import async_to_sync
 from channels.db import database_sync_to_async
 from channels.generic.websocket import AsyncJsonWebsocketConsumer
@@ -12,6 +13,7 @@ from django.dispatch import receiver
 import operator_interface.models
 import operator_interface.tasks
 import payment.models
+import keycloak_auth.clients
 
 channel_layer = get_channel_layer()
 
@@ -25,7 +27,7 @@ def conversation_saved(sender, instance: operator_interface.models.Conversation,
 
 
 @receiver(post_save, sender=operator_interface.models.Message)
-def message_saved(sender, instance: operator_interface.models.Conversation, **kwargs):
+def message_saved(sender, instance: operator_interface.models.Message, **kwargs):
     async_to_sync(channel_layer.group_send)("operator_interface", {
         "type": "message_update",
         "mid": instance.id
@@ -76,7 +78,7 @@ class OperatorConsumer(AsyncJsonWebsocketConsumer):
     async def connect(self):
         self.user = self.scope["user"]
 
-        if not self.user.is_authenticated:
+        if not self.user.is_authenticated or not self.user.is_staff:
             await self.close()
             return
 
@@ -103,8 +105,27 @@ class OperatorConsumer(AsyncJsonWebsocketConsumer):
 
     async def send_conversation(self, conversation: operator_interface.models.Conversation):
         pic = static("operator_interface/img/default_profile_normal.png")
-        if conversation.customer_pic:
-            pic = conversation.customer_pic.url
+        if conversation.conversation_pic:
+            pic = conversation.conversation_pic.url
+
+        admin_client = keycloak_auth.clients.get_keycloak_admin_client()
+        if conversation.conversation_user_id:
+            try:
+                user = admin_client.users.by_id(conversation.conversation_user_id).get()
+            except keycloak.exceptions.KeycloakClientError:
+                user = {}
+        else:
+            user = {
+                "firstName": conversation.conversation_name
+            }
+
+        first_name = user.get("firstName", "")
+        last_name = user.get("lastName", "")
+        attributes = user.get("attributes", {})
+        timezone = next(iter(attributes.get("timezone", [])), None)
+        phone_number = next(iter(attributes.get("phone", [])), None)
+        locale = next(iter(attributes.get("locale", [])), None)
+        gender = next(iter(attributes.get("gender", [])), None)
 
         messages = conversation.message_set.all()
         payments = []
@@ -121,14 +142,14 @@ class OperatorConsumer(AsyncJsonWebsocketConsumer):
             "current_user_responding":
                 conversation.current_agent.id == self.user.id if conversation.current_agent else False,
             "platform": conversation.platform,
-            "customer_name": conversation.customer_name,
-            "customer_username": conversation.customer_username,
+            "customer_name": f'{first_name} {last_name}',
+            "customer_username": user.get("username"),
             "customer_pic": pic,
-            "timezone": conversation.timezone,
-            "customer_email": conversation.customer_email,
-            "customer_phone": conversation.customer_phone.as_national if conversation.customer_phone else None,
-            "customer_locale": conversation.customer_locale,
-            "customer_gender": conversation.customer_gender,
+            "timezone": timezone,
+            "customer_email": user.get("email"),
+            "customer_phone": phone_number,
+            "customer_locale": locale,
+            "customer_gender": gender,
             "messages": [m.id for m in messages],
             "payments": payments
         })

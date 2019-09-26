@@ -28,7 +28,7 @@ Payment method: {payment_o.payment_method}
 ---
 Customer name: {payment_o.customer.name}
 Customer email: {payment_o.customer.email}
-Customer phone: {payment_o.customer.phone.as_national}
+Customer phone: {payment_o.customer.phone.as_national if payment_o.customer else ""}
 ---
 Items:
 

@@ -42,8 +42,6 @@ def handle_text(conversation, text):
     operator_interface.tasks.process_typing.delay(conversation.id)
 
     sender = f"{conversation.platform}:{conversation.platform_id}"
-    if conversation.noonce:
-        sender += f":{conversation.noonce}"
     r = requests.post(f"{settings.RASA_HTTP_URL}/webhooks/rest/webhook?stream=true", json={
         "sender": sender,
         "message": text

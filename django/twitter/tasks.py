@@ -6,6 +6,7 @@ import time
 import urllib.parse
 from io import BytesIO
 
+import typing
 import requests
 from celery import shared_task
 from django.core.files.uploadedfile import InMemoryUploadedFile
@@ -20,26 +21,31 @@ from . import views
 
 
 @shared_task
-def handle_twitter_message(mid, psid, message, user):
-    text = message.get("text")
-    attachment = message.get("attachment")
+def handle_twitter_message(mid: str, psid, message, user):
+    text: str = message.get("text")
+    attachment: dict = message.get("attachment")
     if text is not None:
-        conversation = Conversation.get_or_create_conversation(Conversation.TWITTER, psid, user["name"],
-                                                               f"@{user['screen_name']}", None)
+        conversation: Conversation = Conversation.get_or_create_conversation(
+            Conversation.TWITTER, psid, conversation_name=user["name"]
+        )
         if not Message.message_exits(conversation, mid):
-            message_m = Message(conversation=conversation, message_id=mid, text=text.strip(), direction=Message.FROM_CUSTOMER)
+            message_m: Message = Message(
+                conversation=conversation, message_id=mid, text=text.strip(), direction=Message.FROM_CUSTOMER
+            )
             
             if attachment:
                 if attachment["type"] == "media":
                     creds = views.get_creds()
-                    url = attachment["media"]["media_url_https"]
-                    indices = attachment["media"]["indices"]
+                    url: str = attachment["media"]["media_url_https"]
+                    indices: typing.Tuple = attachment["media"]["indices"]
                     message_m.text = (text[:indices[0]] + text[indices[1]:]).strip()
+
                     media_r = requests.get(url, auth=creds)
-                    orig_file_name = os.path.basename(urllib.parse.urlparse(url).path)
-                    fs = DefaultStorage()
-                    file_name = fs.save(orig_file_name, BytesIO(media_r.content))
-                    message_m.image = fs.base_url + file_name
+                    if media_r.status_code == 200:
+                        orig_file_name = os.path.basename(urllib.parse.urlparse(url).path)
+                        fs = DefaultStorage()
+                        file_name = fs.save(orig_file_name, BytesIO(media_r.content))
+                        message_m.image = fs.base_url + file_name
 
             message_m.save()
             handle_mark_twitter_message_read.delay(psid, mid)
@@ -56,10 +62,12 @@ def handle_twitter_message(mid, psid, message, user):
 
 
 @shared_task
-def handle_twitter_read(psid, last_read):
-    last_read = int(last_read)
-    conversation = Conversation.get_or_create_conversation(Conversation.TWITTER, psid)
-    messages = Message.objects.filter(conversation=conversation, direction=Message.TO_CUSTOMER, read=False)
+def handle_twitter_read(psid: str, last_read: str):
+    last_read: int = int(last_read)
+    conversation: Conversation = Conversation.get_or_create_conversation(Conversation.TWITTER, psid)
+    messages: typing.List[Message] = Message.objects.filter(
+        conversation=conversation, direction=Message.TO_CUSTOMER, read=False
+    )
     message_ids = []
     for m in messages:
         try:
@@ -75,7 +83,7 @@ def handle_twitter_read(psid, last_read):
 
 
 @shared_task
-def handle_mark_twitter_message_read(psid, mid):
+def handle_mark_twitter_message_read(psid: str, mid: str):
     creds = views.get_creds()
     requests.post("https://api.twitter.com/1.1/direct_messages/mark_read.json", data={
         "last_read_event_id": mid,
@@ -84,7 +92,7 @@ def handle_mark_twitter_message_read(psid, mid):
 
 
 @shared_task
-def handle_twitter_message_typing_on(cid):
+def handle_twitter_message_typing_on(cid: int):
     creds = views.get_creds()
     conversation = Conversation.objects.get(id=cid)
     requests.post("https://api.twitter.com/1.1/direct_messages/indicate_typing.json",
@@ -94,9 +102,9 @@ def handle_twitter_message_typing_on(cid):
 
 
 @shared_task
-def send_twitter_message(mid):
+def send_twitter_message(mid: int):
     message = Message.objects.get(id=mid)
-    psid = message.conversation.platform_id
+    psid: str = message.conversation.platform_id
     creds = views.get_creds()
 
     quick_replies = []

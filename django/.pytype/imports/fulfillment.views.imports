@@ -1,0 +1,12 @@
+django/http/__init__ /media/data/Users/BenjaminMisell/Documents/wewillfixyourpc_bot/django/.pytype/imports/default.pyi
+django/shortcuts /media/data/Users/BenjaminMisell/Documents/wewillfixyourpc_bot/django/.pytype/imports/default.pyi
+django/db/models/__init__ /media/data/Users/BenjaminMisell/Documents/wewillfixyourpc_bot/django/.pytype/imports/default.pyi
+phonenumber_field/modelfields /media/data/Users/BenjaminMisell/Documents/wewillfixyourpc_bot/django/.pytype/imports/default.pyi
+djsingleton/models /media/data/Users/BenjaminMisell/Documents/wewillfixyourpc_bot/django/.pytype/imports/default.pyi
+fulfillment/models /media/data/Users/BenjaminMisell/Documents/wewillfixyourpc_bot/django/.pytype/pyi/fulfillment/models.pyi
+django/forms/__init__ /media/data/Users/BenjaminMisell/Documents/wewillfixyourpc_bot/django/.pytype/imports/default.pyi
+django/core/validators /media/data/Users/BenjaminMisell/Documents/wewillfixyourpc_bot/django/.pytype/imports/default.pyi
+phonenumber_field/formfields /media/data/Users/BenjaminMisell/Documents/wewillfixyourpc_bot/django/.pytype/imports/default.pyi
+fulfillment/forms /media/data/Users/BenjaminMisell/Documents/wewillfixyourpc_bot/django/.pytype/pyi/fulfillment/forms.pyi
+django/conf/__init__ /media/data/Users/BenjaminMisell/Documents/wewillfixyourpc_bot/django/.pytype/imports/default.pyi
+payment/models /media/data/Users/BenjaminMisell/Documents/wewillfixyourpc_bot/django/.pytype/pyi/payment/models.pyi

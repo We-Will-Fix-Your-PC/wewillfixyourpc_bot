@@ -13,7 +13,9 @@ class MastercardAuth(requests.auth.AuthBase):
         signer = oauth1.oauth.OAuth()
         payload = r.body
         payload_str = json.dumps(payload) if type(payload) is dict else (
-            payload.decode() if payload is not None else None
+            (
+                payload.decode() if isinstance(payload, bytes) else payload
+            ) if payload is not None else None
         )
         h = signer.get_authorization_header(r.url, r.method, payload_str, self.consumer_key, self.private_key)
         r.headers["Authorization"] = h

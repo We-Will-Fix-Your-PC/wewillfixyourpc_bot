@@ -7,6 +7,7 @@ For more information on this file, see
 https://docs.djangoproject.com/en/2.1/howto/deployment/wsgi/
 """
 import os
+import traceback
 from django.core.wsgi import get_wsgi_application
 from django.conf import settings
 import sentry_sdk
@@ -22,4 +23,8 @@ if not settings.DEBUG:
         release=os.getenv("RELEASE", None)
     )
 
-application = get_wsgi_application()
+try:
+    application = get_wsgi_application()
+except Exception as e:
+    print(e)
+    traceback.print_exc()

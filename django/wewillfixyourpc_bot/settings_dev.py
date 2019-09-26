@@ -34,7 +34,7 @@ ALLOWED_HOSTS = ["*"]
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
-    'mozilla_django_oidc',
+    'keycloak_auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
@@ -62,7 +62,7 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'mozilla_django_oidc.middleware.SessionRefresh',
+    'keycloak_auth.middleware.OIDCMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
@@ -90,20 +90,11 @@ WSGI_APPLICATION = 'wewillfixyourpc_bot.wsgi.application'
 ASGI_APPLICATION = "wewillfixyourpc_bot.routing.application"
 
 AUTHENTICATION_BACKENDS = [
-    'operator_interface.oidc.OIDCAB',
+    "keycloak_auth.auth.KeycloakAuthorization"
 ]
 
-OIDC_RP_SIGN_ALGO = "RS256"
-OIDC_RP_CLIENT_ID = "bot-server-dev"
-OIDC_RP_CLIENT_SECRET = ""
-OIDC_RP_SCOPES = "openid email profile address phone"
-OIDC_OP_JWKS_ENDPOINT = "https://account.cardifftec.uk/auth/realms/wwfypc/protocol/openid-connect/certs"
-OIDC_OP_AUTHORIZATION_ENDPOINT = "https://account.cardifftec.uk/auth/realms/wwfypc/protocol/openid-connect/auth"
-OIDC_OP_TOKEN_ENDPOINT = "https://account.cardifftec.uk/auth/realms/wwfypc/protocol/openid-connect/token"
-OIDC_OP_USER_ENDPOINT = "https://account.cardifftec.uk/auth/realms/wwfypc/protocol/openid-connect/userinfo"
-
-LOGIN_REDIRECT_URL = "/"
-LOGOUT_REDIRECT_URL = "/"
+LOGIN_URL = "oidc_login"
+LOGOUT_REDIRECT_URL = "oidc_logout"
 
 # Database
 # https://docs.djangoproject.com/en/2.1/ref/settings/#databases
@@ -112,6 +103,9 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+        'OPTIONS': {
+            'timeout': 20,
+        }
     }
 }
 
@@ -186,6 +180,8 @@ with open(os.path.join(BASE_DIR, "secrets/azure.json")) as f:
     azure_conf = json.load(f)
 with open(os.path.join(BASE_DIR, "secrets/masterpass.json")) as f:
     masterpass_conf = json.load(f)
+with open(os.path.join(BASE_DIR, "secrets/keycloak.json")) as f:
+    keycloak_conf = json.load(f)
 with open(os.path.join(BASE_DIR, 'secrets/gpay-key-test.pem'), 'rb') as f:
     gpay_priv_key_test = f.read()
 with open(os.path.join(BASE_DIR, 'secrets/masterpass-test.p12'), 'rb') as f:
@@ -226,6 +222,12 @@ ORDER_NOTIFICATION_EMAIL = "q@misell.cymru"
 ORDER_NOTIFICATION_FROM = "noreply@noreply.wewillfixyourpc.co.uk"
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
+KEYCLOAK_SERVER_URL = "https://account.cardifftec.uk/"
+KEYCLOAK_REALM = "wwfypc"
+OIDC_CLIENT_ID = keycloak_conf["client_id"]
+OIDC_CLIENT_SECRET = keycloak_conf["client_secret"]
+OIDC_SCOPES = keycloak_conf["scopes"]
+
 CORS_ORIGIN_ALLOW_ALL = True
 CORS_ALLOW_CREDENTIALS = True
 
@@ -247,6 +249,10 @@ LOGGING = {
             'handlers': ['console'],
             'level': 'INFO',
         },
+        # 'django.db.backends': {
+        #     'handlers': ['console'],
+        #     'level': 'DEBUG',
+        # },
         'twitter': {
             'handlers': ['console'],
             'level': 'DEBUG',
@@ -275,9 +281,15 @@ LOGGING = {
             'handlers': ['console'],
             'level': 'DEBUG',
         },
-        'mozilla_django_oidc': {
+        'keycloak_auth': {
+            'handlers': ['console'],
+            'level': 'DEBUG'
+        },
+        'keycloak': {
             'handlers': ['console'],
             'level': 'DEBUG'
         }
     },
 }
+
+DATA_UPLOAD_MAX_MEMORY_SIZE = 10*1024*1024

@@ -1,21 +1,23 @@
-from django.http import HttpResponse, HttpResponseForbidden, HttpResponseBadRequest, HttpResponseNotFound
-from django.views.decorators.csrf import csrf_exempt
-from django.conf import settings
-import google.oauth2.id_token
-import google.auth.transport.requests
 import json
 import logging
-import uuid
-import requests
-import re
 import os
+import re
 import urllib.parse
+import uuid
 from io import BytesIO
 
+import google.auth.transport.requests
+import google.oauth2.id_token
+import requests
+from django.conf import settings
+from django.core.files.uploadedfile import InMemoryUploadedFile
+from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseForbidden
+from django.views.decorators.csrf import csrf_exempt
+
+import keycloak_auth.clients
+import operator_interface.consumers
 import operator_interface.tasks
 from operator_interface.models import Conversation, Message
-from django.core.files.uploadedfile import InMemoryUploadedFile
-import operator_interface.consumers
 
 logger = logging.getLogger(__name__)
 emoji_pattern = \
@@ -176,15 +178,14 @@ def webhook(request):
     if not is_guest_user:
         user_id = user.get("userStorage", str(uuid.uuid4()))
     else:
-        user_id = conversation_id
-    conversation = Conversation.get_or_create_conversation(Conversation.GOOGLE_ACTIONS, user_id)
-    conversation.noonce = conversation_id
+        user_id = None
+    conversation: Conversation = Conversation.get_or_create_conversation(Conversation.GOOGLE_ACTIONS, conversation_id)
 
-    platform_from_id = {
+    additional_conversation_data = {
         "surfaceCapabilities": data.get("surface", {}).get("capabilities", []),
         "availableSurfaces": data.get("availableSurfaces", [])
     }
-    conversation.platform_from_id = json.dumps(platform_from_id)
+    conversation.additional_conversation_data = json.dumps(additional_conversation_data)
 
     conversation.save()
 
@@ -195,16 +196,89 @@ def webhook(request):
                 google.oauth2.id_token.verify_token(user_id_token, google_request)
         except ValueError:
             return HttpResponseForbidden()
-        conversation.customer_username = user_id_token.get("sub")
-        conversation.customer_locale = user_id_token.get("locale")
-        conversation.customer_name = user_id_token.get("name")
-        conversation.customer_email = user_id_token.get("email")
+
+        admin_client = keycloak_auth.clients.get_keycloak_admin_client()
+
+        if not conversation.conversation_user_id:
+            users = list(map(lambda u: admin_client.users.by_id(u.get("id")).get(), admin_client.users.all()))
+            cont = True
+            for user in users:
+                google_identity = next(
+                    filter(lambda i: i.get("identityProvider") == "google", user.get("federatedIdentities", [])),
+                    None
+                )
+                if google_identity:
+                    if user_id_token.get("sub") == google_identity.get("userId"):
+                        conversation.conversation_user_id = user.get("id")
+                        cont = False
+                        break
+
+            if not cont:
+                for user in users:
+                    if user.get("email") == user_id_token.get("email"):
+                        conversation.customer_user_id = user.get("id")
+                        user_o = admin_client.users.by_id(user.get("id"))
+                        federated_identities = user.get("federatedIdentities")
+                        federated_identities.append({
+                            "identityProvider": "google",
+                            "userId": user_id_token.get("sub"),
+                            "userName": user_id_token.get("email")
+                        })
+                        user_o.update(federated_identities=federated_identities)
+                        break
+
+        if conversation.conversation_user_id:
+            user = admin_client.users.by_id(conversation.conversation_user_id)
+            user_data = user.get()
+            attributes = user_data.get("attributes", {})
+            federated_identities = user_data.get("federatedIdentities")
+
+            google_identity = next(
+                filter(
+                    lambda i:
+                    i.get("identityProvider") == "google" and
+                    i.get("userId") == user_id_token.get("sub"),
+                    user_data.get("federatedIdentities", [])
+                ),
+                None
+            )
+            if not google_identity:
+                federated_identities.push({
+                    "identityProvider": "google",
+                    "userId": user_id_token.get("sub"),
+                    "userName": user_id_token.get("email")
+                })
+
+            new_first_name = user_id_token.get("given_name")
+            new_last_name = user_id_token.get("family_name")
+            new_email = user_id_token.get("email")
+            first_name = user_data.get("firstName")
+            last_name = user_data.get("lastName")
+            email = user_data.get("email")
+            email_verified = user_data.get("emailVerified")
+
+            if new_first_name and not first_name:
+                first_name = new_first_name
+            if new_last_name and not last_name:
+                last_name = new_last_name
+            if new_email and not email:
+                email = new_email
+                email_verified = True
+            user.update(
+                first_name=first_name,
+                last_name=last_name,
+                email=email,
+                email_verified=email_verified,
+                attributes=attributes,
+                federated_identities=federated_identities
+            )
+
         profile_pic = user_id_token.get("picture")
         if profile_pic:
             r = requests.get(profile_pic)
             if r.status_code == 200:
                 file_name = os.path.basename(urllib.parse.urlparse(profile_pic).path)
-                conversation.customer_pic = \
+                conversation.conversation_pic = \
                     InMemoryUploadedFile(file=BytesIO(r.content), size=len(r.content), charset=r.encoding,
                                          content_type=r.headers.get('content-type'), field_name=file_name,
                                          name=file_name)
