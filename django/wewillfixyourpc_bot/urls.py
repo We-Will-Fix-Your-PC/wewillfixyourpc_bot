@@ -13,6 +13,7 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+import django.views.generic
 from django.contrib import admin
 from django.urls import path, include
 from django.conf.urls.static import static
@@ -21,24 +22,32 @@ import os
 import payment.views
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
-    path('accounts/', include('django.contrib.auth.urls')),
-    path('oidc/', include('mozilla_django_oidc.urls')),
-    path('fulfillment/', include('fulfillment.urls', namespace='fulfillment')),
-    path('rasa/', include('rasa_api.urls', namespace='rasa')),
-    path('twitter/', include('twitter.urls', namespace='twitter')),
-    path('facebook/', include('facebook.urls', namespace='facebook')),
-    path('telegram/', include('telegram_bot.urls', namespace='telegram')),
-    path('azure/', include('azure_bot.urls', namespace='azure')),
-    path('gactions/', include('gactions.urls', namespace='gactions')),
-    path('payment/', include('payment.urls', namespace='payment')),
-    path('.well-known/apple-developer-merchantid-domain-association', payment.views.apple_mechantid),
-    path('', include('operator_interface.urls', namespace='operator')),
+    # path('admin/login/', django.views.generic.RedirectView.as_view(
+    #     pattern_name=settings.LOGIN_URL, permanent=True, query_string=True)),
+    path("admin/", admin.site.urls),
+    path("accounts/", include("django.contrib.auth.urls")),
+    path("auth/", include("keycloak_auth.urls")),
+    path("fulfillment/", include("fulfillment.urls", namespace="fulfillment")),
+    path("rasa/", include("rasa_api.urls", namespace="rasa")),
+    path("twitter/", include("twitter.urls", namespace="twitter")),
+    path("facebook/", include("facebook.urls", namespace="facebook")),
+    path("telegram/", include("telegram_bot.urls", namespace="telegram")),
+    path("azure/", include("azure_bot.urls", namespace="azure")),
+    path("gactions/", include("gactions.urls", namespace="gactions")),
+    path("payment/", include("payment.urls", namespace="payment")),
+    path(
+        ".well-known/apple-developer-merchantid-domain-association",
+        payment.views.apple_mechantid,
+    ),
+    path("", include("operator_interface.urls", namespace="operator")),
 ]
 
 if settings.DEBUG:
-    urlpatterns += static('static/operator_interface',
-                          document_root=os.path.join(settings.BASE_DIR,
-                                                     'operator_interface/templates/operator_interface/build'))
-    urlpatterns += static('static/', document_root=settings.STATIC_ROOT)
-    urlpatterns += static('media/', document_root=settings.MEDIA_ROOT)
+    urlpatterns += static(
+        "static/operator_interface",
+        document_root=os.path.join(
+            settings.BASE_DIR, "operator_interface/templates/operator_interface/build"
+        ),
+    )
+    urlpatterns += static("static/", document_root=settings.STATIC_ROOT)
+    urlpatterns += static("media/", document_root=settings.MEDIA_ROOT)

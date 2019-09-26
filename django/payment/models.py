@@ -12,7 +12,9 @@ def make_token():
 
 class PaymentToken(models.Model):
     name = models.CharField(max_length=255)
-    token = models.CharField(max_length=255, default=make_token, editable=False, primary_key=True)
+    token = models.CharField(
+        max_length=255, default=make_token, editable=False, primary_key=True
+    )
 
     def __str__(self):
         return self.name
@@ -52,23 +54,24 @@ class Payment(models.Model):
 
     ENVIRONMENT_TEST = "T"
     ENVIRONMENT_LIVE = "L"
-    ENVIRONMENTS = (
-        (ENVIRONMENT_TEST, "Test"),
-        (ENVIRONMENT_LIVE, "Live"),
-    )
+    ENVIRONMENTS = ((ENVIRONMENT_TEST, "Test"), (ENVIRONMENT_LIVE, "Live"))
 
     id = models.CharField(max_length=255, primary_key=True, default=uuid.uuid4)
     timestamp = models.DateTimeField(auto_now_add=True)
     state = models.CharField(max_length=1, choices=STATES)
-    customer = models.ForeignKey(Customer, on_delete=models.SET_NULL, null=True, blank=True)
-    environment = models.CharField(max_length=1, choices=ENVIRONMENTS, default=settings.DEFAULT_PAYMENT_ENVIRONMENT)
+    customer = models.ForeignKey(
+        Customer, on_delete=models.SET_NULL, null=True, blank=True
+    )
+    environment = models.CharField(
+        max_length=1, choices=ENVIRONMENTS, default=settings.DEFAULT_PAYMENT_ENVIRONMENT
+    )
     payment_method = models.CharField(max_length=255, blank=True, default="")
 
     @property
     def total(self):
-        total = decimal.Decimal('0.0')
+        total = decimal.Decimal("0.0")
         for item in self.paymentitem_set.all():
-            total += (item.price * item.quantity)
+            total += item.price * item.quantity
         return total
 
     @property
@@ -101,4 +104,3 @@ class ThreeDSData(models.Model):
     orderId = models.TextField()
     sessionId = models.CharField(max_length=255)
     timestamp = models.DateTimeField(auto_now_add=True)
-

@@ -6,19 +6,24 @@ import django.db.models.deletion
 
 class Migration(migrations.Migration):
 
-    dependencies = [
-        ('payment', '0001_initial'),
-    ]
+    dependencies = [("payment", "0001_initial")]
 
     operations = [
         migrations.AddField(
-            model_name='payment',
-            name='environment',
-            field=models.CharField(choices=[('T', 'Test'), ('L', 'Live')], default='T', max_length=1),
+            model_name="payment",
+            name="environment",
+            field=models.CharField(
+                choices=[("T", "Test"), ("L", "Live")], default="T", max_length=1
+            ),
         ),
         migrations.AlterField(
-            model_name='payment',
-            name='customer',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to='payment.Customer'),
+            model_name="payment",
+            name="customer",
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                to="payment.Customer",
+            ),
         ),
     ]

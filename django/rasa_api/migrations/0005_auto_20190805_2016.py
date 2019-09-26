@@ -5,25 +5,24 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
 
-    dependencies = [
-        ('rasa_api', '0004_auto_20190804_1226'),
-    ]
+    dependencies = [("rasa_api", "0004_auto_20190804_1226")]
 
     operations = [
-        migrations.RemoveField(
-            model_name='testinguser',
-            name='environment',
-        ),
+        migrations.RemoveField(model_name="testinguser", name="environment"),
         migrations.AddField(
-            model_name='testinguser',
-            name='platform',
-            field=models.CharField(choices=[('FB', 'Facebook'), ('TW', 'Twitter')], default='', max_length=2),
+            model_name="testinguser",
+            name="platform",
+            field=models.CharField(
+                choices=[("FB", "Facebook"), ("TW", "Twitter")],
+                default="",
+                max_length=2,
+            ),
             preserve_default=False,
         ),
         migrations.AddField(
-            model_name='testinguser',
-            name='rasa_url',
-            field=models.URLField(default=''),
+            model_name="testinguser",
+            name="rasa_url",
+            field=models.URLField(default=""),
             preserve_default=False,
         ),
     ]

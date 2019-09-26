@@ -5,19 +5,17 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
 
-    dependencies = [
-        ('operator_interface', '0030_message_end'),
-    ]
+    dependencies = [("operator_interface", "0030_message_end")]
 
     operations = [
         migrations.AlterField(
-            model_name='message',
-            name='end',
+            model_name="message",
+            name="end",
             field=models.BooleanField(default=False, null=True),
         ),
         migrations.AlterField(
-            model_name='message',
-            name='request_phone',
+            model_name="message",
+            name="request_phone",
             field=models.BooleanField(default=False, null=True),
         ),
     ]

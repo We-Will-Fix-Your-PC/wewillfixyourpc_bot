@@ -6,19 +6,18 @@ import django.db.models.deletion
 
 class Migration(migrations.Migration):
 
-    dependencies = [
-        ('rasa_api', '0001_initial'),
-    ]
+    dependencies = [("rasa_api", "0001_initial")]
 
     operations = [
-        migrations.RemoveField(
-            model_name='utterancebutton',
-            name='response',
-        ),
+        migrations.RemoveField(model_name="utterancebutton", name="response"),
         migrations.AddField(
-            model_name='utterancebutton',
-            name='utterance',
-            field=models.ForeignKey(default=1, on_delete=django.db.models.deletion.CASCADE, to='rasa_api.Utterance'),
+            model_name="utterancebutton",
+            name="utterance",
+            field=models.ForeignKey(
+                default=1,
+                on_delete=django.db.models.deletion.CASCADE,
+                to="rasa_api.Utterance",
+            ),
             preserve_default=False,
         ),
     ]

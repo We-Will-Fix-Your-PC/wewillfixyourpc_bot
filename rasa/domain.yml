@@ -4,6 +4,8 @@ actions:
 - greet
 - rate_slot
 - repair
+- repair_book_check
+- repair_book_clarify
 - request_human
 - support_contact
 - support_contact_email
@@ -20,6 +22,7 @@ actions:
 - utter_anything_else
 - utter_ask_continue
 - utter_ask_order
+- utter_ask_book
 - utter_can_do
 - utter_cant_help
 - utter_cheer_up
@@ -105,6 +108,7 @@ intents:
 - device_model
 - move_to_new_device_refused
 - moved_to_new_device
+- resolve_entity
 slots:
   list_items:
     type: unfeaturized

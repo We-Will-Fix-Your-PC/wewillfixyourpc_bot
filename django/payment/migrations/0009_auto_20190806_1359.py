@@ -5,19 +5,17 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
 
-    dependencies = [
-        ('payment', '0008_auto_20190804_1112'),
-    ]
+    dependencies = [("payment", "0008_auto_20190804_1112")]
 
     operations = [
         migrations.AddField(
-            model_name='payment',
-            name='payment_method',
-            field=models.CharField(blank=True, default='', max_length=255),
+            model_name="payment",
+            name="payment_method",
+            field=models.CharField(blank=True, default="", max_length=255),
         ),
         migrations.AddField(
-            model_name='paymentitem',
-            name='quantity',
+            model_name="paymentitem",
+            name="quantity",
             field=models.PositiveIntegerField(default=1),
         ),
     ]

@@ -5,19 +5,17 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
 
-    dependencies = [
-        ('operator_interface', '0003_conversation_noonce'),
-    ]
+    dependencies = [("operator_interface", "0003_conversation_noonce")]
 
     operations = [
         migrations.AddField(
-            model_name='conversation',
-            name='customer_name',
+            model_name="conversation",
+            name="customer_name",
             field=models.CharField(blank=True, max_length=255, null=True),
         ),
         migrations.AddField(
-            model_name='conversation',
-            name='customer_username',
+            model_name="conversation",
+            name="customer_username",
             field=models.CharField(blank=True, max_length=255, null=True),
         ),
     ]

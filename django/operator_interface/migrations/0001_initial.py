@@ -8,35 +8,81 @@ class Migration(migrations.Migration):
 
     initial = True
 
-    dependencies = [
-    ]
+    dependencies = []
 
     operations = [
         migrations.CreateModel(
-            name='Conversation',
+            name="Conversation",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('platform', models.CharField(choices=[('FB', 'Facebook'), ('TW', 'Twitter')], max_length=2)),
-                ('platform_id', models.CharField(max_length=255)),
-                ('agent_responding', models.BooleanField(default=True)),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "platform",
+                    models.CharField(
+                        choices=[("FB", "Facebook"), ("TW", "Twitter")], max_length=2
+                    ),
+                ),
+                ("platform_id", models.CharField(max_length=255)),
+                ("agent_responding", models.BooleanField(default=True)),
             ],
         ),
         migrations.CreateModel(
-            name='Message',
+            name="Message",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('message_id', models.CharField(max_length=255)),
-                ('direction', models.CharField(choices=[('I', 'To customer'), ('O', 'From customer')], max_length=1)),
-                ('text', models.TextField()),
-                ('conversation', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='operator_interface.Conversation')),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("message_id", models.CharField(max_length=255)),
+                (
+                    "direction",
+                    models.CharField(
+                        choices=[("I", "To customer"), ("O", "From customer")],
+                        max_length=1,
+                    ),
+                ),
+                ("text", models.TextField()),
+                (
+                    "conversation",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="operator_interface.Conversation",
+                    ),
+                ),
             ],
         ),
         migrations.CreateModel(
-            name='MessageSuggestion',
+            name="MessageSuggestion",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('suggested_response', models.TextField()),
-                ('message', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='operator_interface.Message')),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("suggested_response", models.TextField()),
+                (
+                    "message",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="operator_interface.Message",
+                    ),
+                ),
             ],
         ),
     ]

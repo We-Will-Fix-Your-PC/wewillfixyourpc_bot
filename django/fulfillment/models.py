@@ -33,7 +33,15 @@ class OpeningHours(models.Model):
 
     def __str__(self):
         days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
-        enabled = [self.monday, self.tuesday, self.wednesday, self.thursday, self.friday, self.saturday, self.sunday]
+        enabled = [
+            self.monday,
+            self.tuesday,
+            self.wednesday,
+            self.thursday,
+            self.friday,
+            self.saturday,
+            self.sunday,
+        ]
         days = map(lambda d: d[1], filter(lambda d: enabled[d[0]], enumerate(days)))
         return ", ".join(days)
 

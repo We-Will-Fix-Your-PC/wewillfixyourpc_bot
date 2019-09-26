@@ -5,18 +5,13 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
 
-    dependencies = [
-        ('operator_interface', '0012_auto_20190615_1011'),
-    ]
+    dependencies = [("operator_interface", "0012_auto_20190615_1011")]
 
     operations = [
-        migrations.RemoveField(
-            model_name='conversationrating',
-            name='conversation',
-        ),
+        migrations.RemoveField(model_name="conversationrating", name="conversation"),
         migrations.AddField(
-            model_name='conversationrating',
-            name='sender_id',
+            model_name="conversationrating",
+            name="sender_id",
             field=models.CharField(default=None, max_length=255),
             preserve_default=False,
         ),

@@ -5,14 +5,10 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
 
-    dependencies = [
-        ('operator_interface', '0029_remove_conversation_noonce'),
-    ]
+    dependencies = [("operator_interface", "0029_remove_conversation_noonce")]
 
     operations = [
         migrations.AddField(
-            model_name='message',
-            name='end',
-            field=models.BooleanField(default=False),
-        ),
+            model_name="message", name="end", field=models.BooleanField(default=False)
+        )
     ]

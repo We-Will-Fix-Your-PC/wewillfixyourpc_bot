@@ -29,59 +29,58 @@ ALLOWED_HOSTS = [os.getenv("HOST", "bot.cardifftec.uk")]
 
 # Application definition
 INSTALLED_APPS = [
-    'django.contrib.admin',
-    'django.contrib.auth',
-    'django.contrib.contenttypes',
-    'django.contrib.sessions',
-    'django.contrib.messages',
-    'django.contrib.staticfiles',
-    'channels',
-    'djsingleton',
-    'phonenumber_field',
-    'fulfillment',
-    'facebook',
-    'twitter',
-    'telegram_bot',
-    'azure_bot',
-    'operator_interface',
-    'payment',
-    'rasa_api',
-    'gactions',
-    'corsheaders',
+    "django.contrib.admin",
+    "django.contrib.auth",
+    "django.contrib.contenttypes",
+    "django.contrib.sessions",
+    "django.contrib.messages",
+    "django.contrib.staticfiles",
+    "channels",
+    "djsingleton",
+    "phonenumber_field",
+    "fulfillment",
+    "facebook",
+    "twitter",
+    "telegram_bot",
+    "azure_bot",
+    "operator_interface",
+    "payment",
+    "rasa_api",
+    "gactions",
+    "corsheaders",
 ]
 
 MIDDLEWARE = [
-    'django.middleware.security.SecurityMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.http.ConditionalGetMiddleware',
-    'corsheaders.middleware.CorsMiddleware',
-    'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    "django.middleware.security.SecurityMiddleware",
+    "django.contrib.sessions.middleware.SessionMiddleware",
+    "django.middleware.http.ConditionalGetMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
+    "django.middleware.common.CommonMiddleware",
+    "django.middleware.csrf.CsrfViewMiddleware",
+    "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "django.contrib.messages.middleware.MessageMiddleware",
+    "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
-ROOT_URLCONF = 'wewillfixyourpc_bot.urls'
+ROOT_URLCONF = "wewillfixyourpc_bot.urls"
 
 TEMPLATES = [
     {
-        'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [os.path.join(BASE_DIR, 'templates')]
-        ,
-        'APP_DIRS': True,
-        'OPTIONS': {
-            'context_processors': [
-                'django.template.context_processors.debug',
-                'django.template.context_processors.request',
-                'django.contrib.auth.context_processors.auth',
-                'django.contrib.messages.context_processors.messages',
-            ],
+        "BACKEND": "django.template.backends.django.DjangoTemplates",
+        "DIRS": [os.path.join(BASE_DIR, "templates")],
+        "APP_DIRS": True,
+        "OPTIONS": {
+            "context_processors": [
+                "django.template.context_processors.debug",
+                "django.template.context_processors.request",
+                "django.contrib.auth.context_processors.auth",
+                "django.contrib.messages.context_processors.messages",
+            ]
         },
-    },
+    }
 ]
 
-WSGI_APPLICATION = 'wewillfixyourpc_bot.wsgi.application'
+WSGI_APPLICATION = "wewillfixyourpc_bot.wsgi.application"
 ASGI_APPLICATION = "wewillfixyourpc_bot.routing.application"
 
 
@@ -89,22 +88,20 @@ ASGI_APPLICATION = "wewillfixyourpc_bot.routing.application"
 # https://docs.djangoproject.com/en/2.1/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'HOST': os.getenv("DB_HOST", 'localhost'),
-        'NAME': os.getenv("DB_NAME", 'bot'),
-        'USER': os.getenv("DB_USER", 'bot'),
-        'PASSWORD': os.getenv("DB_PASS"),
+    "default": {
+        "ENGINE": "django.db.backends.postgresql",
+        "HOST": os.getenv("DB_HOST", "localhost"),
+        "NAME": os.getenv("DB_NAME", "bot"),
+        "USER": os.getenv("DB_USER", "bot"),
+        "PASSWORD": os.getenv("DB_PASS"),
     }
 }
 
 CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
-        "CONFIG": {
-            "hosts": [("redis", 6379)],
-        },
-    },
+        "CONFIG": {"hosts": [("redis", 6379)]},
+    }
 }
 
 
@@ -113,26 +110,20 @@ CHANNEL_LAYERS = {
 
 AUTH_PASSWORD_VALIDATORS = [
     {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"
     },
-    {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
-    },
+    {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator"},
+    {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
+    {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
 ]
 
 
 # Internationalization
 # https://docs.djangoproject.com/en/2.1/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = "en-us"
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = "UTC"
 
 USE_I18N = True
 
@@ -148,11 +139,11 @@ SENTRY_ENVIRONMENT = os.getenv("SENTRY_ENVIRONMENT", "dev")
 
 EXTERNAL_URL_BASE = os.getenv("EXTERNAL_URL", f"https://{ALLOWED_HOSTS[0]}")
 
-STATIC_URL = f'{EXTERNAL_URL_BASE}/static/'
-STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+STATIC_URL = f"{EXTERNAL_URL_BASE}/static/"
+STATIC_ROOT = os.path.join(BASE_DIR, "static")
 
-MEDIA_URL = f'{EXTERNAL_URL_BASE}/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+MEDIA_URL = f"{EXTERNAL_URL_BASE}/media/"
+MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 
 PHONENUMBER_DEFAULT_REGION = "GB"
 
@@ -161,7 +152,7 @@ CELERY_BROKER_URL = os.getenv("CELERY_BROKER_URL", "pyamqp://")
 CELERY_TASK_SERIALIZER = "json"
 CELERY_ACCEPT_CONTENT = ["json"]
 
-with open(os.path.join(BASE_DIR, '/gpay-keys/gpay-key-test.pem'), 'rb') as f:
+with open(os.path.join(BASE_DIR, "/gpay-keys/gpay-key-test.pem"), "rb") as f:
     gpay_priv_key_test = f.read()
 
 AZURE_APP_ID = os.getenv("AZURE_APP_ID")
@@ -202,50 +193,27 @@ EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD")
 EMAIL_USE_TLS = os.getenv("EMAIL_USE_TLS", False)
 EMAIL_USE_SSL = os.getenv("EMAIL_USE_SSL", False)
 ORDER_NOTIFICATION_EMAIL = os.getenv("ORDER_NOTIFICATION_EMAIL", "q@misell.cymru")
-ORDER_NOTIFICATION_FROM = os.getenv("ORDER_CONFIRMATION_FROM", "noreply@noreply.wewillfixyourpc.co.uk")
+ORDER_NOTIFICATION_FROM = os.getenv(
+    "ORDER_CONFIRMATION_FROM", "noreply@noreply.wewillfixyourpc.co.uk"
+)
 
 CORS_ORIGIN_ALLOW_ALL = True
 CORS_ALLOW_CREDENTIALS = True
 SESSION_COOKIE_SAMESITE = None
 
 LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'handlers': {
-        'console': {
-            'level': 'DEBUG',
-            'filters': None,
-            'class': 'logging.StreamHandler',
-        },
+    "version": 1,
+    "disable_existing_loggers": False,
+    "handlers": {
+        "console": {"level": "DEBUG", "filters": None, "class": "logging.StreamHandler"}
     },
-    'loggers': {
-        'django': {
-            'handlers': ['console'],
-            'level': 'INFO',
-        },
-        'twitter': {
-            'handlers': ['console'],
-            'level': 'INFO',
-        },
-        'facebook': {
-            'handlers': ['console'],
-            'level': 'INFO',
-        },
-        'telegram_bot': {
-            'handlers': ['console'],
-            'level': 'INFO',
-        },
-        'gactions': {
-            'handlers': ['console'],
-            'level': 'DEBUG',
-        },
-        'rasa_api': {
-            'handlers': ['console'],
-            'level': 'INFO',
-        },
-        'fulfillment': {
-            'handlers': ['console'],
-            'level': 'INFO',
-        },
+    "loggers": {
+        "django": {"handlers": ["console"], "level": "INFO"},
+        "twitter": {"handlers": ["console"], "level": "INFO"},
+        "facebook": {"handlers": ["console"], "level": "INFO"},
+        "telegram_bot": {"handlers": ["console"], "level": "INFO"},
+        "gactions": {"handlers": ["console"], "level": "DEBUG"},
+        "rasa_api": {"handlers": ["console"], "level": "INFO"},
+        "fulfillment": {"handlers": ["console"], "level": "INFO"},
     },
 }

@@ -31,10 +31,22 @@ class IMEIField(forms.CharField):
 
 
 class UnlockForm(forms.Form):
-    name = forms.CharField(label='Your name', max_length=255,
-                           widget=forms.TextInput(attrs={"autocomplete": "name"}))
-    email = forms.EmailField(label='Your email', max_length=255,
-                             widget=forms.TextInput(attrs={"autocomplete": "email", "type": "email"}))
-    phone = PhoneNumberField(label='Your current phone number',
-                             widget=forms.TextInput(attrs={"autocomplete": "tel", "type": "phone", "autofocus": ""}))
-    imei = IMEIField(label="The phone's IMEI (this can be found by dialing *#06#)", max_length=15)
+    name = forms.CharField(
+        label="Your name",
+        max_length=255,
+        widget=forms.TextInput(attrs={"autocomplete": "name"}),
+    )
+    email = forms.EmailField(
+        label="Your email",
+        max_length=255,
+        widget=forms.TextInput(attrs={"autocomplete": "email", "type": "email"}),
+    )
+    phone = PhoneNumberField(
+        label="Your current phone number",
+        widget=forms.TextInput(
+            attrs={"autocomplete": "tel", "type": "phone", "autofocus": ""}
+        ),
+    )
+    imei = IMEIField(
+        label="The phone's IMEI (this can be found by dialing *#06#)", max_length=15
+    )

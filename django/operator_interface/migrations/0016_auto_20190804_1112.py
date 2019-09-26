@@ -5,24 +5,20 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
 
-    dependencies = [
-        ('operator_interface', '0015_paymentmessage'),
-    ]
+    dependencies = [("operator_interface", "0015_paymentmessage")]
 
     operations = [
         migrations.AddField(
-            model_name='message',
-            name='image',
-            field=models.ImageField(blank=True, null=True, upload_to=''),
+            model_name="message",
+            name="image",
+            field=models.ImageField(blank=True, null=True, upload_to=""),
         ),
         migrations.AddField(
-            model_name='message',
-            name='read',
-            field=models.BooleanField(default=False),
+            model_name="message", name="read", field=models.BooleanField(default=False)
         ),
         migrations.AlterField(
-            model_name='message',
-            name='text',
-            field=models.TextField(blank=True, default=''),
+            model_name="message",
+            name="text",
+            field=models.TextField(blank=True, default=""),
         ),
     ]

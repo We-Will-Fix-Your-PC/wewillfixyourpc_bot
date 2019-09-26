@@ -5,21 +5,19 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
 
-    dependencies = [
-        ('fulfillment', '0006_ipadrepair'),
-    ]
+    dependencies = [("fulfillment", "0006_ipadrepair")]
 
     operations = [
         migrations.AddField(
-            model_name='ipadrepair',
-            name='repair_time',
-            field=models.CharField(default='', max_length=255),
+            model_name="ipadrepair",
+            name="repair_time",
+            field=models.CharField(default="", max_length=255),
             preserve_default=False,
         ),
         migrations.AddField(
-            model_name='iphonerepair',
-            name='repair_time',
-            field=models.CharField(default='', max_length=255),
+            model_name="iphonerepair",
+            name="repair_time",
+            field=models.CharField(default="", max_length=255),
             preserve_default=False,
         ),
     ]

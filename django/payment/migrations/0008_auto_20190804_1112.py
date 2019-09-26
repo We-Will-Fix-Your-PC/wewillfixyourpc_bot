@@ -6,14 +6,14 @@ import phonenumber_field.modelfields
 
 class Migration(migrations.Migration):
 
-    dependencies = [
-        ('payment', '0007_auto_20190803_0828'),
-    ]
+    dependencies = [("payment", "0007_auto_20190803_0828")]
 
     operations = [
         migrations.AlterField(
-            model_name='customer',
-            name='phone',
-            field=phonenumber_field.modelfields.PhoneNumberField(max_length=128, region=None),
-        ),
+            model_name="customer",
+            name="phone",
+            field=phonenumber_field.modelfields.PhoneNumberField(
+                max_length=128, region=None
+            ),
+        )
     ]

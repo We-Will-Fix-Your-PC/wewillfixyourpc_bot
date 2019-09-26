@@ -5,19 +5,17 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
 
-    dependencies = [
-        ('operator_interface', '0027_auto_20190831_1627'),
-    ]
+    dependencies = [("operator_interface", "0027_auto_20190831_1627")]
 
     operations = [
         migrations.AlterField(
-            model_name='conversation',
-            name='noonce',
-            field=models.CharField(blank=True, default='', max_length=255, null=True),
+            model_name="conversation",
+            name="noonce",
+            field=models.CharField(blank=True, default="", max_length=255, null=True),
         ),
         migrations.AlterField(
-            model_name='conversation',
-            name='platform_from_id',
-            field=models.TextField(blank=True, default='', null=True),
+            model_name="conversation",
+            name="platform_from_id",
+            field=models.TextField(blank=True, default="", null=True),
         ),
     ]

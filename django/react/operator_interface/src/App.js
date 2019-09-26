@@ -495,7 +495,7 @@ class App extends Component {
                                 return <ListItem key={c.c.id} onClick={() => this.selectConversation(c.c.id)}>
                                     <ListItemGraphic graphic={<img src={c.c.customer_pic} alt=""/>}/>
                                     <ListItemText
-                                        primaryText={c.c.customer_name}
+                                        primaryText={`${c.c.customer_name} - ${c.c.platform_name}`}
                                         secondaryText={(c.lastMsg.direction === "O" ? "Them: " : "You: ") + c.lastMsg.text}/>
                                     {!c.c.agent_responding ?
                                         <ListItemMeta meta={<MaterialIcon icon='notification_important'/>}/> : null}

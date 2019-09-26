@@ -32,4 +32,4 @@ python-magic
 pyjwt
 mastercard-oauth1-signer
 google-auth
-mozilla-django-oidc
+https://github.com/Peter-Slump/python-keycloak-client.git

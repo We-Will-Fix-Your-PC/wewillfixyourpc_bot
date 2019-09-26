@@ -5,14 +5,15 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
 
-    dependencies = [
-        ('rasa_api', '0006_auto_20190805_2017'),
-    ]
+    dependencies = [("rasa_api", "0006_auto_20190805_2017")]
 
     operations = [
         migrations.AlterField(
-            model_name='testinguser',
-            name='platform',
-            field=models.CharField(choices=[('FB', 'Facebook'), ('TW', 'Twitter'), ('TG', 'Telegram')], max_length=2),
-        ),
+            model_name="testinguser",
+            name="platform",
+            field=models.CharField(
+                choices=[("FB", "Facebook"), ("TW", "Twitter"), ("TG", "Telegram")],
+                max_length=2,
+            ),
+        )
     ]

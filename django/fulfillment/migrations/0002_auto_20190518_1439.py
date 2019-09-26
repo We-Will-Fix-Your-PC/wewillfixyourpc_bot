@@ -5,30 +5,32 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
 
-    dependencies = [
-        ('fulfillment', '0001_initial'),
-    ]
+    dependencies = [("fulfillment", "0001_initial")]
 
     operations = [
         migrations.CreateModel(
-            name='OpeningHoursOverride',
+            name="OpeningHoursOverride",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('day', models.DateField()),
-                ('closed', models.BooleanField()),
-                ('open', models.TimeField(blank=True)),
-                ('close', models.TimeField(blank=True)),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("day", models.DateField()),
+                ("closed", models.BooleanField()),
+                ("open", models.TimeField(blank=True)),
+                ("close", models.TimeField(blank=True)),
             ],
         ),
-        migrations.DeleteModel(
-            name='OpeningHoursOverrides',
+        migrations.DeleteModel(name="OpeningHoursOverrides"),
+        migrations.AlterModelOptions(
+            name="contactdetails", options={"verbose_name_plural": "Contact details"}
         ),
         migrations.AlterModelOptions(
-            name='contactdetails',
-            options={'verbose_name_plural': 'Contact details'},
-        ),
-        migrations.AlterModelOptions(
-            name='openinghours',
-            options={'verbose_name_plural': 'Opening hours'},
+            name="openinghours", options={"verbose_name_plural": "Opening hours"}
         ),
     ]

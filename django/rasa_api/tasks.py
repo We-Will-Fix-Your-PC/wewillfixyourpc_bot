@@ -21,7 +21,7 @@ def handle_message(mid):
     text = message.text
 
     if text:
-        logging.info(f"Got message of \"{text}\" to process with rasa")
+        logging.info(f'Got message of "{text}" to process with rasa')
 
         return handle_text(conversation, text)
 
@@ -30,7 +30,7 @@ def handle_message(mid):
 def handle_event(cid, event):
     conversation = Conversation.objects.get(id=cid)
 
-    logging.info(f"Got event of \"{event}\" to process with rasa")
+    logging.info(f'Got event of "{event}" to process with rasa')
 
     if event == "WELCOME":
         return handle_text(conversation, "/greet")
@@ -42,12 +42,11 @@ def handle_text(conversation, text):
     operator_interface.tasks.process_typing.delay(conversation.id)
 
     sender = f"{conversation.platform}:{conversation.platform_id}"
-    if conversation.noonce:
-        sender += f":{conversation.noonce}"
-    r = requests.post(f"{settings.RASA_HTTP_URL}/webhooks/rest/webhook?stream=true", json={
-        "sender": sender,
-        "message": text
-    }, stream=True)
+    r = requests.post(
+        f"{settings.RASA_HTTP_URL}/webhooks/rest/webhook?stream=true",
+        json={"sender": sender, "message": text},
+        stream=True,
+    )
     r.raise_for_status()
 
     items = r.iter_lines(None, True)
@@ -64,7 +63,11 @@ def handle_text(conversation, text):
             if not data.get("recipient_id"):
                 continue
 
-            message = Message(conversation=conversation, direction=Message.TO_CUSTOMER, message_id=uuid.uuid4())
+            message = Message(
+                conversation=conversation,
+                direction=Message.TO_CUSTOMER,
+                message_id=uuid.uuid4(),
+            )
 
             if data.get("text"):
                 message.text = data["text"]
@@ -88,12 +91,14 @@ def handle_text(conversation, text):
                     conversation.save()
                     operator_interface.consumers.conversation_saved(None, conversation)
 
-                    operator_interface.tasks.send_message_notifications.delay({
-                        "type": "alert",
-                        "cid": conversation.id,
-                        "name": conversation.customer_name,
-                        "text": "Human needed!"
-                    })
+                    operator_interface.tasks.send_message_notifications.delay(
+                        {
+                            "type": "alert",
+                            "cid": conversation.id,
+                            "name": conversation.customer_name,
+                            "text": "Human needed!",
+                        }
+                    )
                     continue
                 elif event_type == "request":
                     message.text = custom.get("text")
@@ -112,7 +117,9 @@ def handle_text(conversation, text):
 
             if data.get("buttons"):
                 for button in data["buttons"]:
-                    suggestion = MessageSuggestion(message=message, suggested_response=button["payload"])
+                    suggestion = MessageSuggestion(
+                        message=message, suggested_response=button["payload"]
+                    )
                     suggestion.save()
 
             out_data.append(operator_interface.tasks.process_message(message.id))

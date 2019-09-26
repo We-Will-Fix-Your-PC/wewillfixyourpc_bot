@@ -2,6 +2,4 @@ from django.urls import path
 
 from . import consumers
 
-websocket_urlpatterns = [
-    path('ws/operator/', consumers.OperatorConsumer),
-]
+websocket_urlpatterns = [path("ws/operator/", consumers.OperatorConsumer)]

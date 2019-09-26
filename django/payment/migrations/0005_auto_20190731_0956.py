@@ -5,14 +5,15 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
 
-    dependencies = [
-        ('payment', '0004_threedsdata_timestamp'),
-    ]
+    dependencies = [("payment", "0004_threedsdata_timestamp")]
 
     operations = [
         migrations.AlterField(
-            model_name='payment',
-            name='state',
-            field=models.CharField(choices=[('O', 'Opened'), ('P', 'Paid'), ('C', 'Complete')], max_length=1),
-        ),
+            model_name="payment",
+            name="state",
+            field=models.CharField(
+                choices=[("O", "Opened"), ("P", "Paid"), ("C", "Complete")],
+                max_length=1,
+            ),
+        )
     ]

@@ -6,20 +6,32 @@ import django.db.models.deletion
 
 class Migration(migrations.Migration):
 
-    dependencies = [
-        ('payment', '0002_auto_20190729_1134'),
-    ]
+    dependencies = [("payment", "0002_auto_20190729_1134")]
 
     operations = [
         migrations.CreateModel(
-            name='ThreeDSData',
+            name="ThreeDSData",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('oneTime3DsToken', models.TextField()),
-                ('redirectURL', models.TextField()),
-                ('orderId', models.TextField()),
-                ('sessionId', models.CharField(max_length=255)),
-                ('payment', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='payment.Payment')),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("oneTime3DsToken", models.TextField()),
+                ("redirectURL", models.TextField()),
+                ("orderId", models.TextField()),
+                ("sessionId", models.CharField(max_length=255)),
+                (
+                    "payment",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="payment.Payment",
+                    ),
+                ),
             ],
-        ),
+        )
     ]

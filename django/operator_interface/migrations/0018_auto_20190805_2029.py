@@ -5,14 +5,12 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
 
-    dependencies = [
-        ('operator_interface', '0017_auto_20190805_2016'),
-    ]
+    dependencies = [("operator_interface", "0017_auto_20190805_2016")]
 
     operations = [
         migrations.AlterField(
-            model_name='message',
-            name='image',
+            model_name="message",
+            name="image",
             field=models.URLField(blank=True, null=True),
-        ),
+        )
     ]

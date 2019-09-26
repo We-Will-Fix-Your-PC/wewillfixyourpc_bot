@@ -221,3 +221,5 @@ node_modules
 
 django/secrets/
 gactions/creds.data
+
+.sass-cache

@@ -26,57 +26,55 @@ class NotificationSubscription(models.Model):
 
 
 class Conversation(models.Model):
-    FACEBOOK = 'FB'
-    TWITTER = 'TW'
-    TELEGRAM = 'TG'
-    AZURE = 'AZ'
-    GOOGLE_ACTIONS = 'GA'
+    FACEBOOK = "FB"
+    TWITTER = "TW"
+    TELEGRAM = "TG"
+    AZURE = "AZ"
+    GOOGLE_ACTIONS = "GA"
     PLATFORM_CHOICES = (
-        (FACEBOOK, 'Facebook'),
-        (TWITTER, 'Twitter'),
-        (TELEGRAM, 'Telegram'),
-        (AZURE, 'Azure'),
-        (GOOGLE_ACTIONS, 'Actions on Google'),
+        (FACEBOOK, "Facebook"),
+        (TWITTER, "Twitter"),
+        (TELEGRAM, "Telegram"),
+        (AZURE, "Azure"),
+        (GOOGLE_ACTIONS, "Actions on Google"),
     )
 
     platform = models.CharField(max_length=2, choices=PLATFORM_CHOICES)
     platform_id = models.CharField(max_length=255)
-    platform_from_id = models.TextField(blank=True, null=True, default="")
-    noonce = models.CharField(max_length=255, blank=True, null=True)
     agent_responding = models.BooleanField(default=True)
-    timezone = models.CharField(max_length=255, blank=True, null=True, default=None)
-    current_agent = models.ForeignKey(User, blank=True, null=True, default=None, on_delete=models.SET_DEFAULT)
-    customer_name = models.CharField(max_length=255, blank=True, null=True)
-    customer_username = models.CharField(max_length=255, blank=True, null=True)
-    customer_pic = models.ImageField(blank=True, null=True)
-    customer_email = models.EmailField(blank=True, null=True)
-    customer_phone = PhoneNumberField(blank=True, null=True)
-    customer_locale = models.CharField(max_length=255, blank=True, null=True)
-    customer_gender = models.CharField(max_length=255, blank=True, null=True)
+    current_agent = models.ForeignKey(
+        User, blank=True, null=True, default=None, on_delete=models.SET_DEFAULT
+    )
+    conversation_user_id = models.UUIDField(blank=True, null=True)
+    conversation_name = models.CharField(max_length=255, blank=True, null=True)
+    conversation_pic = models.ImageField(blank=True, null=True)
+
+    additional_conversation_data = models.TextField(blank=True, null=True)
 
     def __str__(self):
         platform = list(filter(lambda p: p[0] == self.platform, self.PLATFORM_CHOICES))
         platform = platform[0][1] if len(platform) else "UNKNOWN"
-        return f"{platform} - {self.customer_name}"
+        return f"{platform} - {self.conversation_name}"
 
     @classmethod
-    def get_or_create_conversation(cls, platform, platform_id, customer_name=None, customer_username=None,
-                                   customer_pic=None, from_id=None):
+    def get_or_create_conversation(
+        cls, platform, platform_id, conversation_name=None, conversation_pic=None
+    ):
         try:
             conv = cls.objects.get(platform=platform, platform_id=platform_id)
-            if customer_name is not None:
-                conv.customer_name = customer_name
-            if customer_username is not None:
-                conv.customer_username = customer_username
-            if customer_pic is not None:
-                conv.customer_pic = customer_pic
-            if from_id is not None:
-                conv.platform_from_id = from_id
+            if conversation_name is not None:
+                conv.conversation_name = conversation_name
+            if conversation_pic is not None:
+                conv.conversation_pic = conversation_pic
             conv.save()
             return conv
         except cls.DoesNotExist:
-            conv = cls(platform=platform, platform_id=platform_id, customer_name=customer_name,
-                       customer_username=customer_username, customer_pic=customer_pic, platform_from_id=from_id)
+            conv = cls(
+                platform=platform,
+                platform_id=platform_id,
+                conversation_name=conversation_name,
+                conversation_pic=conversation_pic,
+            )
             conv.save()
             return conv
 
@@ -95,12 +93,9 @@ class ConversationRating(models.Model):
 
 
 class Message(models.Model):
-    TO_CUSTOMER = 'I'
-    FROM_CUSTOMER = 'O'
-    DIRECTION_CHOICES = (
-        (TO_CUSTOMER, 'To customer'),
-        (FROM_CUSTOMER, 'From customer')
-    )
+    TO_CUSTOMER = "I"
+    FROM_CUSTOMER = "O"
+    DIRECTION_CHOICES = ((TO_CUSTOMER, "To customer"), (FROM_CUSTOMER, "From customer"))
 
     conversation = models.ForeignKey(Conversation, on_delete=models.CASCADE)
     message_id = models.CharField(max_length=255)
@@ -111,16 +106,27 @@ class Message(models.Model):
     read = models.BooleanField(default=False)
     delivered = models.BooleanField(default=False)
     image = models.URLField(blank=True, null=True)
-    payment_request = models.ForeignKey(payment.models.Payment, on_delete=models.SET_NULL, blank=True, null=True,
-                                        related_name='request_message')
-    payment_confirm = models.ForeignKey(payment.models.Payment, on_delete=models.SET_NULL, blank=True, null=True,
-                                        related_name='confirm_message')
+    payment_request = models.ForeignKey(
+        payment.models.Payment,
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+        related_name="request_message",
+    )
+    payment_confirm = models.ForeignKey(
+        payment.models.Payment,
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+        related_name="confirm_message",
+    )
     card = models.TextField(blank=True, null=True)
+    selection = models.TextField(blank=True, null=True)
     request = models.CharField(max_length=255, null=True, blank=True)
     end = models.BooleanField(default=False, null=True)
 
     class Meta:
-        ordering = ('timestamp',)
+        ordering = ("timestamp",)
 
     def __str__(self):
         return f"{str(self.conversation)} - {self.timestamp.isoformat()}"

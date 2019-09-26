@@ -6,15 +6,15 @@ import django.utils.timezone
 
 class Migration(migrations.Migration):
 
-    dependencies = [
-        ('payment', '0003_threedsdata'),
-    ]
+    dependencies = [("payment", "0003_threedsdata")]
 
     operations = [
         migrations.AddField(
-            model_name='threedsdata',
-            name='timestamp',
-            field=models.DateTimeField(auto_now_add=True, default=django.utils.timezone.now),
+            model_name="threedsdata",
+            name="timestamp",
+            field=models.DateTimeField(
+                auto_now_add=True, default=django.utils.timezone.now
+            ),
             preserve_default=False,
-        ),
+        )
     ]

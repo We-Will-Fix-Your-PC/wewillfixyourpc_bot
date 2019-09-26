@@ -5,13 +5,6 @@ from django.db import migrations
 
 class Migration(migrations.Migration):
 
-    dependencies = [
-        ('operator_interface', '0028_auto_20190831_1628'),
-    ]
+    dependencies = [("operator_interface", "0028_auto_20190831_1628")]
 
-    operations = [
-        migrations.RemoveField(
-            model_name='conversation',
-            name='noonce',
-        ),
-    ]
+    operations = [migrations.RemoveField(model_name="conversation", name="noonce")]

@@ -6,18 +6,30 @@ import django.db.models.deletion
 
 class Migration(migrations.Migration):
 
-    dependencies = [
-        ('operator_interface', '0006_auto_20190521_1056'),
-    ]
+    dependencies = [("operator_interface", "0006_auto_20190521_1056")]
 
     operations = [
         migrations.CreateModel(
-            name='ConversationRating',
+            name="ConversationRating",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('time', models.DateTimeField(auto_now_add=True)),
-                ('rating', models.PositiveSmallIntegerField()),
-                ('conversation', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='operator_interface.Conversation')),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("time", models.DateTimeField(auto_now_add=True)),
+                ("rating", models.PositiveSmallIntegerField()),
+                (
+                    "conversation",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="operator_interface.Conversation",
+                    ),
+                ),
             ],
-        ),
+        )
     ]

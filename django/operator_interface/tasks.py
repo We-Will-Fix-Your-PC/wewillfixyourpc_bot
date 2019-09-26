@@ -21,10 +21,9 @@ channel_layer = get_channel_layer()
 
 @shared_task
 def send_message_to_interface(mid):
-    async_to_sync(channel_layer.group_send)("operator_interface", {
-        "type": "message",
-        "mid": mid
-    })
+    async_to_sync(channel_layer.group_send)(
+        "operator_interface", {"type": "message", "mid": mid}
+    )
 
 
 @shared_task
@@ -37,8 +36,8 @@ def send_push_notification(sid, data):
             vapid_private_key=settings.PUSH_PRIV_KEY,
             vapid_claims={
                 "sub": "mailto:q@misell.cymru",
-                "aud": "https://cardifftec.uk"
-            }
+                "aud": "https://cardifftec.uk",
+            },
         )
     except WebPushException as e:
         sentry_sdk.capture_exception(e)
@@ -52,7 +51,9 @@ def send_message_notifications(data):
         subscriptions = models.NotificationSubscription.objects.all()
     else:
         conversation = models.Conversation.objects.get(id=data["cid"])
-        subscriptions = models.NotificationSubscription.objects.filter(user=conversation.current_agent)
+        subscriptions = models.NotificationSubscription.objects.filter(
+            user=conversation.current_agent
+        )
 
     for subscription in subscriptions:
         send_push_notification.delay(subscription.id, data)
@@ -69,12 +70,14 @@ def process_message(mid):
         if conversation.agent_responding:
             return rasa_api.tasks.handle_message(mid)
         else:
-            send_message_notifications({
-                "type": "message",
-                "cid": message.conversation.id,
-                "name": message.conversation.customer_name,
-                "text": message.text
-            })
+            send_message_notifications(
+                {
+                    "type": "message",
+                    "cid": message.conversation.id,
+                    "name": message.conversation.customer_name,
+                    "text": message.text,
+                }
+            )
 
     elif message.direction == models.Message.TO_CUSTOMER:
         if conversation.platform == models.Conversation.FACEBOOK:
@@ -111,9 +114,12 @@ def hand_back(cid):
     conversation.save()
     consumers.conversation_saved(None, conversation)
     message = models.Message(
-        message_id=uuid.uuid4(), conversation=conversation, direction=models.Message.TO_CUSTOMER,
+        message_id=uuid.uuid4(),
+        conversation=conversation,
+        direction=models.Message.TO_CUSTOMER,
         text=f"You've been handed back to the automated assistant.\n"
-             f"You can always request an agent at any time you wish.")
+        f"You can always request an agent at any time you wish.",
+    )
     message.save()
     process_message(message.id)
 
@@ -137,8 +143,12 @@ def take_over(cid, uid):
     conversation.save()
     consumers.conversation_saved(None, conversation)
     message = models.Message(
-        message_id=uuid.uuid4(), conversation=conversation, direction=models.Message.TO_CUSTOMER, user=user,
-        text=f"Hello I'm {user.first_name} and I'll be taking over from here")
+        message_id=uuid.uuid4(),
+        conversation=conversation,
+        direction=models.Message.TO_CUSTOMER,
+        user=user,
+        text=f"Hello I'm {user.first_name} and I'll be taking over from here",
+    )
     message.save()
     process_message(message.id)
 
