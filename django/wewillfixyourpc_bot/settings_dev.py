@@ -32,66 +32,63 @@ ALLOWED_HOSTS = ["*"]
 
 # Application definition
 INSTALLED_APPS = [
-    'django.contrib.admin',
-    'django.contrib.auth',
-    'keycloak_auth',
-    'django.contrib.contenttypes',
-    'django.contrib.sessions',
-    'django.contrib.messages',
-    'django.contrib.staticfiles',
-    'channels',
-    'djsingleton',
-    'phonenumber_field',
-    'fulfillment',
-    'facebook',
-    'twitter',
-    'telegram_bot',
-    'azure_bot',
-    'operator_interface',
-    'payment',
-    'rasa_api',
-    'gactions',
-    'corsheaders',
+    "django.contrib.admin",
+    "django.contrib.auth",
+    "keycloak_auth",
+    "django.contrib.contenttypes",
+    "django.contrib.sessions",
+    "django.contrib.messages",
+    "django.contrib.staticfiles",
+    "channels",
+    "djsingleton",
+    "phonenumber_field",
+    "fulfillment",
+    "facebook",
+    "twitter",
+    "telegram_bot",
+    "azure_bot",
+    "operator_interface",
+    "payment",
+    "rasa_api",
+    "gactions",
+    "corsheaders",
 ]
 
 MIDDLEWARE = [
-    'django.middleware.security.SecurityMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.http.ConditionalGetMiddleware',
-    'corsheaders.middleware.CorsMiddleware',
-    'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'keycloak_auth.middleware.OIDCMiddleware',
-    'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    "django.middleware.security.SecurityMiddleware",
+    "django.contrib.sessions.middleware.SessionMiddleware",
+    "django.middleware.http.ConditionalGetMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
+    "django.middleware.common.CommonMiddleware",
+    "django.middleware.csrf.CsrfViewMiddleware",
+    "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "keycloak_auth.middleware.OIDCMiddleware",
+    "django.contrib.messages.middleware.MessageMiddleware",
+    "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
-ROOT_URLCONF = 'wewillfixyourpc_bot.urls'
+ROOT_URLCONF = "wewillfixyourpc_bot.urls"
 
 TEMPLATES = [
     {
-        'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [os.path.join(BASE_DIR, 'templates')]
-        ,
-        'APP_DIRS': True,
-        'OPTIONS': {
-            'context_processors': [
-                'django.template.context_processors.debug',
-                'django.template.context_processors.request',
-                'django.contrib.auth.context_processors.auth',
-                'django.contrib.messages.context_processors.messages',
-            ],
+        "BACKEND": "django.template.backends.django.DjangoTemplates",
+        "DIRS": [os.path.join(BASE_DIR, "templates")],
+        "APP_DIRS": True,
+        "OPTIONS": {
+            "context_processors": [
+                "django.template.context_processors.debug",
+                "django.template.context_processors.request",
+                "django.contrib.auth.context_processors.auth",
+                "django.contrib.messages.context_processors.messages",
+            ]
         },
-    },
+    }
 ]
 
-WSGI_APPLICATION = 'wewillfixyourpc_bot.wsgi.application'
+WSGI_APPLICATION = "wewillfixyourpc_bot.wsgi.application"
 ASGI_APPLICATION = "wewillfixyourpc_bot.routing.application"
 
-AUTHENTICATION_BACKENDS = [
-    "keycloak_auth.auth.KeycloakAuthorization"
-]
+AUTHENTICATION_BACKENDS = ["keycloak_auth.auth.KeycloakAuthorization"]
 
 LOGIN_URL = "oidc_login"
 LOGOUT_REDIRECT_URL = "oidc_logout"
@@ -100,22 +97,18 @@ LOGOUT_REDIRECT_URL = "oidc_logout"
 # https://docs.djangoproject.com/en/2.1/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
-        'OPTIONS': {
-            'timeout': 20,
-        }
+    "default": {
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": os.path.join(BASE_DIR, "db.sqlite3"),
+        "OPTIONS": {"timeout": 20},
     }
 }
 
 CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
-        "CONFIG": {
-            "hosts": [("localhost", 6379)],
-        },
-    },
+        "CONFIG": {"hosts": [("localhost", 6379)]},
+    }
 }
 
 # Password validation
@@ -123,26 +116,20 @@ CHANNEL_LAYERS = {
 
 AUTH_PASSWORD_VALIDATORS = [
     {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"
     },
-    {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
-    },
+    {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator"},
+    {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
+    {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
 ]
 
 
 # Internationalization
 # https://docs.djangoproject.com/en/2.1/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = "en-us"
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = "UTC"
 
 USE_I18N = True
 
@@ -155,11 +142,11 @@ SENTRY_ENVIRONMENT = "dev"
 
 EXTERNAL_URL_BASE = "https://wewillfixyourpc-bot.eu.ngrok.io"
 
-STATIC_URL = f'{EXTERNAL_URL_BASE}/static/'
-STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+STATIC_URL = f"{EXTERNAL_URL_BASE}/static/"
+STATIC_ROOT = os.path.join(BASE_DIR, "static")
 
-MEDIA_URL = f'{EXTERNAL_URL_BASE}/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+MEDIA_URL = f"{EXTERNAL_URL_BASE}/media/"
+MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 
 PHONENUMBER_DEFAULT_REGION = "GB"
 
@@ -182,9 +169,9 @@ with open(os.path.join(BASE_DIR, "secrets/masterpass.json")) as f:
     masterpass_conf = json.load(f)
 with open(os.path.join(BASE_DIR, "secrets/keycloak.json")) as f:
     keycloak_conf = json.load(f)
-with open(os.path.join(BASE_DIR, 'secrets/gpay-key-test.pem'), 'rb') as f:
+with open(os.path.join(BASE_DIR, "secrets/gpay-key-test.pem"), "rb") as f:
     gpay_priv_key_test = f.read()
-with open(os.path.join(BASE_DIR, 'secrets/masterpass-test.p12'), 'rb') as f:
+with open(os.path.join(BASE_DIR, "secrets/masterpass-test.p12"), "rb") as f:
     masterpass_test_p12 = f.read()
 
 AZURE_APP_ID = azure_conf["app-id"]
@@ -220,7 +207,7 @@ DEFAULT_PAYMENT_ENVIRONMENT = "T"
 
 ORDER_NOTIFICATION_EMAIL = "q@misell.cymru"
 ORDER_NOTIFICATION_FROM = "noreply@noreply.wewillfixyourpc.co.uk"
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 
 KEYCLOAK_SERVER_URL = "https://account.cardifftec.uk/"
 KEYCLOAK_REALM = "wwfypc"
@@ -235,61 +222,27 @@ with open(os.path.join(BASE_DIR, "secrets/PUSH_PRIV_KEY")) as f:
     PUSH_PRIV_KEY = f.read()
 
 LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'handlers': {
-        'console': {
-            'level': 'DEBUG',
-            'filters': None,
-            'class': 'logging.StreamHandler',
-        },
+    "version": 1,
+    "disable_existing_loggers": False,
+    "handlers": {
+        "console": {"level": "DEBUG", "filters": None, "class": "logging.StreamHandler"}
     },
-    'loggers': {
-        'django': {
-            'handlers': ['console'],
-            'level': 'INFO',
-        },
+    "loggers": {
+        "django": {"handlers": ["console"], "level": "INFO"},
         # 'django.db.backends': {
         #     'handlers': ['console'],
         #     'level': 'DEBUG',
         # },
-        'twitter': {
-            'handlers': ['console'],
-            'level': 'DEBUG',
-        },
-        'facebook': {
-            'handlers': ['console'],
-            'level': 'DEBUG',
-        },
-        'telegram_bot': {
-            'handlers': ['console'],
-            'level': 'DEBUG',
-        },
-        'azure_bot': {
-            'handlers': ['console'],
-            'level': 'DEBUG',
-        },
-        'gactions': {
-            'handlers': ['console'],
-            'level': 'DEBUG',
-        },
-        'rasa_api': {
-            'handlers': ['console'],
-            'level': 'DEBUG',
-        },
-        'fulfillment': {
-            'handlers': ['console'],
-            'level': 'DEBUG',
-        },
-        'keycloak_auth': {
-            'handlers': ['console'],
-            'level': 'DEBUG'
-        },
-        'keycloak': {
-            'handlers': ['console'],
-            'level': 'DEBUG'
-        }
+        "twitter": {"handlers": ["console"], "level": "DEBUG"},
+        "facebook": {"handlers": ["console"], "level": "DEBUG"},
+        "telegram_bot": {"handlers": ["console"], "level": "DEBUG"},
+        "azure_bot": {"handlers": ["console"], "level": "DEBUG"},
+        "gactions": {"handlers": ["console"], "level": "DEBUG"},
+        "rasa_api": {"handlers": ["console"], "level": "DEBUG"},
+        "fulfillment": {"handlers": ["console"], "level": "DEBUG"},
+        "keycloak_auth": {"handlers": ["console"], "level": "DEBUG"},
+        "keycloak": {"handlers": ["console"], "level": "DEBUG"},
     },
 }
 
-DATA_UPLOAD_MAX_MEMORY_SIZE = 10*1024*1024
+DATA_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024

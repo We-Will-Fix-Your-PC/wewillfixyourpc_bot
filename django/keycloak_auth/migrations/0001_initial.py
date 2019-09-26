@@ -8,28 +8,43 @@ class Migration(migrations.Migration):
 
     initial = True
 
-    dependencies = [
-    ]
+    dependencies = []
 
     operations = [
         migrations.CreateModel(
-            name='Nonce',
+            name="Nonce",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('state', models.UUIDField(default=uuid.uuid4, unique=True)),
-                ('redirect_uri', models.CharField(max_length=255)),
-                ('next_path', models.CharField(max_length=255, null=True)),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("state", models.UUIDField(default=uuid.uuid4, unique=True)),
+                ("redirect_uri", models.CharField(max_length=255)),
+                ("next_path", models.CharField(max_length=255, null=True)),
             ],
         ),
         migrations.CreateModel(
-            name='RemoteUserOpenIdConnectProfile',
+            name="RemoteUserOpenIdConnectProfile",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('access_token', models.TextField(null=True)),
-                ('expires_before', models.DateTimeField(null=True)),
-                ('refresh_token', models.TextField(null=True)),
-                ('refresh_expires_before', models.DateTimeField(null=True)),
-                ('sub', models.CharField(max_length=255, unique=True)),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("access_token", models.TextField(null=True)),
+                ("expires_before", models.DateTimeField(null=True)),
+                ("refresh_token", models.TextField(null=True)),
+                ("refresh_expires_before", models.DateTimeField(null=True)),
+                ("sub", models.CharField(max_length=255, unique=True)),
             ],
         ),
     ]

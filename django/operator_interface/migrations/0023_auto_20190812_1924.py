@@ -9,18 +9,27 @@ class Migration(migrations.Migration):
 
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-        ('operator_interface', '0022_auto_20190808_2135'),
+        ("operator_interface", "0022_auto_20190808_2135"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='conversation',
-            name='current_agent',
-            field=models.ForeignKey(blank=True, default=None, null=True, on_delete=django.db.models.deletion.SET_DEFAULT, to=settings.AUTH_USER_MODEL),
+            model_name="conversation",
+            name="current_agent",
+            field=models.ForeignKey(
+                blank=True,
+                default=None,
+                null=True,
+                on_delete=django.db.models.deletion.SET_DEFAULT,
+                to=settings.AUTH_USER_MODEL,
+            ),
         ),
         migrations.AlterField(
-            model_name='conversation',
-            name='platform',
-            field=models.CharField(choices=[('FB', 'Facebook'), ('TW', 'Twitter'), ('TG', 'Telegram')], max_length=2),
+            model_name="conversation",
+            name="platform",
+            field=models.CharField(
+                choices=[("FB", "Facebook"), ("TW", "Twitter"), ("TG", "Telegram")],
+                max_length=2,
+            ),
         ),
     ]

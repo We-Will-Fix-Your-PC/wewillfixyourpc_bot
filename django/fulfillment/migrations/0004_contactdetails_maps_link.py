@@ -5,15 +5,13 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
 
-    dependencies = [
-        ('fulfillment', '0003_auto_20190518_1439'),
-    ]
+    dependencies = [("fulfillment", "0003_auto_20190518_1439")]
 
     operations = [
         migrations.AddField(
-            model_name='contactdetails',
-            name='maps_link',
-            field=models.URLField(default=''),
+            model_name="contactdetails",
+            name="maps_link",
+            field=models.URLField(default=""),
             preserve_default=False,
-        ),
+        )
     ]

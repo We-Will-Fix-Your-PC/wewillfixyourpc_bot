@@ -5,18 +5,11 @@ from django.db import migrations
 
 class Migration(migrations.Migration):
 
-    dependencies = [
-        ('rasa_api', '0003_environmentmodel_testinguser'),
-    ]
+    dependencies = [("rasa_api", "0003_environmentmodel_testinguser")]
 
     operations = [
         migrations.RenameField(
-            model_name='testinguser',
-            old_name='platform_id',
-            new_name='sender_id',
+            model_name="testinguser", old_name="platform_id", new_name="sender_id"
         ),
-        migrations.RemoveField(
-            model_name='testinguser',
-            name='platform',
-        ),
+        migrations.RemoveField(model_name="testinguser", name="platform"),
     ]

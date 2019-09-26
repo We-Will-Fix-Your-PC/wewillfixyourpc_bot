@@ -17,9 +17,15 @@ django.setup()
 
 if not settings.DEBUG:
     sentry_sdk.init(
-        "https://efc22f89d34a46d0adffb302181ed3f9@sentry.io/1471674", environment=settings.SENTRY_ENVIRONMENT,
-        integrations=[CeleryIntegration(), DjangoIntegration(), RedisIntegration(), FlaskIntegration()],
-        release=os.getenv("RELEASE", None)
+        "https://efc22f89d34a46d0adffb302181ed3f9@sentry.io/1471674",
+        environment=settings.SENTRY_ENVIRONMENT,
+        integrations=[
+            CeleryIntegration(),
+            DjangoIntegration(),
+            RedisIntegration(),
+            FlaskIntegration(),
+        ],
+        release=os.getenv("RELEASE", None),
     )
 
 application = get_default_application()

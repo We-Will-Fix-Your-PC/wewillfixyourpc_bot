@@ -7,7 +7,7 @@ import django.utils.timezone
 
 from . import clients, models
 
-REMOTE_SESSION_KEY = '_auth_remote_user_id'
+REMOTE_SESSION_KEY = "_auth_remote_user_id"
 
 
 def _get_user_session_key(request):
@@ -41,7 +41,7 @@ def remote_user_login(request, user, backend=None):
     :param backend:
     :return:
     """
-    session_auth_hash = ''
+    session_auth_hash = ""
     if user is None:
         user = request.user
 
@@ -59,20 +59,20 @@ def remote_user_login(request, user, backend=None):
             _, backend = backends[0]
         else:
             raise ValueError(
-                'You have multiple authentication backends configured and '
-                'therefore must provide the `backend` argument or set the '
-                '`backend` attribute on the user.'
+                "You have multiple authentication backends configured and "
+                "therefore must provide the `backend` argument or set the "
+                "`backend` attribute on the user."
             )
 
-    if not hasattr(user, 'identifier'):
+    if not hasattr(user, "identifier"):
         raise ValueError(
-            'The user does not have an identifier or the identifier is empty.'
+            "The user does not have an identifier or the identifier is empty."
         )
 
     request.session[REMOTE_SESSION_KEY] = user.identifier
     request.session[django.contrib.auth.BACKEND_SESSION_KEY] = backend
     request.session[django.contrib.auth.HASH_SESSION_KEY] = session_auth_hash
-    if hasattr(request, 'user'):
+    if hasattr(request, "user"):
         request.user = user
     django.middleware.csrf.rotate_token(request)
 
@@ -88,26 +88,27 @@ class KeycloakAuthorization:
     def get_all_permissions(self, user_obj, obj=None):
         if not user_obj.is_active or user_obj.is_anonymous or obj is not None:
             return set()
-        if not hasattr(user_obj, '_keycloak_perm_cache'):
+        if not hasattr(user_obj, "_keycloak_perm_cache"):
             user_obj._keycloak_perm_cache = self.get_keycloak_permissions(
-                user_obj=user_obj)
+                user_obj=user_obj
+            )
         return user_obj._keycloak_perm_cache
 
     def get_keycloak_permissions(self, user_obj):
-        if not hasattr(user_obj, 'oidc_profile'):
+        if not hasattr(user_obj, "oidc_profile"):
             return set()
 
         rpt_decoded = clients.get_entitlement(oidc_profile=user_obj.oidc_profile)
 
         permissions = []
-        for p in rpt_decoded.get('permissions', []):
+        for p in rpt_decoded.get("permissions", []):
             if p.get("scopes"):
                 for scope in p["scopes"]:
-                    permission = p['rsname']  # type: str
+                    permission = p["rsname"]  # type: str
                     app, model = permission.rsplit(".", 1)
                     permissions.append(f"{app}.{scope}_{model}")
             else:
-                permissions.append(p['rsname'])
+                permissions.append(p["rsname"])
 
         return permissions
 
@@ -134,5 +135,6 @@ class KeycloakAuthorization:
         initiate_time = django.utils.timezone.now()
         token_response = client.authorization_code(code=code, redirect_uri=redirect_uri)
 
-        return clients.update_or_create(token_response=token_response,
-                                        initiate_time=initiate_time).user
+        return clients.update_or_create(
+            token_response=token_response, initiate_time=initiate_time
+        ).user

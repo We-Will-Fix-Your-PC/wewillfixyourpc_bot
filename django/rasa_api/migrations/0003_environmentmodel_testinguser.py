@@ -6,26 +6,51 @@ import django.db.models.deletion
 
 class Migration(migrations.Migration):
 
-    dependencies = [
-        ('rasa_api', '0002_auto_20190801_1531'),
-    ]
+    dependencies = [("rasa_api", "0002_auto_20190801_1531")]
 
     operations = [
         migrations.CreateModel(
-            name='EnvironmentModel',
+            name="EnvironmentModel",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=255)),
-                ('rasa_model', models.FileField(upload_to='')),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("name", models.CharField(max_length=255)),
+                ("rasa_model", models.FileField(upload_to="")),
             ],
         ),
         migrations.CreateModel(
-            name='TestingUser',
+            name="TestingUser",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('platform', models.CharField(choices=[('FB', 'Facebook'), ('TW', 'Twitter')], max_length=2)),
-                ('platform_id', models.CharField(max_length=255)),
-                ('environment', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='rasa_api.EnvironmentModel')),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "platform",
+                    models.CharField(
+                        choices=[("FB", "Facebook"), ("TW", "Twitter")], max_length=2
+                    ),
+                ),
+                ("platform_id", models.CharField(max_length=255)),
+                (
+                    "environment",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="rasa_api.EnvironmentModel",
+                    ),
+                ),
             ],
         ),
     ]

@@ -6,14 +6,12 @@ import django.utils.timezone
 
 class Migration(migrations.Migration):
 
-    dependencies = [
-        ('operator_interface', '0001_initial'),
-    ]
+    dependencies = [("operator_interface", "0001_initial")]
 
     operations = [
         migrations.AddField(
-            model_name='message',
-            name='timestamp',
+            model_name="message",
+            name="timestamp",
             field=models.DateTimeField(default=django.utils.timezone.now),
-        ),
+        )
     ]

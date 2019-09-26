@@ -5,14 +5,10 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
 
-    dependencies = [
-        ('payment', '0006_paymenttoken'),
-    ]
+    dependencies = [("payment", "0006_paymenttoken")]
 
     operations = [
         migrations.AlterField(
-            model_name='customer',
-            name='phone',
-            field=models.CharField(max_length=255),
-        ),
+            model_name="customer", name="phone", field=models.CharField(max_length=255)
+        )
     ]

@@ -22,9 +22,11 @@ class RemoteUserOpenIdConnectProfile(models.Model):
 
     sub = models.CharField(max_length=255, unique=True)
 
-    user = models.OneToOneField(django.conf.settings.AUTH_USER_MODEL,
-                                related_name='oidc_profile',
-                                on_delete=models.CASCADE)
+    user = models.OneToOneField(
+        django.conf.settings.AUTH_USER_MODEL,
+        related_name="oidc_profile",
+        on_delete=models.CASCADE,
+    )
 
     @property
     def is_active(self):
@@ -44,5 +46,5 @@ class RemoteUserOpenIdConnectProfile(models.Model):
         return clients.get_openid_connect_client().decode_token(
             token=self.access_token,
             keys=client.certs(),
-            algorithms=client.well_known['id_token_signing_alg_values_supported']
+            algorithms=client.well_known["id_token_signing_alg_values_supported"],
         )

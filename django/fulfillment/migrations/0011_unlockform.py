@@ -7,18 +7,30 @@ import uuid
 
 class Migration(migrations.Migration):
 
-    dependencies = [
-        ('fulfillment', '0010_auto_20190808_1529'),
-    ]
+    dependencies = [("fulfillment", "0010_auto_20190808_1529")]
 
     operations = [
         migrations.CreateModel(
-            name='UnlockForm',
+            name="UnlockForm",
             fields=[
-                ('id', models.CharField(default=uuid.uuid4, max_length=255, primary_key=True, serialize=False)),
-                ('name', models.CharField(blank=True, max_length=255, null=True)),
-                ('email', models.CharField(blank=True, max_length=255, null=True)),
-                ('phone_unlock', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='fulfillment.PhoneUnlock')),
+                (
+                    "id",
+                    models.CharField(
+                        default=uuid.uuid4,
+                        max_length=255,
+                        primary_key=True,
+                        serialize=False,
+                    ),
+                ),
+                ("name", models.CharField(blank=True, max_length=255, null=True)),
+                ("email", models.CharField(blank=True, max_length=255, null=True)),
+                (
+                    "phone_unlock",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="fulfillment.PhoneUnlock",
+                    ),
+                ),
             ],
-        ),
+        )
     ]

@@ -31,14 +31,20 @@ def handle_facebook_message(psid: dict, message: dict) -> None:
     mid: typing.Text = message["mid"]
     is_echo: bool = message.get("is_echo")
     psid: typing.Text = psid["sender"] if not is_echo else psid["recipient"]
-    conversation: Conversation = Conversation.get_or_create_conversation(Conversation.FACEBOOK, psid)
+    conversation: Conversation = Conversation.get_or_create_conversation(
+        Conversation.FACEBOOK, psid
+    )
     if not is_echo:
         update_facebook_profile(psid, conversation.id)
         if not Message.message_exits(conversation, mid):
             handle_mark_facebook_message_read.delay(psid)
             if text:
-                message_m: Message = Message(conversation=conversation, message_id=mid, text=text,
-                                             direction=Message.FROM_CUSTOMER)
+                message_m: Message = Message(
+                    conversation=conversation,
+                    message_id=mid,
+                    text=text,
+                    direction=Message.FROM_CUSTOMER,
+                )
                 message_m.save()
                 operator_interface.tasks.process_message.delay(message_m.id)
             if attachments:
@@ -49,45 +55,67 @@ def handle_facebook_message(psid: dict, message: dict) -> None:
                         url = payload.get("url")
                         r = requests.get(url)
                         if r.status_code == 200:
-                            orig_file_name = os.path.basename(urllib.parse.urlparse(url).path)
+                            orig_file_name = os.path.basename(
+                                urllib.parse.urlparse(url).path
+                            )
                             fs = DefaultStorage()
                             file_name = fs.save(orig_file_name, BytesIO(r.content))
 
                             if att_type == "image":
                                 message_m: Message = Message(
-                                    conversation=conversation, message_id=mid, image=fs.base_url + file_name,
-                                    direction=Message.FROM_CUSTOMER
+                                    conversation=conversation,
+                                    message_id=mid,
+                                    image=fs.base_url + file_name,
+                                    direction=Message.FROM_CUSTOMER,
                                 )
                                 message_m.save()
-                                operator_interface.tasks.process_message.delay(message_m.id)
+                                operator_interface.tasks.process_message.delay(
+                                    message_m.id
+                                )
                             else:
                                 message_m: Message = Message(
-                                    conversation=conversation, message_id=mid, direction=Message.FROM_CUSTOMER,
-                                    text=f"<a href=\"{fs.base_url + file_name}\" target=\"_blank\">"
-                                         f"{orig_file_name}"
-                                         f"</a>",
+                                    conversation=conversation,
+                                    message_id=mid,
+                                    direction=Message.FROM_CUSTOMER,
+                                    text=f'<a href="{fs.base_url + file_name}" target="_blank">'
+                                    f"{orig_file_name}"
+                                    f"</a>",
                                 )
                                 message_m.save()
-                                operator_interface.tasks.send_message_to_interface.delay(message_m.id)
+                                operator_interface.tasks.send_message_to_interface.delay(
+                                    message_m.id
+                                )
                     elif att_type == "location":
                         message_m: Message = Message(
-                            conversation=conversation, message_id=mid, direction=Message.FROM_CUSTOMER,
+                            conversation=conversation,
+                            message_id=mid,
+                            direction=Message.FROM_CUSTOMER,
                             text=f"<a href=\"{attachment.get('url')}\" target=\"_blank\">Location</a>",
                         )
                         message_m.save()
-                        operator_interface.tasks.send_message_to_interface.delay(message_m.id)
+                        operator_interface.tasks.send_message_to_interface.delay(
+                            message_m.id
+                        )
     else:
         if not Message.message_exits(conversation, mid):
             if text:
-                similar_messages: typing.List[Message] = \
-                    Message.objects.filter(conversation=conversation, text=text,
-                                           timestamp__gte=timezone.now() - datetime.timedelta(seconds=30))
+                similar_messages: typing.List[Message] = Message.objects.filter(
+                    conversation=conversation,
+                    text=text,
+                    timestamp__gte=timezone.now() - datetime.timedelta(seconds=30),
+                )
                 if len(similar_messages) == 0:
                     message_m: Message = Message(
-                        conversation=conversation, message_id=mid, text=text if text else "",
-                        direction=Message.TO_CUSTOMER, delivered=True)
+                        conversation=conversation,
+                        message_id=mid,
+                        text=text if text else "",
+                        direction=Message.TO_CUSTOMER,
+                        delivered=True,
+                    )
                     message_m.save()
-                    operator_interface.tasks.send_message_to_interface.delay(message_m.id)
+                    operator_interface.tasks.send_message_to_interface.delay(
+                        message_m.id
+                    )
 
 
 @shared_task
@@ -96,7 +124,9 @@ def handle_facebook_postback(psid: dict, postback: dict) -> None:
     payload: str = postback.get("payload")
     title: str = postback.get("title")
     if payload is not None:
-        conversation: Conversation = Conversation.get_or_create_conversation(Conversation.FACEBOOK, psid)
+        conversation: Conversation = Conversation.get_or_create_conversation(
+            Conversation.FACEBOOK, psid
+        )
         payload: dict = json.loads(payload)
         action: str = payload.get("action")
         if action == "start_action":
@@ -105,8 +135,10 @@ def handle_facebook_postback(psid: dict, postback: dict) -> None:
             operator_interface.tasks.process_event.delay(conversation.id, action)
 
         message_m: Message = Message(
-            conversation=conversation, message_id=uuid.uuid4(), text=title,
-            direction=Message.FROM_CUSTOMER
+            conversation=conversation,
+            message_id=uuid.uuid4(),
+            text=title,
+            direction=Message.FROM_CUSTOMER,
         )
         message_m.save()
         handle_mark_facebook_message_read.delay(psid)
@@ -119,11 +151,15 @@ def handle_facebook_read(psid: dict, read: dict) -> None:
     psid: str = psid["sender"]
     watermark: int = read.get("watermark")
     if watermark is not None:
-        conversation: Conversation = Conversation.get_or_create_conversation(Conversation.FACEBOOK, psid)
+        conversation: Conversation = Conversation.get_or_create_conversation(
+            Conversation.FACEBOOK, psid
+        )
 
         messages = Message.objects.filter(
-            conversation=conversation, direction=Message.TO_CUSTOMER, read=False,
-            timestamp__lte=datetime.datetime.fromtimestamp(watermark / 1000)
+            conversation=conversation,
+            direction=Message.TO_CUSTOMER,
+            read=False,
+            timestamp__lte=datetime.datetime.fromtimestamp(watermark / 1000),
         )
         message_ids = [m.id for m in messages]
         messages.update(read=True)
@@ -136,28 +172,34 @@ def handle_facebook_read(psid: dict, read: dict) -> None:
 @shared_task
 def update_facebook_profile(psid: str, cid: int) -> None:
     conversation: Conversation = Conversation.objects.get(id=cid)
-    r = requests.get(f"https://graph.facebook.com/{psid}", params={
-        "fields": "name,profile_pic,timezone,locale,gender",
-        "access_token": settings.FACEBOOK_ACCESS_TOKEN
-    })
+    r = requests.get(
+        f"https://graph.facebook.com/{psid}",
+        params={
+            "fields": "name,profile_pic,timezone,locale,gender",
+            "access_token": settings.FACEBOOK_ACCESS_TOKEN,
+        },
+    )
     r.raise_for_status()
     r = r.json()
-    name = r['name']
+    name = r["name"]
     profile_pic = r["profile_pic"]
-    timezone = r.get('timezone', None)
+    timezone = r.get("timezone", None)
     if timezone < 0:
         timezone = f"Etc/GMT-{abs(timezone)}"
     else:
         timezone = f"Etc/GMT+{abs(timezone)}"
-    locale = r.get('locale', None)
-    gender = r.get('gender', None)
+    locale = r.get("locale", None)
+    gender = r.get("gender", None)
 
     pic_r = requests.get(profile_pic)
     if pic_r.status_code == 200:
         conversation.customer_pic = InMemoryUploadedFile(
-            file=BytesIO(pic_r.content), size=len(pic_r.content), charset=pic_r.encoding,
-            content_type=pic_r.headers.get('content-type'), field_name=psid,
-            name=psid
+            file=BytesIO(pic_r.content),
+            size=len(pic_r.content),
+            charset=pic_r.encoding,
+            content_type=pic_r.headers.get("content-type"),
+            field_name=psid,
+            name=psid,
         )
     conversation.customer_name = name
 
@@ -168,14 +210,20 @@ def update_facebook_profile(psid: str, cid: int) -> None:
         for user in users:
             user = admin_client.users.by_id(user.get("id")).get()
             facebook_identity = next(
-                filter(lambda i: i.get("identityProvider") == "facebook", user.get("federatedIdentities", [])),
-                None
+                filter(
+                    lambda i: i.get("identityProvider") == "facebook",
+                    user.get("federatedIdentities", []),
+                ),
+                None,
             )
             if facebook_identity:
-                app_ids_r = requests.get(f"https://graph.facebook.com/{psid}/ids_for_apps", params={
-                    "fields": "id",
-                    "access_token": settings.FACEBOOK_ACCESS_TOKEN
-                })
+                app_ids_r = requests.get(
+                    f"https://graph.facebook.com/{psid}/ids_for_apps",
+                    params={
+                        "fields": "id",
+                        "access_token": settings.FACEBOOK_ACCESS_TOKEN,
+                    },
+                )
                 app_ids_r.raise_for_status()
                 app_ids = app_ids_r.json()
                 for app in app_ids.get("data", []):
@@ -201,27 +249,24 @@ def update_facebook_profile(psid: str, cid: int) -> None:
 
 @shared_task
 def handle_mark_facebook_message_read(psid: str) -> None:
-    requests.post("https://graph.facebook.com/me/messages",
-                  params={"access_token": settings.FACEBOOK_ACCESS_TOKEN},
-                  json={
-                      "recipient": {
-                          "id": psid
-                      },
-                      "sender_action": "mark_seen"
-                  }).raise_for_status()
+    requests.post(
+        "https://graph.facebook.com/me/messages",
+        params={"access_token": settings.FACEBOOK_ACCESS_TOKEN},
+        json={"recipient": {"id": psid}, "sender_action": "mark_seen"},
+    ).raise_for_status()
 
 
 @shared_task
 def handle_facebook_message_typing_on(cid: int) -> None:
     conversation: Conversation = Conversation.objects.get(id=cid)
-    requests.post("https://graph.facebook.com/me/messages",
-                  params={"access_token": settings.FACEBOOK_ACCESS_TOKEN},
-                  json={
-                      "recipient": {
-                          "id": conversation.platform_id
-                      },
-                      "sender_action": "typing_on"
-                  }).raise_for_status()
+    requests.post(
+        "https://graph.facebook.com/me/messages",
+        params={"access_token": settings.FACEBOOK_ACCESS_TOKEN},
+        json={
+            "recipient": {"id": conversation.platform_id},
+            "sender_action": "typing_on",
+        },
+    ).raise_for_status()
 
 
 @shared_task
@@ -238,10 +283,9 @@ def send_facebook_message(mid: int) -> None:
                     params={"access_token": settings.FACEBOOK_ACCESS_TOKEN},
                     json={
                         "name": message.user.first_name,
-                        "profile_picture_url":
-                            settings.EXTERNAL_URL_BASE +
-                            reverse("operator:profile_pic", args=[message.user.id]),
-                    }
+                        "profile_picture_url": settings.EXTERNAL_URL_BASE
+                        + reverse("operator:profile_pic", args=[message.user.id]),
+                    },
                 )
                 if persona_r.status_code == 200:
                     persona_json = persona_r.json()
@@ -256,28 +300,20 @@ def send_facebook_message(mid: int) -> None:
     requests.post(
         "https://graph.facebook.com/me/messages",
         params={"access_token": settings.FACEBOOK_ACCESS_TOKEN},
-        json={
-            "recipient": {
-                "id": psid
-            },
-            "sender_action": "typing_off"
-        }
+        json={"recipient": {"id": psid}, "sender_action": "typing_off"},
     )
 
     quick_replies = []
     for suggestion in message.messagesuggestion_set.all():
-        quick_replies.append({
-            "content_type": "text",
-            "title": suggestion.suggested_response,
-            "payload": suggestion.id
-        })
+        quick_replies.append(
+            {
+                "content_type": "text",
+                "title": suggestion.suggested_response,
+                "payload": suggestion.id,
+            }
+        )
 
-    request_body = {
-        "recipient": {
-            "id": psid
-        },
-        "message": {}
-    }
+    request_body = {"recipient": {"id": psid}, "message": {}}
 
     if persona_id is not None:
         request_body["persona_id"] = persona_id
@@ -293,16 +329,18 @@ def send_facebook_message(mid: int) -> None:
                 "buttons": [
                     {
                         "type": "web_url",
-                        "url": settings.EXTERNAL_URL_BASE + reverse(
-                            "payment:fb_payment", kwargs={"payment_id": message.payment_request.id}
+                        "url": settings.EXTERNAL_URL_BASE
+                        + reverse(
+                            "payment:fb_payment",
+                            kwargs={"payment_id": message.payment_request.id},
                         ),
                         "title": "Pay",
                         "webview_height_ratio": "compact",
                         "messenger_extensions": True,
                         "webview_share_button": "hide",
                     }
-                ]
-            }
+                ],
+            },
         }
     elif message.payment_confirm:
         request_body["message"]["attachment"] = {
@@ -316,19 +354,35 @@ def send_facebook_message(mid: int) -> None:
                 "currency": "GBP",
                 "payment_method": message.payment_confirm.payment_method,
                 "summary": {
-                    "subtotal": str((message.payment_confirm.total / decimal.Decimal('1.2'))
-                                    .quantize(decimal.Decimal('.01'), rounding=decimal.ROUND_DOWN)),
-                    "total_tax": str((message.payment_confirm.total * decimal.Decimal('0.2'))
-                                     .quantize(decimal.Decimal('.01'), rounding=decimal.ROUND_DOWN)),
-                    "total_cost": str(message.payment_confirm.total
-                                      .quantize(decimal.Decimal('.01'), rounding=decimal.ROUND_DOWN))
+                    "subtotal": str(
+                        (
+                            message.payment_confirm.total / decimal.Decimal("1.2")
+                        ).quantize(decimal.Decimal(".01"), rounding=decimal.ROUND_DOWN)
+                    ),
+                    "total_tax": str(
+                        (
+                            message.payment_confirm.total * decimal.Decimal("0.2")
+                        ).quantize(decimal.Decimal(".01"), rounding=decimal.ROUND_DOWN)
+                    ),
+                    "total_cost": str(
+                        message.payment_confirm.total.quantize(
+                            decimal.Decimal(".01"), rounding=decimal.ROUND_DOWN
+                        )
+                    ),
                 },
-                "elements": [{
-                    "title": item.title,
-                    "quantity": item.quantity,
-                    "price": str(item.price.quantize(decimal.Decimal('.01'), rounding=decimal.ROUND_DOWN)),
-                } for item in message.payment_confirm.paymentitem_set.all()]
-            }
+                "elements": [
+                    {
+                        "title": item.title,
+                        "quantity": item.quantity,
+                        "price": str(
+                            item.price.quantize(
+                                decimal.Decimal(".01"), rounding=decimal.ROUND_DOWN
+                            )
+                        ),
+                    }
+                    for item in message.payment_confirm.paymentitem_set.all()
+                ],
+            },
         }
     elif message.selection:
         selection_data = json.loads(message.selection)
@@ -336,21 +390,28 @@ def send_facebook_message(mid: int) -> None:
             "type": "template",
             "payload": {
                 "template_type": "generic",
-                "elements": [{
-                    "title": item.get("title", ""),
-                    "buttons": [{
-                            "type": "postback",
-                            "title": f"Select {item.get('title', '')}",
-                            "payload": json.dumps({
-                                "action": f'resolve_entity{{"number": "{i+1}"}}'
-                            })
-                    }],
-                } for i, item in enumerate(selection_data.get("items", []))]
-            }
+                "elements": [
+                    {
+                        "title": item.get("title", ""),
+                        "buttons": [
+                            {
+                                "type": "postback",
+                                "title": f"Select {item.get('title', '')}",
+                                "payload": json.dumps(
+                                    {"action": f'resolve_entity{{"number": "{i+1}"}}'}
+                                ),
+                            }
+                        ],
+                    }
+                    for i, item in enumerate(selection_data.get("items", []))
+                ],
+            },
         }
     elif message.text:
-        urls = re.findall("(http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*(),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+)",
-                          message.text)
+        urls = re.findall(
+            "(http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*(),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+)",
+            message.text,
+        )
         if len(urls) == 1:
             request_body["message"]["attachment"] = {
                 "type": "template",
@@ -362,40 +423,38 @@ def send_facebook_message(mid: int) -> None:
                             "type": "web_url",
                             "url": urls[0],
                             "title": "Open",
-                            "webview_height_ratio": "full"
+                            "webview_height_ratio": "full",
                         }
-                    ]
-                }
+                    ],
+                },
             }
         else:
             request_body["message"]["text"] = message.text
     elif message.image:
         request_body["message"]["attachment"] = {
             "type": "image",
-            "payload": {
-                "url": message.image,
-            }
+            "payload": {"url": message.image},
         }
 
     message_r = requests.post(
         "https://graph.facebook.com/me/messages",
         params={"access_token": settings.FACEBOOK_ACCESS_TOKEN},
-        json=request_body
+        json=request_body,
     )
     if message_r.status_code != 200:
-        logging.error(f"Error sending facebook message: {message_r.status_code} {message_r.text}")
+        logging.error(
+            f"Error sending facebook message: {message_r.status_code} {message_r.text}"
+        )
         request_body = {
-            "recipient": {
-                "id": psid
-            },
+            "recipient": {"id": psid},
             "message": {
                 "text": "Sorry, I'm having some difficulty processing your request. Please try again later"
-            }
+            },
         }
         requests.post(
             "https://graph.facebook.com/me/messages",
             params={"access_token": settings.FACEBOOK_ACCESS_TOKEN},
-            json=request_body
+            json=request_body,
         ).raise_for_status()
     else:
         message_json = message_r.json()

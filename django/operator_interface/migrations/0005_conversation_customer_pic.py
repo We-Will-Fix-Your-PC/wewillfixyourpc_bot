@@ -5,14 +5,12 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
 
-    dependencies = [
-        ('operator_interface', '0004_auto_20190520_1925'),
-    ]
+    dependencies = [("operator_interface", "0004_auto_20190520_1925")]
 
     operations = [
         migrations.AddField(
-            model_name='conversation',
-            name='customer_pic',
+            model_name="conversation",
+            name="customer_pic",
             field=models.URLField(blank=True, null=True),
-        ),
+        )
     ]

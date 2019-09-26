@@ -5,26 +5,15 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
 
-    dependencies = [
-        ('operator_interface', '0035_message_request_email'),
-    ]
+    dependencies = [("operator_interface", "0035_message_request_email")]
 
     operations = [
-        migrations.RemoveField(
-            model_name='message',
-            name='request_email',
-        ),
-        migrations.RemoveField(
-            model_name='message',
-            name='request_name',
-        ),
-        migrations.RemoveField(
-            model_name='message',
-            name='request_phone',
-        ),
+        migrations.RemoveField(model_name="message", name="request_email"),
+        migrations.RemoveField(model_name="message", name="request_name"),
+        migrations.RemoveField(model_name="message", name="request_phone"),
         migrations.AddField(
-            model_name='message',
-            name='request',
+            model_name="message",
+            name="request",
             field=models.CharField(blank=True, max_length=255, null=True),
         ),
     ]

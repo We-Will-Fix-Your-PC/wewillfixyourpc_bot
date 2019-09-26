@@ -5,8 +5,14 @@ from keycloak_auth.middleware import OIDCChannelsMiddleware
 import operator_interface.routing
 
 
-application = SentryAsgiMiddleware(ProtocolTypeRouter({
-    'websocket': AuthMiddlewareStack(OIDCChannelsMiddleware(URLRouter(
-         operator_interface.routing.websocket_urlpatterns
-    ))),
-}))
+application = SentryAsgiMiddleware(
+    ProtocolTypeRouter(
+        {
+            "websocket": AuthMiddlewareStack(
+                OIDCChannelsMiddleware(
+                    URLRouter(operator_interface.routing.websocket_urlpatterns)
+                )
+            )
+        }
+    )
+)

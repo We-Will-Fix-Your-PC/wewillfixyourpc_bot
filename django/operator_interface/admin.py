@@ -7,7 +7,7 @@ from . import models
 class UserProfileInline(admin.StackedInline):
     model = models.UserProfile
     can_delete = False
-    verbose_name_plural = 'User profile'
+    verbose_name_plural = "User profile"
 
 
 class UserAdmin(BaseUserAdmin):
@@ -16,7 +16,7 @@ class UserAdmin(BaseUserAdmin):
 
 @admin.register(models.ConversationRating)
 class ConversationRatingAdmin(admin.ModelAdmin):
-    readonly_fields = ('time',)
+    readonly_fields = ("time",)
 
 
 admin.site.unregister(User)

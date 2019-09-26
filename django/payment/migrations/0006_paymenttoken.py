@@ -6,16 +6,23 @@ import payment.models
 
 class Migration(migrations.Migration):
 
-    dependencies = [
-        ('payment', '0005_auto_20190731_0956'),
-    ]
+    dependencies = [("payment", "0005_auto_20190731_0956")]
 
     operations = [
         migrations.CreateModel(
-            name='PaymentToken',
+            name="PaymentToken",
             fields=[
-                ('name', models.CharField(max_length=255)),
-                ('token', models.CharField(default=payment.models.make_token, editable=False, max_length=255, primary_key=True, serialize=False)),
+                ("name", models.CharField(max_length=255)),
+                (
+                    "token",
+                    models.CharField(
+                        default=payment.models.make_token,
+                        editable=False,
+                        max_length=255,
+                        primary_key=True,
+                        serialize=False,
+                    ),
+                ),
             ],
-        ),
+        )
     ]

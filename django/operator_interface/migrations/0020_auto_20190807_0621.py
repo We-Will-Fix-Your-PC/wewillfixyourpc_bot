@@ -6,19 +6,19 @@ import phonenumber_field.modelfields
 
 class Migration(migrations.Migration):
 
-    dependencies = [
-        ('operator_interface', '0019_paymentconfirmmessage'),
-    ]
+    dependencies = [("operator_interface", "0019_paymentconfirmmessage")]
 
     operations = [
         migrations.AddField(
-            model_name='conversation',
-            name='customer_email',
+            model_name="conversation",
+            name="customer_email",
             field=models.EmailField(blank=True, max_length=254, null=True),
         ),
         migrations.AddField(
-            model_name='conversation',
-            name='customer_phone',
-            field=phonenumber_field.modelfields.PhoneNumberField(blank=True, max_length=128, null=True, region=None),
+            model_name="conversation",
+            name="customer_phone",
+            field=phonenumber_field.modelfields.PhoneNumberField(
+                blank=True, max_length=128, null=True, region=None
+            ),
         ),
     ]

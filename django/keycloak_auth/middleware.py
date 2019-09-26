@@ -8,7 +8,10 @@ import keycloak_auth.auth
 def get_user(session, origin_user):
     # Check for the user as set by
     # django.contrib.auth.middleware.AuthenticationMiddleware
-    if not isinstance(origin_user, django.contrib.auth.models.AnonymousUser) and origin_user is not None:
+    if (
+        not isinstance(origin_user, django.contrib.auth.models.AnonymousUser)
+        and origin_user is not None
+    ):
         return origin_user
 
     try:
@@ -22,12 +25,11 @@ class OIDCMiddleware:
         self.get_response = get_response
 
     def __call__(self, request):
-        origin_user = getattr(request, 'user', None)
+        origin_user = getattr(request, "user", None)
 
-        request.user = django.utils.functional.SimpleLazyObject(lambda: get_user(
-            request.session,
-            origin_user=origin_user
-        ))
+        request.user = django.utils.functional.SimpleLazyObject(
+            lambda: get_user(request.session, origin_user=origin_user)
+        )
 
         return self.get_response(request)
 
@@ -39,11 +41,10 @@ class OIDCChannelsMiddleware:
     def __call__(self, scope):
         close_old_connections()
 
-        origin_user = scope.get('user')
+        origin_user = scope.get("user")
 
-        user = django.utils.functional.SimpleLazyObject(lambda: get_user(
-            scope.get("session"),
-            origin_user=origin_user
-        ))
+        user = django.utils.functional.SimpleLazyObject(
+            lambda: get_user(scope.get("session"), origin_user=origin_user)
+        )
 
         return self.inner(dict(scope, user=user))

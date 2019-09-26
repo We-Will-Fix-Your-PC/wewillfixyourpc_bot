@@ -19,35 +19,33 @@ channel_layer = get_channel_layer()
 
 
 @receiver(post_save, sender=operator_interface.models.Conversation)
-def conversation_saved(sender, instance: operator_interface.models.Conversation, **kwargs):
-    async_to_sync(channel_layer.group_send)("operator_interface", {
-        "type": "conversation_update",
-        "cid": instance.id
-    })
+def conversation_saved(
+    sender, instance: operator_interface.models.Conversation, **kwargs
+):
+    async_to_sync(channel_layer.group_send)(
+        "operator_interface", {"type": "conversation_update", "cid": instance.id}
+    )
 
 
 @receiver(post_save, sender=operator_interface.models.Message)
 def message_saved(sender, instance: operator_interface.models.Message, **kwargs):
-    async_to_sync(channel_layer.group_send)("operator_interface", {
-        "type": "message_update",
-        "mid": instance.id
-    })
+    async_to_sync(channel_layer.group_send)(
+        "operator_interface", {"type": "message_update", "mid": instance.id}
+    )
 
 
 @receiver(post_save, sender=payment.models.Payment)
 def payment_saved(sender, instance: payment.models.Payment, **kwargs):
-    async_to_sync(channel_layer.group_send)("operator_interface", {
-        "type": "payment_update",
-        "pid": str(instance.id)
-    })
+    async_to_sync(channel_layer.group_send)(
+        "operator_interface", {"type": "payment_update", "pid": str(instance.id)}
+    )
 
 
 @receiver(post_save, sender=payment.models.PaymentItem)
 def payment_item_saved(sender, instance: payment.models.PaymentItem, **kwargs):
-    async_to_sync(channel_layer.group_send)("operator_interface", {
-        "type": "payment_item_update",
-        "pid": instance.id
-    })
+    async_to_sync(channel_layer.group_send)(
+        "operator_interface", {"type": "payment_item_update", "pid": instance.id}
+    )
 
 
 class OperatorConsumer(AsyncJsonWebsocketConsumer):
@@ -89,21 +87,29 @@ class OperatorConsumer(AsyncJsonWebsocketConsumer):
         await self.channel_layer.group_discard("operator_interface", self.channel_name)
 
     async def send_message(self, message: operator_interface.models.Message):
-        await self.send_json({
-            "type": "message",
-            "id": message.id,
-            "direction": message.direction,
-            "timestamp": int(message.timestamp.timestamp()),
-            "text": message.text,
-            "image": message.image,
-            "read": message.read,
-            "delivered": message.delivered,
-            "payment_request": message.payment_request.id if message.payment_request else None,
-            "payment_confirm": message.payment_confirm.id if message.payment_confirm else None,
-            "conversation_id": message.conversation.id,
-        })
+        await self.send_json(
+            {
+                "type": "message",
+                "id": message.id,
+                "direction": message.direction,
+                "timestamp": int(message.timestamp.timestamp()),
+                "text": message.text,
+                "image": message.image,
+                "read": message.read,
+                "delivered": message.delivered,
+                "payment_request": message.payment_request.id
+                if message.payment_request
+                else None,
+                "payment_confirm": message.payment_confirm.id
+                if message.payment_confirm
+                else None,
+                "conversation_id": message.conversation.id,
+            }
+        )
 
-    async def send_conversation(self, conversation: operator_interface.models.Conversation):
+    async def send_conversation(
+        self, conversation: operator_interface.models.Conversation
+    ):
         pic = static("operator_interface/img/default_profile_normal.png")
         if conversation.conversation_pic:
             pic = conversation.conversation_pic.url
@@ -115,9 +121,7 @@ class OperatorConsumer(AsyncJsonWebsocketConsumer):
             except keycloak.exceptions.KeycloakClientError:
                 user = {}
         else:
-            user = {
-                "firstName": conversation.conversation_name
-            }
+            user = {"firstName": conversation.conversation_name}
 
         first_name = user.get("firstName", "")
         last_name = user.get("lastName", "")
@@ -135,53 +139,64 @@ class OperatorConsumer(AsyncJsonWebsocketConsumer):
             if m.payment_confirm and m.payment_confirm.id not in payments:
                 payments.append(m.payment_confirm.id)
 
-        await self.send_json({
-            "type": "conversation",
-            "id": conversation.id,
-            "agent_responding": conversation.agent_responding,
-            "current_user_responding":
-                conversation.current_agent.id == self.user.id if conversation.current_agent else False,
-            "platform": conversation.platform,
-            "customer_name": f'{first_name} {last_name}',
-            "customer_username": user.get("username"),
-            "customer_pic": pic,
-            "timezone": timezone,
-            "customer_email": user.get("email"),
-            "customer_phone": phone_number,
-            "customer_locale": locale,
-            "customer_gender": gender,
-            "messages": [m.id for m in messages],
-            "payments": payments
-        })
+        await self.send_json(
+            {
+                "type": "conversation",
+                "id": conversation.id,
+                "agent_responding": conversation.agent_responding,
+                "current_user_responding": conversation.current_agent.id == self.user.id
+                if conversation.current_agent
+                else False,
+                "platform": conversation.platform,
+                "customer_name": f"{first_name} {last_name}",
+                "customer_username": user.get("username"),
+                "customer_pic": pic,
+                "timezone": timezone,
+                "customer_email": user.get("email"),
+                "customer_phone": phone_number,
+                "customer_locale": locale,
+                "customer_gender": gender,
+                "messages": [m.id for m in messages],
+                "payments": payments,
+            }
+        )
 
     async def send_payment(self, payment: payment.models.Payment):
-        await self.send_json({
-            "type": "payment",
-            "id": payment.id,
-            "timestamp": payment.timestamp.timestamp(),
-            "state": payment.state,
-            "payment_method": payment.payment_method,
-            "total": str(payment.total),
-            "items": [i.id for i in payment.paymentitem_set.all()]
-        })
+        await self.send_json(
+            {
+                "type": "payment",
+                "id": payment.id,
+                "timestamp": payment.timestamp.timestamp(),
+                "state": payment.state,
+                "payment_method": payment.payment_method,
+                "total": str(payment.total),
+                "items": [i.id for i in payment.paymentitem_set.all()],
+            }
+        )
 
     async def send_payment_item(self, payment_item: payment.models.PaymentItem):
-        await self.send_json({
-            "type": "payment_item",
-            "id": payment_item.id,
-            "payment_id": payment_item.payment.id,
-            "item_type": payment_item.item_type,
-            "item_data": payment_item.item_data,
-            "title": payment_item.title,
-            "quantity": payment_item.quantity,
-            "price": str(payment_item.price)
-        })
+        await self.send_json(
+            {
+                "type": "payment_item",
+                "id": payment_item.id,
+                "payment_id": payment_item.payment.id,
+                "item_type": payment_item.item_type,
+                "item_data": payment_item.item_data,
+                "title": payment_item.title,
+                "quantity": payment_item.quantity,
+                "price": str(payment_item.price),
+            }
+        )
 
     async def make_message(self, cid, text):
         conversation = await self.get_conversation(cid)
         message = operator_interface.models.Message(
-            conversation=conversation, text=text, direction=operator_interface.models.Message.TO_CUSTOMER,
-            message_id=uuid.uuid4(), user=self.user)
+            conversation=conversation,
+            text=text,
+            direction=operator_interface.models.Message.TO_CUSTOMER,
+            message_id=uuid.uuid4(),
+            user=self.user,
+        )
         await self.save_object(message)
         operator_interface.tasks.process_message.delay(message.id)
 
@@ -210,7 +225,9 @@ class OperatorConsumer(AsyncJsonWebsocketConsumer):
     @database_sync_to_async
     def lookup_customer(self, email, phone, name):
         try:
-            return payment.models.Customer.objects.get(email=email, phone=phone, name=name)
+            return payment.models.Customer.objects.get(
+                email=email, phone=phone, name=name
+            )
         except payment.models.Customer.DoesNotExist:
             customer = payment.models.Customer(email=email, phone=phone, name=name)
             customer.save()
@@ -222,21 +239,39 @@ class OperatorConsumer(AsyncJsonWebsocketConsumer):
 
     async def make_payment_request(self, cid, items):
         conversation = await self.get_conversation(cid)
-        customer = await self.lookup_customer(email=conversation.customer_email, phone=conversation.customer_phone,
-                                              name=conversation.customer_name) \
-            if (conversation.customer_phone and conversation.customer_email) else None
-        payment_o = payment.models.Payment(state=payment.models.Payment.STATE_OPEN, customer=customer)
+        customer = (
+            await self.lookup_customer(
+                email=conversation.customer_email,
+                phone=conversation.customer_phone,
+                name=conversation.customer_name,
+            )
+            if (conversation.customer_phone and conversation.customer_email)
+            else None
+        )
+        payment_o = payment.models.Payment(
+            state=payment.models.Payment.STATE_OPEN, customer=customer
+        )
         await self.save_object(payment_o)
 
         for item in items:
             payment_item = payment.models.PaymentItem(
-                payment=payment_o, item_type=item["item_type"], item_data=item["item_data"], title=item["title"],
-                quantity=item["quantity"], price=item["price"])
+                payment=payment_o,
+                item_type=item["item_type"],
+                item_data=item["item_data"],
+                title=item["title"],
+                quantity=item["quantity"],
+                price=item["price"],
+            )
             await self.save_object(payment_item)
 
         message = operator_interface.models.Message(
-            conversation=conversation, direction=operator_interface.models.Message.TO_CUSTOMER, message_id=uuid.uuid4(),
-            user=self.user, text="To complete payment follow this link 💸", payment_request=payment_o)
+            conversation=conversation,
+            direction=operator_interface.models.Message.TO_CUSTOMER,
+            message_id=uuid.uuid4(),
+            user=self.user,
+            text="To complete payment follow this link 💸",
+            payment_request=payment_o,
+        )
         await self.save_object(message)
         operator_interface.tasks.process_message.delay(message.id)
 

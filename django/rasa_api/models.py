@@ -34,7 +34,9 @@ class EnvironmentModel(models.Model):
 
 
 class TestingUser(models.Model):
-    platform = models.CharField(max_length=2, choices=operator_interface.models.Conversation.PLATFORM_CHOICES)
+    platform = models.CharField(
+        max_length=2, choices=operator_interface.models.Conversation.PLATFORM_CHOICES
+    )
     platform_id = models.CharField(max_length=255)
     rasa_url = models.URLField()
 

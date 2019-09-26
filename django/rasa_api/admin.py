@@ -13,7 +13,7 @@ class UtteranceButtonInline(admin.StackedInline):
 @admin.register(models.Utterance)
 class AdminUtterance(admin.ModelAdmin):
     inlines = [UtteranceResponseInline, UtteranceButtonInline]
-    ordering = ('name',)
+    ordering = ("name",)
 
 
 admin.site.register(models.EnvironmentModel)

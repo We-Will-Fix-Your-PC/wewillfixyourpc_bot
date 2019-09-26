@@ -1,8 +1,0 @@
-django/contrib/auth/__init__ /media/data/Users/BenjaminMisell/Documents/wewillfixyourpc_bot/django/.pytype/imports/default.pyi
-django/db/transaction /media/data/Users/BenjaminMisell/Documents/wewillfixyourpc_bot/django/.pytype/imports/default.pyi
-django/utils/timezone /media/data/Users/BenjaminMisell/Documents/wewillfixyourpc_bot/django/.pytype/imports/default.pyi
-keycloak/realm /media/data/Users/BenjaminMisell/Documents/wewillfixyourpc_bot/django/.pytype/imports/default.pyi
-keycloak/admin/realm /media/data/Users/BenjaminMisell/Documents/wewillfixyourpc_bot/django/.pytype/imports/default.pyi
-django/conf/__init__ /media/data/Users/BenjaminMisell/Documents/wewillfixyourpc_bot/django/.pytype/imports/default.pyi
-django/core/exceptions /media/data/Users/BenjaminMisell/Documents/wewillfixyourpc_bot/django/.pytype/imports/default.pyi
-django/db/models/__init__ /media/data/Users/BenjaminMisell/Documents/wewillfixyourpc_bot/django/.pytype/imports/default.pyi

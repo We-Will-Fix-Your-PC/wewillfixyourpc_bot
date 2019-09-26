@@ -1,9 +1,0 @@
-django/contrib/admin/__init__ /media/data/Users/BenjaminMisell/Documents/wewillfixyourpc_bot/django/.pytype/imports/default.pyi
-django/contrib/auth/admin /media/data/Users/BenjaminMisell/Documents/wewillfixyourpc_bot/django/.pytype/imports/default.pyi
-django/contrib/auth/models /media/data/Users/BenjaminMisell/Documents/wewillfixyourpc_bot/django/.pytype/imports/default.pyi
-django/db/models/__init__ /media/data/Users/BenjaminMisell/Documents/wewillfixyourpc_bot/django/.pytype/imports/default.pyi
-django/utils/timezone /media/data/Users/BenjaminMisell/Documents/wewillfixyourpc_bot/django/.pytype/imports/default.pyi
-phonenumber_field/modelfields /media/data/Users/BenjaminMisell/Documents/wewillfixyourpc_bot/django/.pytype/imports/default.pyi
-django/conf/__init__ /media/data/Users/BenjaminMisell/Documents/wewillfixyourpc_bot/django/.pytype/imports/default.pyi
-payment/models /media/data/Users/BenjaminMisell/Documents/wewillfixyourpc_bot/django/.pytype/pyi/payment/models.pyi
-operator_interface/models /media/data/Users/BenjaminMisell/Documents/wewillfixyourpc_bot/django/.pytype/pyi/operator_interface/models.pyi

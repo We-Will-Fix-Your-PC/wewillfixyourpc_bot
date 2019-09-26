@@ -5,14 +5,10 @@ from django.db import migrations
 
 class Migration(migrations.Migration):
 
-    dependencies = [
-        ('rasa_api', '0005_auto_20190805_2016'),
-    ]
+    dependencies = [("rasa_api", "0005_auto_20190805_2016")]
 
     operations = [
         migrations.RenameField(
-            model_name='testinguser',
-            old_name='sender_id',
-            new_name='platform_id',
-        ),
+            model_name="testinguser", old_name="sender_id", new_name="platform_id"
+        )
     ]

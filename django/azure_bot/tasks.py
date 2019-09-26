@@ -18,11 +18,13 @@ def event_to_conversation(msg):
     from_id = msg["conversation"]["id"]
     customer_name = msg["from"].get("name")
 
-    additional = json.dumps({
-        "to": msg["from"]["id"],
-        "from": msg["recipient"]["id"],
-        "endpoint": msg["serviceUrl"]
-    })
+    additional = json.dumps(
+        {
+            "to": msg["from"]["id"],
+            "from": msg["recipient"]["id"],
+            "endpoint": msg["serviceUrl"],
+        }
+    )
 
     conversation = Conversation.get_or_create_conversation(
         Conversation.AZURE, from_id, conversation_name=customer_name
@@ -44,12 +46,15 @@ def get_access_token():
     if len(valid_tokens):
         return valid_tokens.pop()
 
-    r = requests.post("https://login.microsoftonline.com/botframework.com/oauth2/v2.0/token", data={
-        "grant_type": "client_credentials",
-        "client_id": settings.AZURE_APP_ID,
-        "client_secret": settings.AZURE_APP_PASSWORD,
-        "scope": "https://api.botframework.com/.default"
-    })
+    r = requests.post(
+        "https://login.microsoftonline.com/botframework.com/oauth2/v2.0/token",
+        data={
+            "grant_type": "client_credentials",
+            "client_id": settings.AZURE_APP_ID,
+            "client_secret": settings.AZURE_APP_PASSWORD,
+            "scope": "https://api.botframework.com/.default",
+        },
+    )
     r.raise_for_status()
     data = r.json()
 
@@ -69,8 +74,11 @@ def handle_azure_message(msg):
 
     if not Message.message_exits(conversation, mid):
         message_m = Message(
-            conversation=conversation, message_id=mid, direction=Message.FROM_CUSTOMER,
-            timestamp=dateutil.parser.parse(timestamp))
+            conversation=conversation,
+            message_id=mid,
+            direction=Message.FROM_CUSTOMER,
+            timestamp=dateutil.parser.parse(timestamp),
+        )
 
         if text:
             message_m.text = text
@@ -93,7 +101,13 @@ def handle_azure_contact_relation_update(msg):
 def handle_azure_conversation_update(msg):
     from_id = msg["conversation"]["id"]
 
-    send_welcome = bool(len(Conversation.objects.filter(platform=Conversation.AZURE, platform_id=from_id)))
+    send_welcome = bool(
+        len(
+            Conversation.objects.filter(
+                platform=Conversation.AZURE, platform_id=from_id
+            )
+        )
+    )
 
     conversation = event_to_conversation(msg)
 
@@ -109,38 +123,30 @@ def send_azure_message(mid):
 
     endpoint = f"{additional_id['endpoint']}/v3/conversations/{message.conversation.platform_id}/activities"
 
-    r = requests.post(endpoint, headers={
-        "Authorization": f"Bearer {access_token}"
-    }, json={
-        "type": "message",
-        "from": {
-            "id": additional_id["from"]
+    r = requests.post(
+        endpoint,
+        headers={"Authorization": f"Bearer {access_token}"},
+        json={
+            "type": "message",
+            "from": {"id": additional_id["from"]},
+            "conversation": {"id": message.conversation.platform_id},
+            "recipient": {"id": additional_id["to"]},
+            "text": message.text,
         },
-        "conversation": {
-            "id": message.conversation.platform_id
-        },
-        "recipient": {
-            "id": additional_id["to"]
-        },
-        "text": message.text,
-    })
+    )
     if r.status_code != 200:
         logging.error(f"Error sending azure message: {r.status_code} {r.text}")
-        requests.post(endpoint, headers={
-            "Authorization": f"Bearer {access_token}"
-        }, json={
-            "type": "message",
-            "from": {
-                "id": additional_id["from"]
+        requests.post(
+            endpoint,
+            headers={"Authorization": f"Bearer {access_token}"},
+            json={
+                "type": "message",
+                "from": {"id": additional_id["from"]},
+                "conversation": {"id": message.conversation.platform_id},
+                "recipient": {"id": additional_id["to"]},
+                "text": "Sorry, I'm having some difficulty processing your request. Please try again later",
             },
-            "conversation": {
-                "id": message.conversation.platform_id
-            },
-            "recipient": {
-                "id": additional_id["to"]
-            },
-            "text": "Sorry, I'm having some difficulty processing your request. Please try again later"
-        }).raise_for_status()
+        ).raise_for_status()
     else:
         r = r.json()
         message.message_id = r["id"]

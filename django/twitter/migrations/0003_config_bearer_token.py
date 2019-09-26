@@ -5,14 +5,12 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
 
-    dependencies = [
-        ('twitter', '0002_auto_20190520_1620'),
-    ]
+    dependencies = [("twitter", "0002_auto_20190520_1620")]
 
     operations = [
         migrations.AddField(
-            model_name='config',
-            name='bearer_token',
+            model_name="config",
+            name="bearer_token",
             field=models.CharField(blank=True, max_length=255, null=True),
-        ),
+        )
     ]

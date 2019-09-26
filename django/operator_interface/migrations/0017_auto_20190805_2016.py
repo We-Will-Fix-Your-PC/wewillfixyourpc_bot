@@ -5,14 +5,12 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
 
-    dependencies = [
-        ('operator_interface', '0016_auto_20190804_1112'),
-    ]
+    dependencies = [("operator_interface", "0016_auto_20190804_1112")]
 
     operations = [
         migrations.AlterField(
-            model_name='message',
-            name='image',
+            model_name="message",
+            name="image",
             field=models.FilePathField(blank=True, null=True),
-        ),
+        )
     ]

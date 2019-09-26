@@ -5,22 +5,28 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
 
-    dependencies = [
-        ('fulfillment', '0004_contactdetails_maps_link'),
-    ]
+    dependencies = [("fulfillment", "0004_contactdetails_maps_link")]
 
     operations = [
         migrations.CreateModel(
-            name='IPhoneRepair',
+            name="IPhoneRepair",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=255)),
-                ('repair_name', models.CharField(max_length=255)),
-                ('price', models.DecimalField(decimal_places=2, max_digits=10)),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("name", models.CharField(max_length=255)),
+                ("repair_name", models.CharField(max_length=255)),
+                ("price", models.DecimalField(decimal_places=2, max_digits=10)),
             ],
             options={
-                'verbose_name': 'iPhone Repair',
-                'verbose_name_plural': 'iPhone Repairs',
+                "verbose_name": "iPhone Repair",
+                "verbose_name_plural": "iPhone Repairs",
             },
-        ),
+        )
     ]

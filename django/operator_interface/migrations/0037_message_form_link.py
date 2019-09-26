@@ -5,14 +5,12 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
 
-    dependencies = [
-        ('operator_interface', '0036_auto_20190902_1606'),
-    ]
+    dependencies = [("operator_interface", "0036_auto_20190902_1606")]
 
     operations = [
         migrations.AddField(
-            model_name='message',
-            name='form_link',
+            model_name="message",
+            name="form_link",
             field=models.TextField(blank=True, null=True),
-        ),
+        )
     ]

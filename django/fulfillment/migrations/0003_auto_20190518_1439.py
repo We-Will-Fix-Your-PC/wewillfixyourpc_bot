@@ -5,19 +5,17 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
 
-    dependencies = [
-        ('fulfillment', '0002_auto_20190518_1439'),
-    ]
+    dependencies = [("fulfillment", "0002_auto_20190518_1439")]
 
     operations = [
         migrations.AlterField(
-            model_name='openinghoursoverride',
-            name='close',
+            model_name="openinghoursoverride",
+            name="close",
             field=models.TimeField(blank=True, null=True),
         ),
         migrations.AlterField(
-            model_name='openinghoursoverride',
-            name='open',
+            model_name="openinghoursoverride",
+            name="open",
             field=models.TimeField(blank=True, null=True),
         ),
     ]

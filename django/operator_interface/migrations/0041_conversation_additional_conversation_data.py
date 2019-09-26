@@ -5,14 +5,12 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
 
-    dependencies = [
-        ('operator_interface', '0040_auto_20190924_1857'),
-    ]
+    dependencies = [("operator_interface", "0040_auto_20190924_1857")]
 
     operations = [
         migrations.AddField(
-            model_name='conversation',
-            name='additional_conversation_data',
+            model_name="conversation",
+            name="additional_conversation_data",
             field=models.TextField(blank=True, null=True),
-        ),
+        )
     ]

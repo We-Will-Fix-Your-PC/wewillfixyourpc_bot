@@ -5,15 +5,13 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
 
-    dependencies = [
-        ('operator_interface', '0002_message_timestamp'),
-    ]
+    dependencies = [("operator_interface", "0002_message_timestamp")]
 
     operations = [
         migrations.AddField(
-            model_name='conversation',
-            name='noonce',
-            field=models.CharField(default='', max_length=255),
+            model_name="conversation",
+            name="noonce",
+            field=models.CharField(default="", max_length=255),
             preserve_default=False,
-        ),
+        )
     ]

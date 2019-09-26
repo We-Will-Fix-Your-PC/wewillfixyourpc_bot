@@ -4,7 +4,7 @@ from . import models
 
 @admin.register(models.PaymentToken)
 class PaymentTokenAdmin(admin.ModelAdmin):
-    readonly_fields = ('token',)
+    readonly_fields = ("token",)
 
 
 admin.site.register(models.Customer)

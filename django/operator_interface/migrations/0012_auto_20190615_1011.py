@@ -5,13 +5,10 @@ from django.db import migrations
 
 class Migration(migrations.Migration):
 
-    dependencies = [
-        ('operator_interface', '0011_notificationsubscription'),
-    ]
+    dependencies = [("operator_interface", "0011_notificationsubscription")]
 
     operations = [
         migrations.AlterModelOptions(
-            name='message',
-            options={'ordering': ('timestamp',)},
-        ),
+            name="message", options={"ordering": ("timestamp",)}
+        )
     ]

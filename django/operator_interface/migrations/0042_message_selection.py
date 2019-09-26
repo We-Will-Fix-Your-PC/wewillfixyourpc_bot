@@ -6,13 +6,13 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('operator_interface', '0041_conversation_additional_conversation_data'),
+        ("operator_interface", "0041_conversation_additional_conversation_data")
     ]
 
     operations = [
         migrations.AddField(
-            model_name='message',
-            name='selection',
+            model_name="message",
+            name="selection",
             field=models.TextField(blank=True, null=True),
-        ),
+        )
     ]

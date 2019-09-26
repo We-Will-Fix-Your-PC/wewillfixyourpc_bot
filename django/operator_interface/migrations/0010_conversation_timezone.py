@@ -5,14 +5,12 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
 
-    dependencies = [
-        ('operator_interface', '0009_message_user'),
-    ]
+    dependencies = [("operator_interface", "0009_message_user")]
 
     operations = [
         migrations.AddField(
-            model_name='conversation',
-            name='timezone',
+            model_name="conversation",
+            name="timezone",
             field=models.CharField(blank=True, default=None, max_length=255, null=True),
-        ),
+        )
     ]

@@ -5,14 +5,12 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
 
-    dependencies = [
-        ('operator_interface', '0023_auto_20190812_1924'),
-    ]
+    dependencies = [("operator_interface", "0023_auto_20190812_1924")]
 
     operations = [
         migrations.AddField(
-            model_name='message',
-            name='delivered',
+            model_name="message",
+            name="delivered",
             field=models.BooleanField(default=False),
-        ),
+        )
     ]
