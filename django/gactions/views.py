@@ -14,7 +14,7 @@ from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseForbidden
 from django.views.decorators.csrf import csrf_exempt
 
-import keycloak_auth.clients
+import django_keycloak_auth.clients
 import operator_interface.consumers
 import operator_interface.tasks
 from operator_interface.models import Conversation, Message
@@ -247,7 +247,7 @@ def webhook(request):
         except ValueError:
             return HttpResponseForbidden()
 
-        admin_client = keycloak_auth.clients.get_keycloak_admin_client()
+        admin_client = django_keycloak_auth.clients.get_keycloak_admin_client()
 
         if not conversation.conversation_user_id:
             users = list(

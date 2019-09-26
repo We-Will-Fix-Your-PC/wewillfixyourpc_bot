@@ -1,4 +1,5 @@
 Django
+Pillow
 djsingleton
 django-phonenumber-field
 django-cors-headers
@@ -7,17 +8,13 @@ phonenumbers
 mysqlclient
 redis
 celery
-pika
 requests
 requests_oauthlib
-Pillow
 redis
 pytz
-pyjwt
 pywebpush
 sentry-sdk
 sentry-sdk[flask]
-blinker
 inflect
 cryptography
 rasa_sdk
@@ -32,4 +29,4 @@ python-magic
 pyjwt
 mastercard-oauth1-signer
 google-auth
-https://github.com/Peter-Slump/python-keycloak-client.git
+git+https://github.com/Peter-Slump/python-keycloak-client.git@master

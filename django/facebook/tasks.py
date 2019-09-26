@@ -18,7 +18,7 @@ from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.shortcuts import reverse
 from django.utils import timezone
 
-import keycloak_auth.clients
+import django_keycloak_auth.clients
 import operator_interface.consumers
 import operator_interface.tasks
 from operator_interface.models import Conversation, Message
@@ -203,7 +203,7 @@ def update_facebook_profile(psid: str, cid: int) -> None:
         )
     conversation.customer_name = name
 
-    admin_client = keycloak_auth.clients.get_keycloak_admin_client()
+    admin_client = django_keycloak_auth.clients.get_keycloak_admin_client()
 
     if not conversation.conversation_user_id:
         users = admin_client.users.all()

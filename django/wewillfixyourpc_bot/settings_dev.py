@@ -34,7 +34,7 @@ ALLOWED_HOSTS = ["*"]
 INSTALLED_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
-    "keycloak_auth",
+    "django_keycloak_auth",
     "django.contrib.contenttypes",
     "django.contrib.sessions",
     "django.contrib.messages",
@@ -62,7 +62,7 @@ MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
-    "keycloak_auth.middleware.OIDCMiddleware",
+    "django_keycloak_auth.middleware.OIDCMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
@@ -88,7 +88,7 @@ TEMPLATES = [
 WSGI_APPLICATION = "wewillfixyourpc_bot.wsgi.application"
 ASGI_APPLICATION = "wewillfixyourpc_bot.routing.application"
 
-AUTHENTICATION_BACKENDS = ["keycloak_auth.auth.KeycloakAuthorization"]
+AUTHENTICATION_BACKENDS = ["django_keycloak_auth.auth.KeycloakAuthorization"]
 
 LOGIN_URL = "oidc_login"
 LOGOUT_REDIRECT_URL = "oidc_logout"
@@ -240,7 +240,7 @@ LOGGING = {
         "gactions": {"handlers": ["console"], "level": "DEBUG"},
         "rasa_api": {"handlers": ["console"], "level": "DEBUG"},
         "fulfillment": {"handlers": ["console"], "level": "DEBUG"},
-        "keycloak_auth": {"handlers": ["console"], "level": "DEBUG"},
+        "django_keycloak_auth": {"handlers": ["console"], "level": "DEBUG"},
         "keycloak": {"handlers": ["console"], "level": "DEBUG"},
     },
 }

@@ -13,7 +13,7 @@ from django.dispatch import receiver
 import operator_interface.models
 import operator_interface.tasks
 import payment.models
-import keycloak_auth.clients
+import django_keycloak_auth.clients
 
 channel_layer = get_channel_layer()
 
@@ -114,7 +114,7 @@ class OperatorConsumer(AsyncJsonWebsocketConsumer):
         if conversation.conversation_pic:
             pic = conversation.conversation_pic.url
 
-        admin_client = keycloak_auth.clients.get_keycloak_admin_client()
+        admin_client = django_keycloak_auth.clients.get_keycloak_admin_client()
         if conversation.conversation_user_id:
             try:
                 user = admin_client.users.by_id(conversation.conversation_user_id).get()

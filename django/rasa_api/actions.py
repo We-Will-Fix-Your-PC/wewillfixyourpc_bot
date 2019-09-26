@@ -29,7 +29,7 @@ from rasa_sdk.forms import FormAction
 import operator_interface.models
 import payment.models
 import rasa_api.models
-import keycloak_auth.clients
+import django_keycloak_auth.clients
 from fulfillment import models
 
 tz = pytz.timezone("Europe/London")
@@ -94,7 +94,7 @@ def sender_id_to_conversation(sender_id):
 
 
 def update_user_info(conversation, **kwargs):
-    admin_client = keycloak_auth.clients.get_keycloak_admin_client()
+    admin_client = django_keycloak_auth.clients.get_keycloak_admin_client()
 
     if conversation.conversation_user_id:
         try:
@@ -213,7 +213,7 @@ class ActionUpdateInfoSlots(Action):
                         if c.get("name") == "actions.capability.WEB_BROWSER":
                             highest_input_supported = "web_form"
 
-            admin_client = keycloak_auth.clients.get_keycloak_admin_client()
+            admin_client = django_keycloak_auth.clients.get_keycloak_admin_client()
 
             if not conversation.conversation_user_id:
                 if conversation.conversation_name:
