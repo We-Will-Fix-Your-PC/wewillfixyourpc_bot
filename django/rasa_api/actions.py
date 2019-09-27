@@ -29,7 +29,7 @@ from rasa_sdk.forms import FormAction
 import operator_interface.models
 import payment.models
 import rasa_api.models
-import django_keycloak_auth.clients
+import django_keycloak_auth.users
 from fulfillment import models
 
 tz = pytz.timezone("Europe/London")
@@ -93,22 +93,24 @@ def sender_id_to_conversation(sender_id):
             return None
 
 
-def update_user_info(conversation, **kwargs):
-    admin_client = django_keycloak_auth.clients.get_keycloak_admin_client()
+def update_user_info(conversation: operator_interface.models.Conversation, email=None, **kwargs):
+    if not conversation.conversation_user_id and email:
+        user = django_keycloak_auth.users.get_or_create_user(
+            email=email,
+            first_name=conversation.conversation_name,
+            required_actions=["UPDATE_PASSWORD", "UPDATE_PROFILE", "VERIFY_EMAIL"],
+            *kwargs
+        )
+        if user:
+            conversation.conversation_user_id = user.get("id")
+            conversation.save()
 
     if conversation.conversation_user_id:
-        try:
-            user = admin_client.users.by_id(conversation.conversation_user_id)
-        except keycloak.exceptions.KeycloakClientError:
-            return
-
-        if kwargs.get("attributes"):
-            user_data = user.get()
-            user_attributes = user_data.get("attributes", {})
-            kwargs["attributes"] = dict(**kwargs["attributes"], **user_attributes)
-
-        user.update(**kwargs)
-        conversation.save()
+        django_keycloak_auth.users.update_user(
+            conversation.conversation_user_id,
+            force_update=True,
+            *kwargs
+        )
 
 
 class ActionRequestHuman(Action):
@@ -1143,61 +1145,59 @@ class ActionOrderUnlock(Action):
         brand: Text = tracker.get_slot("brand")
         device_model: Text = tracker.get_slot("device_model")
         network: Text = tracker.get_slot("network")
-        name: Text = tracker.get_slot("name")
-        phone_number: Text = tracker.get_slot("phone_number")
-        email: Text = tracker.get_slot("email")
         imei: Text = tracker.get_slot("imei")
 
-        try:
-            network_o = models.Network.objects.get(name=network.lower())
-            network_name = network_o.display_name
-        except models.Network.DoesNotExist:
-            network_alt_o = models.NetworkAlternativeName.objects.get(
-                name=network.lower()
+        conversation = sender_id_to_conversation(tracker.sender_id)
+
+        if conversation:
+            try:
+                network_o = models.Network.objects.get(name=network.lower())
+                network_name = network_o.display_name
+            except models.Network.DoesNotExist:
+                network_alt_o = models.NetworkAlternativeName.objects.get(
+                    name=network.lower()
+                )
+                network_o = network_alt_o.network
+                network_name = network_alt_o.display_name
+            brand_o = models.Brand.objects.get(name=brand.lower())
+            device_model_o = (
+                models.Model.objects.get(name=device_model.lower())
+                if device_model
+                else None
             )
-            network_o = network_alt_o.network
-            network_name = network_alt_o.display_name
-        brand_o = models.Brand.objects.get(name=brand.lower())
-        device_model_o = (
-            models.Model.objects.get(name=device_model.lower())
-            if device_model
-            else None
-        )
 
-        unlock_o = models.PhoneUnlock.objects.get(
-            network=network_o, brand=brand_o, device=device_model_o
-        )  # type: models.PhoneUnlock
+            unlock_o: models.PhoneUnlock = models.PhoneUnlock.objects.get(
+                network=network_o, brand=brand_o, device=device_model_o
+            )
 
-        customer_o = payment.models.Customer.find_customer(
-            name=name, email=email, phone=phone_number
-        )
-        payment_o = payment.models.Payment(
-            state=payment.models.Payment.STATE_OPEN, customer=customer_o
-        )
-        item_data = json.dumps(
-            {
-                "imei": imei,
-                "network": network_o.name,
-                "make": brand_o.name,
-                "model": device_model_o.name if device_model_o else None,
-                "days": unlock_o.time,
-            }
-        )
-        payment_item_o = payment.models.PaymentItem(
-            payment=payment_o,
-            item_type="unlock",
-            item_data=item_data,
-            title=f"Unlock {brand_o.display_name} {device_model_o.display_name if device_model_o else ''} from "
-            f"{network_name}",
-            price=unlock_o.price,
-        )
+            payment_o = payment.models.Payment(
+                state=payment.models.Payment.STATE_OPEN, customer_id=conversation.conversation_user_id
+            )
+            item_data = json.dumps(
+                {
+                    "imei": imei,
+                    "network": network_o.name,
+                    "make": brand_o.name,
+                    "model": device_model_o.name if device_model_o else None,
+                    "days": unlock_o.time,
+                }
+            )
+            payment_item_o = payment.models.PaymentItem(
+                payment=payment_o,
+                item_type="unlock",
+                item_data=item_data,
+                title=f"Unlock {brand_o.display_name} {device_model_o.display_name if device_model_o else ''} from "
+                f"{network_name}",
+                price=unlock_o.price,
+            )
 
-        payment_o.save()
-        payment_item_o.save()
+            payment_o.save()
+            payment_item_o.save()
 
-        dispatcher.utter_custom_json(
-            {"type": "payment", "payment_id": str(payment_o.id)}
-        )
+            dispatcher.utter_custom_json(
+                {"type": "payment", "payment_id": str(payment_o.id)}
+            )
+
         return []
 
 
@@ -1454,7 +1454,7 @@ class UnlockOrderForm(FormAction):
             conversation = sender_id_to_conversation(tracker.sender_id)
 
             if conversation:
-                update_user_info(conversation, attributes={"phone": phone})
+                update_user_info(conversation, phone=phone)
 
             return {"phone_number": phone}
 
@@ -1471,6 +1471,20 @@ class UnlockOrderForm(FormAction):
             update_user_info(conversation, email=value)
 
         return {"email": value}
+
+    def validate_name(
+        self,
+        value: Text,
+        dispatcher: CollectingDispatcher,
+        tracker: Tracker,
+        domain: Dict[Text, Any],
+    ) -> Optional[Dict[Text, Any]]:
+        conversation = sender_id_to_conversation(tracker.sender_id)
+
+        if conversation:
+            update_user_info(conversation, first_name=value)
+
+        return {"name": value}
 
     def submit(
         self,
@@ -1494,55 +1508,56 @@ class UnlockOrderWebForm(Action):
         brand = tracker.get_slot("brand")  # type: Text
         device_model = tracker.get_slot("device_model")  # type: Text
         network = tracker.get_slot("network")  # type: Text
-        name = tracker.get_slot("name")  # type: Text
-        email = tracker.get_slot("email")  # type: Text
 
-        try:
-            network_o = models.Network.objects.get(name=network.lower())
-            network_name = network_o.display_name
-        except models.Network.DoesNotExist:
-            network_alt_o = models.NetworkAlternativeName.objects.get(
-                name=network.lower()
+        conversation = sender_id_to_conversation(tracker.sender_id)
+
+        if conversation:
+            try:
+                network_o: models.Network = models.Network.objects.get(name=network.lower())
+                network_name = network_o.display_name
+            except models.Network.DoesNotExist:
+                network_alt_o = models.NetworkAlternativeName.objects.get(
+                    name=network.lower()
+                )
+                network_o = network_alt_o.network
+                network_name = network_alt_o.display_name
+            brand_o: models.Brand = models.Brand.objects.get(name=brand.lower())
+            device_model_o = (
+                models.Model.objects.get(name=device_model.lower())
+                if device_model
+                else None
             )
-            network_o = network_alt_o.network
-            network_name = network_alt_o.display_name
-        brand_o = models.Brand.objects.get(name=brand.lower())
-        device_model_o = (
-            models.Model.objects.get(name=device_model.lower())
-            if device_model
-            else None
-        )
 
-        unlock_o = models.PhoneUnlock.objects.get(
-            network=network_o, brand=brand_o, device=device_model_o
-        )  # type: models.PhoneUnlock
+            unlock_o: models.PhoneUnlock = models.PhoneUnlock.objects.get(
+                network=network_o, brand=brand_o, device=device_model_o
+            )
 
-        unlock_form = models.UnlockForm(
-            phone_unlock=unlock_o, network_name=network_name, name=name, email=email
-        )
-        unlock_form.save()
+            unlock_form = models.UnlockForm(
+                phone_unlock=unlock_o, network_name=network_name, customer_id=conversation.conversation_user_id
+            )
+            unlock_form.save()
 
-        dispatcher.utter_message("Continue with your order here")
-        dispatcher.utter_custom_json(
-            {
-                "type": "card",
-                "card": {
-                    "title": "Complete your order",
-                    "text": "Open this form to complete your order",
-                    "button": {
-                        "title": "Open",
-                        "link": settings.EXTERNAL_URL_BASE
-                        + reverse(
-                            "fulfillment:form",
-                            kwargs={
-                                "form_type": "unlocking",
-                                "form_id": str(unlock_form.id),
-                            },
-                        ),
+            dispatcher.utter_message("Continue with your order here")
+            dispatcher.utter_custom_json(
+                {
+                    "type": "card",
+                    "card": {
+                        "title": "Complete your order",
+                        "text": "Open this form to complete your order",
+                        "button": {
+                            "title": "Open",
+                            "link": settings.EXTERNAL_URL_BASE
+                            + reverse(
+                                "fulfillment:form",
+                                kwargs={
+                                    "form_type": "unlocking",
+                                    "form_id": str(unlock_form.id),
+                                },
+                            ),
+                        },
                     },
-                },
-            }
-        )
+                }
+            )
         return []
 
 

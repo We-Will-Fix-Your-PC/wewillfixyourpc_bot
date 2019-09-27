@@ -22,8 +22,8 @@ import os
 import payment.views
 
 urlpatterns = [
-    # path('admin/login/', django.views.generic.RedirectView.as_view(
-    #     pattern_name=settings.LOGIN_URL, permanent=True, query_string=True)),
+    path('admin/login/', django.views.generic.RedirectView.as_view(
+        pattern_name=settings.LOGIN_URL, permanent=True, query_string=True)),
     path("admin/", admin.site.urls),
     path("accounts/", include("django.contrib.auth.urls")),
     path("auth/", include("django_keycloak_auth.urls")),

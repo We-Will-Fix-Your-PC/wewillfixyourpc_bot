@@ -18,7 +18,7 @@ from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.shortcuts import reverse
 from django.utils import timezone
 
-import django_keycloak_auth.clients
+import django_keycloak_auth.users
 import operator_interface.consumers
 import operator_interface.tasks
 from operator_interface.models import Conversation, Message
@@ -172,24 +172,26 @@ def handle_facebook_read(psid: dict, read: dict) -> None:
 @shared_task
 def update_facebook_profile(psid: str, cid: int) -> None:
     conversation: Conversation = Conversation.objects.get(id=cid)
-    r = requests.get(
+    profile_r = requests.get(
         f"https://graph.facebook.com/{psid}",
         params={
-            "fields": "name,profile_pic,timezone,locale,gender",
+            "fields": "name,profile_pic,timezone,locale,gender,ids_for_apps",
             "access_token": settings.FACEBOOK_ACCESS_TOKEN,
         },
     )
-    r.raise_for_status()
-    r = r.json()
-    name = r["name"]
-    profile_pic = r["profile_pic"]
-    timezone = r.get("timezone", None)
-    if timezone < 0:
-        timezone = f"Etc/GMT-{abs(timezone)}"
+    profile_r.raise_for_status()
+    profile = profile_r.json()
+    name = profile["name"]
+    first_name = profile.get("first_name")
+    last_name = profile.get("last_name")
+    profile_pic = profile["profile_pic"]
+    user_timezone = profile.get("timezone", None)
+    if user_timezone < 0:
+        user_timezone = f"Etc/GMT-{abs(user_timezone)}"
     else:
-        timezone = f"Etc/GMT+{abs(timezone)}"
-    locale = r.get("locale", None)
-    gender = r.get("gender", None)
+        user_timezone = f"Etc/GMT+{abs(user_timezone)}"
+    locale = profile.get("locale", None)
+    gender = profile.get("gender", None)
 
     pic_r = requests.get(profile_pic)
     if pic_r.status_code == 200:
@@ -203,45 +205,32 @@ def update_facebook_profile(psid: str, cid: int) -> None:
         )
     conversation.customer_name = name
 
-    admin_client = django_keycloak_auth.clients.get_keycloak_admin_client()
-
     if not conversation.conversation_user_id:
-        users = admin_client.users.all()
-        for user in users:
-            user = admin_client.users.by_id(user.get("id")).get()
-            facebook_identity = next(
-                filter(
-                    lambda i: i.get("identityProvider") == "facebook",
-                    user.get("federatedIdentities", []),
-                ),
-                None,
-            )
-            if facebook_identity:
-                app_ids_r = requests.get(
-                    f"https://graph.facebook.com/{psid}/ids_for_apps",
-                    params={
-                        "fields": "id",
-                        "access_token": settings.FACEBOOK_ACCESS_TOKEN,
-                    },
-                )
-                app_ids_r.raise_for_status()
-                app_ids = app_ids_r.json()
-                for app in app_ids.get("data", []):
-                    if app.get("id") == facebook_identity.get("userId"):
-                        conversation.conversation_user_id = user.get("id")
-                        break
+        app_ids = profile.get("ids_for_apps", [])
+
+        def check_asid_with_psid(identity):
+            for app in app_ids:
+                if app.get("id") == identity.get("userId"):
+                    return True
+            return False
+
+        user = django_keycloak_auth.users.get_or_create_user(
+            federated_provider="facebook",
+            check_federated_user=check_asid_with_psid,
+        )
+        if user:
+            conversation.conversation_user_id = user.get("id")
+            conversation.save()
 
     if conversation.conversation_user_id:
-        user = admin_client.users.by_id(conversation.conversation_user_id)
-        user_data = user.get()
-        attributes = user_data.get("attributes", {})
-        if gender and not attributes.get("gender"):
-            attributes["gender"] = gender
-        if locale and not attributes.get("locale"):
-            attributes["locale"] = locale
-        if timezone and not attributes.get("timezone"):
-            attributes["timezone"] = timezone
-        user.update(attributes=attributes)
+        django_keycloak_auth.users.update_user(
+            conversation.conversation_user_id,
+            first_name=first_name,
+            last_name=last_name,
+            gender=gender,
+            locale=locale,
+            timezone=user_timezone
+        )
 
     conversation.save()
     operator_interface.consumers.conversation_saved(None, conversation)

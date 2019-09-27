@@ -7,6 +7,7 @@ from django.conf import settings
 import operator_interface.models
 import operator_interface.tasks
 import operator_interface.consumers
+import django_keycloak_auth.users
 from . import models
 
 

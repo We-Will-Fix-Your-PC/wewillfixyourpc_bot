@@ -20,28 +20,6 @@ class PaymentToken(models.Model):
         return self.name
 
 
-class Customer(models.Model):
-    name = models.CharField(max_length=255)
-    email = models.EmailField(blank=True, null=True)
-    phone = PhoneNumberField(blank=True, null=True)
-
-    def __str__(self):
-        return self.name
-
-    @classmethod
-    def find_customer(cls, *args, **kwargs):
-        customer = cls.objects.filter(email=kwargs.get("email"))
-        if len(customer) > 0:
-            customer = customer[0]
-            for k, v in kwargs.items():
-                setattr(customer, k, v)
-            customer.save()
-        else:
-            customer = cls(*args, **kwargs)
-            customer.save()
-        return customer
-
-
 class Payment(models.Model):
     STATE_OPEN = "O"
     STATE_PAID = "P"
@@ -59,9 +37,7 @@ class Payment(models.Model):
     id = models.CharField(max_length=255, primary_key=True, default=uuid.uuid4)
     timestamp = models.DateTimeField(auto_now_add=True)
     state = models.CharField(max_length=1, choices=STATES)
-    customer = models.ForeignKey(
-        Customer, on_delete=models.SET_NULL, null=True, blank=True
-    )
+    customer_id = models.CharField(max_length=255)
     environment = models.CharField(
         max_length=1, choices=ENVIRONMENTS, default=settings.DEFAULT_PAYMENT_ENVIRONMENT
     )

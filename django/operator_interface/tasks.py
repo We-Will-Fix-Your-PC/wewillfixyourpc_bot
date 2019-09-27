@@ -13,6 +13,8 @@ import rasa_api.tasks
 import telegram_bot.tasks
 import twitter.tasks
 import azure_bot.tasks
+import keycloak.exceptions
+import django_keycloak_auth.clients
 from . import consumers, models
 from django.contrib.auth.models import User
 
@@ -70,11 +72,22 @@ def process_message(mid):
         if conversation.agent_responding:
             return rasa_api.tasks.handle_message(mid)
         else:
+            admin_client = django_keycloak_auth.clients.get_keycloak_admin_client()
+            if message.conversation.conversation_user_id:
+                try:
+                    user = admin_client.users.by_id(message.conversation.conversation_user_id).user
+                except keycloak.exceptions.KeycloakClientError:
+                    user = {"firstName": message.conversation.conversation_name}
+            else:
+                user = {"firstName": message.conversation.conversation_name}
+
+            name = f'{user.get("firstName", "")} {user.get("lastName", "")}'
+
             send_message_notifications(
                 {
                     "type": "message",
                     "cid": message.conversation.id,
-                    "name": message.conversation.customer_name,
+                    "name": name,
                     "text": message.text,
                 }
             )

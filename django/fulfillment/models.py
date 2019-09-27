@@ -128,5 +128,4 @@ class UnlockForm(models.Model):
     id = models.CharField(max_length=255, primary_key=True, default=uuid.uuid4)
     phone_unlock = models.ForeignKey(PhoneUnlock, on_delete=models.CASCADE)
     network_name = models.CharField(max_length=255)
-    name = models.CharField(max_length=255, blank=True, null=True)
-    email = models.EmailField(max_length=255, blank=True, null=True)
+    customer_id = models.CharField(max_length=255)

@@ -11,7 +11,7 @@ django.setup()
 
 import twitter.views
 
-WEBHOOK_URL = "https://bot.cardifftec.uk/twitter/webhook/"
+WEBHOOK_URL = "https://wewillfixyourpc-bot.eu.ngrok.io/twitter/webhook/"
 
 auth = requests_oauthlib.OAuth1(
     settings.TWITTER_CONSUMER_KEY,

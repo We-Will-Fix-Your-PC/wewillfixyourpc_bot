@@ -14,7 +14,7 @@ from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseForbidden
 from django.views.decorators.csrf import csrf_exempt
 
-import django_keycloak_auth.clients
+import django_keycloak_auth.users
 import operator_interface.consumers
 import operator_interface.tasks
 from operator_interface.models import Conversation, Message
@@ -247,91 +247,34 @@ def webhook(request):
         except ValueError:
             return HttpResponseForbidden()
 
-        admin_client = django_keycloak_auth.clients.get_keycloak_admin_client()
-
         if not conversation.conversation_user_id:
-            users = list(
-                map(
-                    lambda u: admin_client.users.by_id(u.get("id")).get(),
-                    admin_client.users.all(),
-                )
+            user = django_keycloak_auth.users.get_or_create_user(
+                federated_provider="google",
+                federated_user_id=user_id_token.get("sub"),
+                federated_user_name=user_id_token.get("email"),
+                email=user_id_token.get("email"),
+                first_name=user_id_token.get("given_name"),
+                last_name=user_id_token.get("family_name"),
+                required_actions=["UPDATE_PROFILE"],
             )
-            cont = True
-            for user in users:
-                google_identity = next(
-                    filter(
-                        lambda i: i.get("identityProvider") == "google",
-                        user.get("federatedIdentities", []),
-                    ),
-                    None,
-                )
-                if google_identity:
-                    if user_id_token.get("sub") == google_identity.get("userId"):
-                        conversation.conversation_user_id = user.get("id")
-                        cont = False
-                        break
-
-            if not cont:
-                for user in users:
-                    if user.get("email") == user_id_token.get("email"):
-                        conversation.customer_user_id = user.get("id")
-                        user_o = admin_client.users.by_id(user.get("id"))
-                        federated_identities = user.get("federatedIdentities")
-                        federated_identities.append(
-                            {
-                                "identityProvider": "google",
-                                "userId": user_id_token.get("sub"),
-                                "userName": user_id_token.get("email"),
-                            }
-                        )
-                        user_o.update(federated_identities=federated_identities)
-                        break
+            if user:
+                conversation.conversation_user_id = user.get("id")
+                conversation.save()
 
         if conversation.conversation_user_id:
-            user = admin_client.users.by_id(conversation.conversation_user_id)
-            user_data = user.get()
-            attributes = user_data.get("attributes", {})
-            federated_identities = user_data.get("federatedIdentities")
-
-            google_identity = next(
-                filter(
-                    lambda i: i.get("identityProvider") == "google"
-                    and i.get("userId") == user_id_token.get("sub"),
-                    user_data.get("federatedIdentities", []),
-                ),
-                None,
+            django_keycloak_auth.users.link_federated_identity_if_not_exists(
+                conversation.conversation_user_id,
+                federated_provider="google",
+                federated_user_id=user_id_token.get("sub"),
+                federated_user_name=user_id_token.get("email"),
             )
-            if not google_identity:
-                federated_identities.push(
-                    {
-                        "identityProvider": "google",
-                        "userId": user_id_token.get("sub"),
-                        "userName": user_id_token.get("email"),
-                    }
-                )
 
-            new_first_name = user_id_token.get("given_name")
-            new_last_name = user_id_token.get("family_name")
-            new_email = user_id_token.get("email")
-            first_name = user_data.get("firstName")
-            last_name = user_data.get("lastName")
-            email = user_data.get("email")
-            email_verified = user_data.get("emailVerified")
-
-            if new_first_name and not first_name:
-                first_name = new_first_name
-            if new_last_name and not last_name:
-                last_name = new_last_name
-            if new_email and not email:
-                email = new_email
-                email_verified = True
-            user.update(
-                first_name=first_name,
-                last_name=last_name,
-                email=email,
-                email_verified=email_verified,
-                attributes=attributes,
-                federated_identities=federated_identities,
+            django_keycloak_auth.users.update_user(
+                conversation.conversation_user_id,
+                first_name=user_id_token.get("given_name"),
+                last_name=user_id_token.get("family_name"),
+                email=user_id_token.get("email"),
+                email_verified=user_id_token.get("email_verified", True)
             )
 
         profile_pic = user_id_token.get("picture")

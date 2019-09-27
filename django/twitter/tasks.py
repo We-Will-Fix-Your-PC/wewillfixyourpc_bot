@@ -15,6 +15,7 @@ from django.conf import settings
 from django.shortcuts import reverse
 
 import operator_interface.tasks
+import django_keycloak_auth.users
 from operator_interface.consumers import conversation_saved
 from operator_interface.models import Conversation, Message
 from . import views
@@ -26,8 +27,33 @@ def handle_twitter_message(mid: str, psid, message, user):
     attachment: dict = message.get("attachment")
     if text is not None:
         conversation: Conversation = Conversation.get_or_create_conversation(
-            Conversation.TWITTER, psid, conversation_name=user["name"]
+            Conversation.TWITTER, psid,
         )
+
+        if not conversation.conversation_user_id:
+            user = django_keycloak_auth.users.get_or_create_user(
+                federated_provider="twitter",
+                federated_user_id=user.get("id"),
+                federated_user_name=user.get("screen_name"),
+                first_name=user.get("name"),
+            )
+            if user:
+                conversation.conversation_user_id = user.get("id")
+                conversation.save()
+
+        if conversation.conversation_user_id:
+            django_keycloak_auth.users.link_federated_identity_if_not_exists(
+                conversation.conversation_user_id,
+                federated_provider="twitter",
+                federated_user_id=user.get("id"),
+                federated_user_name=user.get("screen_name"),
+            )
+
+            django_keycloak_auth.users.update_user(
+                conversation.conversation_user_id,
+                first_name=user.get("name"),
+            )
+
         if not Message.message_exits(conversation, mid):
             message_m: Message = Message(
                 conversation=conversation,
@@ -55,12 +81,13 @@ def handle_twitter_message(mid: str, psid, message, user):
             message_m.save()
             handle_mark_twitter_message_read.delay(psid, mid)
             operator_interface.tasks.process_message.delay(message_m.id)
+
         file_name = os.path.basename(
             urllib.parse.urlparse(user["profile_image_url_https"]).path
         )
         r = requests.get(user["profile_image_url_https"])
         if r.status_code == 200:
-            conversation.customer_pic = InMemoryUploadedFile(
+            conversation.conversation_pic = InMemoryUploadedFile(
                 file=BytesIO(r.content),
                 size=len(r.content),
                 charset=r.encoding,
