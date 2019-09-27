@@ -14,6 +14,7 @@ from . import models
 @shared_task
 def process_payment(pid):
     payment_o = models.Payment.objects.get(id=pid)
+    user = django_keycloak_auth.users.get_user_by_id(payment_o.customer_id)
 
     email_items = "\n\n".join(
         [
@@ -32,9 +33,9 @@ Order date: {payment_o.timestamp.strftime("%c")}
 Environment: {next(e[1] for e in models.Payment.ENVIRONMENTS if e[0] == payment_o.environment)}
 Payment method: {payment_o.payment_method}
 ---
-Customer name: {payment_o.customer.name}
-Customer email: {payment_o.customer.email}
-Customer phone: {payment_o.customer.phone.as_national if payment_o.customer else ""}
+Customer name: {user.user.get("firstName")} {user.user.get("lastName")}
+Customer email: {user.user.get("email")}
+Customer phone: {next(user.user.get("attributes", {}).get("phone", []), "")}
 ---
 Items:
 

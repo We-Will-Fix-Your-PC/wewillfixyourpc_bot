@@ -37,7 +37,7 @@
 </head>
 <body>
 <h1>Order details</h1>
-<p><span>Deliver to:</span> {{ payment.customer.name }}</p>
+<p><span>Deliver to:</span> {{ user.user.firstName }} {{ user.user.lastName }}</p>
 <p><span>Ordered on:</span> {{ payment.timestamp|date:"Y-m-d P" }}</p>
 <p><span>Paid with:</span> {{ payment.payment_method }}</p>
 <p><span>Order number:</span> {{ payment.id }}</p>

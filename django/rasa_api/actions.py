@@ -102,6 +102,7 @@ def update_user_info(conversation: operator_interface.models.Conversation, email
             *kwargs
         )
         if user:
+            django_keycloak_auth.users.link_roles_to_user(user.get("id"), ["customer"])
             conversation.conversation_user_id = user.get("id")
             conversation.save()
 

@@ -8,6 +8,7 @@ import logging
 import uuid
 import payment.models
 import operator_interface.tasks
+import django_keycloak_auth.users
 from operator_interface.models import Message, MessageSuggestion, Conversation
 import operator_interface.consumers
 

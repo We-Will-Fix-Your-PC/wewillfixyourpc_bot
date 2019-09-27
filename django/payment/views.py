@@ -18,6 +18,7 @@ from django.views.decorators.csrf import csrf_exempt
 
 import operator_interface.models
 import operator_interface.tasks
+import django_keycloak_auth.users
 from . import gpay, mastercard, models, tasks
 
 
@@ -28,21 +29,9 @@ def payment_saved(sender, instance: models.Payment, **kwargs):
             message = operator_interface.models.Message.objects.get(
                 payment_request=instance.id
             )
-            conversation = message.conversation
-            conversation.customer_phone = (
-                instance.customer.phone
-                if instance.customer.phone
-                else conversation.customer_phone
-            )
-            conversation.customer_email = (
-                instance.customer.email
-                if instance.customer.email
-                else conversation.customer_email
-            )
-            conversation.save()
 
             message = operator_interface.models.Message(
-                conversation=conversation,
+                conversation=message.conversation,
                 direction=operator_interface.models.Message.TO_CUSTOMER,
                 message_id=uuid.uuid4(),
                 text="Payment complete 💸, thanks!",
@@ -113,6 +102,7 @@ def twitter_payment(request, payment_id):
 @xframe_options_exempt
 def receipt(request, payment_id):
     payment_o = get_object_or_404(models.Payment, id=payment_id)
+    user = django_keycloak_auth.users.get_user_by_id(payment_o.customer_id)
     return render(
         request,
         "payment/receipt.html",
@@ -124,12 +114,14 @@ def receipt(request, payment_id):
             "tax": (payment_o.total * decimal.Decimal("0.2")).quantize(
                 decimal.Decimal(".01"), rounding=decimal.ROUND_DOWN
             ),
+            "user": user
         },
     )
 
 
 def payment(request, payment_id):
     payment_o = get_object_or_404(models.Payment, id=payment_id)
+    customer_user = django_keycloak_auth.users.get_user_by_id(payment_o.customer_id)
 
     return HttpResponse(
         json.dumps(
@@ -138,15 +130,11 @@ def payment(request, payment_id):
                 "timestamp": payment_o.timestamp.isoformat(),
                 "state": payment_o.state,
                 "environment": payment_o.environment,
-                "customer": payment_o.customer
-                if not payment_o.customer
-                else {
-                    "id": payment_o.customer.id,
-                    "name": payment_o.customer.name,
-                    "email": payment_o.customer.email,
-                    "phone": payment_o.customer.phone.as_e164
-                    if payment_o.customer.phone
-                    else None,
+                "customer": {
+                    "id": customer_user.user.get("id"),
+                    "name": f'{customer_user.user.get("firstName")} {customer_user.user.get("lastName")}',
+                    "email": customer_user.user.get("email"),
+                    "phone": next(customer_user.user.get("attributes", {}).get("phone", []), None)
                 },
                 "items": list(
                     map(
@@ -197,12 +185,15 @@ def take_worldpay_payment(request, payment_id):
             payment_o.id = payment["id"]
             if payment.get("customer"):
                 customer = payment["customer"]
-                email = customer.get("email")
-                phone = customer.get("phone")
-                name = customer.get("name")
-                payment_o.customer = models.Customer.find_customer(
-                    email=email, phone=phone, name=name
+                user = django_keycloak_auth.users.get_or_create_user(
+                    email=customer.get("email"),
+                    first_name=customer.get("name"),
+                    required_actions=["UPDATE_PASSWORD", "UPDATE_PROFILE", "VERIFY_EMAIL"],
+                    phone=customer.get("phone")
                 )
+                if user:
+                    django_keycloak_auth.users.link_roles_to_user(user.get("id"), ["customer"])
+                    payment_o.customer_id = user.get("id")
             payment_o.save()
 
             for item in items:
@@ -234,9 +225,15 @@ def take_worldpay_payment(request, payment_id):
     email = body.get("email")
     phone = body.get("phone")
     name = body.get("payerName")
-    payment_o.customer = models.Customer.find_customer(
-        email=email, phone=phone, name=name
+    user = django_keycloak_auth.users.get_or_create_user(
+        email=email,
+        first_name=name,
+        required_actions=["UPDATE_PASSWORD", "UPDATE_PROFILE", "VERIFY_EMAIL"],
+        phone=phone
     )
+    if user:
+        django_keycloak_auth.users.link_roles_to_user(user.get("id"), ["customer"])
+        payment_o.customer_id = user.get("id")
     payment_o.save()
 
     token = (
@@ -268,8 +265,8 @@ def take_worldpay_payment(request, payment_id):
         "customerOrderCode": payment_o.id,
         "amount": total,
         "currencyCode": "GBP",
-        "name": body.get("name"),
-        "shopperEmailAddress": payment_o.customer.email,
+        "name": f'{user.get("firstName")} {user.get("lastName")}',
+        "shopperEmailAddress": user.get("email"),
         "billingAddress": billingAddress,
         "shopperIpAddress": get_client_ip(request),
         "shopperUserAgent": request.META["HTTP_USER_AGENT"],
@@ -505,13 +502,16 @@ def take_masterpass_payment(request, payment_id, redirect_url_b64, base_url, aut
     email = personalInfo.get("recipientEmailAddress")
     phone = personalInfo.get("recipientPhone")
     name = personalInfo.get("recipientName")
-    try:
-        payment_o.customer = models.Customer.find_customer(
-            email=email, phone=phone, name=name
-        )
-        payment_o.save()
-    except ValueError:
-        pass
+    user = django_keycloak_auth.users.get_or_create_user(
+        email=email,
+        first_name=name,
+        required_actions=["UPDATE_PASSWORD", "UPDATE_PROFILE", "VERIFY_EMAIL"],
+        phone=phone
+    )
+    if user:
+        django_keycloak_auth.users.link_roles_to_user(user.get("id"), ["customer"])
+        payment_o.customer_id = user.get("id")
+    payment_o.save()
 
     billingAddress = {
         "address1": card["billingAddress"]["line1"],
@@ -531,8 +531,8 @@ def take_masterpass_payment(request, payment_id, redirect_url_b64, base_url, aut
         "customerOrderCode": payment_o.id,
         "amount": total,
         "currencyCode": "GBP",
-        "name": name,
-        "shopperEmailAddress": payment_o.customer.email,
+        "name": user.get("name"),
+        "shopperEmailAddress": user.get("email"),
         "billingAddress": billingAddress,
         "shopperIpAddress": get_client_ip(request),
         "shopperUserAgent": request.META["HTTP_USER_AGENT"],

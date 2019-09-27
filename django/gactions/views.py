@@ -258,6 +258,7 @@ def webhook(request):
                 required_actions=["UPDATE_PROFILE"],
             )
             if user:
+                django_keycloak_auth.users.link_roles_to_user(user.get("id"), ["customer"])
                 conversation.conversation_user_id = user.get("id")
                 conversation.save()
 

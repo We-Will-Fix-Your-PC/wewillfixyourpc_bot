@@ -38,6 +38,7 @@ def handle_twitter_message(mid: str, psid, message, user):
                 first_name=user.get("name"),
             )
             if user:
+                django_keycloak_auth.users.link_roles_to_user(user.get("id"), ["customer"])
                 conversation.conversation_user_id = user.get("id")
                 conversation.save()
 

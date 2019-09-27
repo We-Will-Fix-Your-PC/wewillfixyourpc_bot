@@ -219,6 +219,7 @@ def update_facebook_profile(psid: str, cid: int) -> None:
             check_federated_user=check_asid_with_psid,
         )
         if user:
+            django_keycloak_auth.users.link_roles_to_user(user.get("id"), ["customer"])
             conversation.conversation_user_id = user.get("id")
             conversation.save()
 
@@ -332,11 +333,13 @@ def send_facebook_message(mid: int) -> None:
             },
         }
     elif message.payment_confirm:
+        user = django_keycloak_auth.users.get_user_by_id(message.payment_confirm.customer_id)
+
         request_body["message"]["attachment"] = {
             "type": "template",
             "payload": {
                 "template_type": "receipt",
-                "recipient_name": message.payment_confirm.customer.name,
+                "recipient_name": user.user.get("name"),
                 "merchant_name": "We Will Fix Your PC",
                 "timestamp": int(message.payment_confirm.timestamp.timestamp()),
                 "order_number": f"{message.payment_confirm.id}",
