@@ -73,7 +73,7 @@ spec:
         - name: django
           image: theenbyperor/wewillfixyourpcbot_django:(version)
           imagePullPolicy: Always
-          command: ["sh", "-c", "python3 manage.py collectstatic --noinput && python3 manage.py migrate"]
+          command: ["sh", "-c", "python3 manage.py collectstatic --noinput && python3 manage.py migrate && python3 manage.py sync-keycloak"]
           ports:
             - containerPort: 8000
           volumeMounts:
