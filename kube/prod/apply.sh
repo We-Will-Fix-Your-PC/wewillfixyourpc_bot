@@ -1,9 +1,11 @@
 #!/usr/bin/env bash
 
-VERSION=$(sentry-cli releases propose-version)
+VERSION=$(sentry-cli releases propose-version || exit)
 
-sed -e "s/(version)/$VERSION/g" < django.yaml | kubectl apply -f -
-kubectl apply -f nginx.yaml
-kubectl apply -f rasa.yaml
-kubectl apply -f redis.yaml
-kubectl apply -f duckling.yaml
+sed -e "s/(version)/$VERSION/g" < django.yaml | kubectl apply -f - || exit
+kubectl apply -f nginx.yaml || exit
+kubectl apply -f rasa.yaml || exit
+kubectl apply -f redis.yaml || exit
+kubectl apply -f duckling.yaml || exit
+
+sentry-cli releases --org we-will-fix-your-pc deploys $VERSION new -e prod

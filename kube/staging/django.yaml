@@ -38,9 +38,12 @@ data:
   CELERY_RESULT_BACKEND: "redis://redis"
   RASA_HTTP_URL: "http://rasa:5005"
   SENTRY_ENVIRONMENT: "staging"
-  PAYMENT_ENVIRONMENT: "test"
   EMAIL_HOST: "mail.misell.cymru"
   ORDER_NOTIFICATION_EMAIL: "q@misell.cymru"
+  KEYCLOAK_SERVER_URL: "https://account.cardifftec.uk/"
+  KEYCLOAK_REALM: wwfypc-staging
+  KEYCLOAK_SCOPES: "openid email profile"
+  KEYCLOAK_CLIENT_ID: "bot-server"
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -60,9 +63,6 @@ spec:
         app: django
     spec:
       volumes:
-        - name: gpay-keys
-          secret:
-            secretName: gpay-keys
         - name: static
           persistentVolumeClaim:
             claimName: django-static
@@ -77,9 +77,6 @@ spec:
           ports:
             - containerPort: 8000
           volumeMounts:
-            - mountPath: "/gpay-keys/"
-              name: gpay-keys
-              readOnly: true
             - mountPath: "/app/static/"
               name: static
             - mountPath: "/app/media/"
@@ -101,9 +98,6 @@ spec:
             - secretRef:
                 name: webpush-secrets
             - secretRef:
-                name: worldpay-keys
-              prefix: "WORLDPAY_"
-            - secretRef:
                 name: facebook-secrets
               prefix: "FACEBOOK_"
             - secretRef:
@@ -115,6 +109,9 @@ spec:
             - secretRef:
                 name: azure-creds
               prefix: "AZURE_"
+            - secretRef:
+                name: keycloak
+              prefix: "KEYCLOAK_"
       containers:
         - name: gunicorn
           image: theenbyperor/wewillfixyourpcbot_django:(version)
@@ -123,14 +120,10 @@ spec:
           ports:
             - containerPort: 8000
           volumeMounts:
-            - mountPath: "/gpay-keys/"
-              name: gpay-keys
-              readOnly: true
             - mountPath: "/app/static/"
               name: static
             - mountPath: "/app/media/"
               name: media
-
           envFrom:
             - configMapRef:
                 name: django-conf
@@ -148,9 +141,6 @@ spec:
             - secretRef:
                 name: webpush-secrets
             - secretRef:
-                name: worldpay-keys
-              prefix: "WORLDPAY_"
-            - secretRef:
                 name: facebook-secrets
               prefix: "FACEBOOK_"
             - secretRef:
@@ -162,6 +152,9 @@ spec:
             - secretRef:
                 name: azure-creds
               prefix: "AZURE_"
+            - secretRef:
+                name: keycloak
+              prefix: "KEYCLOAK_"
         - name: daphne
           image: theenbyperor/wewillfixyourpcbot_django:(version)
           imagePullPolicy: Always
@@ -169,9 +162,6 @@ spec:
           ports:
             - containerPort: 8001
           volumeMounts:
-            - mountPath: "/gpay-keys/"
-              name: gpay-keys
-              readOnly: true
             - mountPath: "/app/static/"
               name: static
             - mountPath: "/app/media/"
@@ -193,9 +183,6 @@ spec:
             - secretRef:
                 name: webpush-secrets
             - secretRef:
-                name: worldpay-keys
-              prefix: "WORLDPAY_"
-            - secretRef:
                 name: facebook-secrets
               prefix: "FACEBOOK_"
             - secretRef:
@@ -207,6 +194,9 @@ spec:
             - secretRef:
                 name: azure-creds
               prefix: "AZURE_"
+            - secretRef:
+                name: keycloak
+              prefix: "KEYCLOAK_"
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -226,9 +216,6 @@ spec:
         app: celery
     spec:
       volumes:
-        - name: gpay-keys
-          secret:
-            secretName: gpay-keys
         - name: static
           persistentVolumeClaim:
             claimName: django-static
@@ -243,9 +230,6 @@ spec:
           ports:
             - containerPort: 8000
           volumeMounts:
-            - mountPath: "/gpay-keys/"
-              name: gpay-keys
-              readOnly: true
             - mountPath: "/app/static/"
               name: static
             - mountPath: "/app/media/"
@@ -267,9 +251,6 @@ spec:
             - secretRef:
                 name: webpush-secrets
             - secretRef:
-                name: worldpay-keys
-              prefix: "WORLDPAY_"
-            - secretRef:
                 name: facebook-secrets
               prefix: "FACEBOOK_"
             - secretRef:
@@ -281,6 +262,9 @@ spec:
             - secretRef:
                 name: azure-creds
               prefix: "AZURE_"
+            - secretRef:
+                name: keycloak
+              prefix: "KEYCLOAK_"
 ---
 apiVersion: v1
 kind: Service
