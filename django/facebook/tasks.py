@@ -206,7 +206,7 @@ def update_facebook_profile(psid: str, cid: int) -> None:
     conversation.customer_name = name
 
     if not conversation.conversation_user_id:
-        app_ids = profile.get("ids_for_apps", [])
+        app_ids = profile.get("ids_for_apps", {}).get("data", [])
 
         def check_asid_with_psid(identity):
             for app in app_ids:
