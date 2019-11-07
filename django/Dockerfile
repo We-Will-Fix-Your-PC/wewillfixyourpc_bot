@@ -12,8 +12,8 @@ RUN pip install -U pip
 COPY requirements.txt /app/
 RUN pip install -r requirements.txt
 
-COPY django-keycloak-auth-1.0.any-any.tar.gz /
-RUN pip install /django-keycloak-auth-1.0.any-any.tar.gz && rm /django-keycloak-auth-1.0.any-any.tar.gz
+COPY django-keycloak-auth-1.0.tar.gz /
+RUN pip install /django-keycloak-auth-1.0.tar.gz && rm /django-keycloak-auth-1.0.tar.gz
 
 USER app:app
 
