@@ -175,23 +175,23 @@ def update_facebook_profile(psid: str, cid: int) -> None:
     profile_r = requests.get(
         f"https://graph.facebook.com/{psid}",
         params={
-            "fields": "name,profile_pic,timezone,locale,gender,ids_for_apps",
+            "fields": "name,profile_pic,timezone,locale,gender,ids_for_apps,first_name,last_name",
             "access_token": settings.FACEBOOK_ACCESS_TOKEN,
         },
     )
     profile_r.raise_for_status()
     profile = profile_r.json()
-    name = profile["name"]
+    name = profile.get("name")
     first_name = profile.get("first_name")
     last_name = profile.get("last_name")
-    profile_pic = profile["profile_pic"]
-    user_timezone = profile.get("timezone", None)
+    profile_pic = profile.get("profile_pic")
+    user_timezone = profile.get("timezone")
     if user_timezone < 0:
         user_timezone = f"Etc/GMT-{abs(user_timezone)}"
     else:
         user_timezone = f"Etc/GMT+{abs(user_timezone)}"
-    locale = profile.get("locale", None)
-    gender = profile.get("gender", None)
+    locale = profile.get("locale")
+    gender = profile.get("gender")
 
     pic_r = requests.get(profile_pic)
     if pic_r.status_code == 200:
@@ -221,7 +221,6 @@ def update_facebook_profile(psid: str, cid: int) -> None:
         if user:
             django_keycloak_auth.users.link_roles_to_user(user.get("id"), ["customer"])
             conversation.conversation_user_id = user.get("id")
-            conversation.save()
 
     if conversation.conversation_user_id:
         django_keycloak_auth.users.update_user(
