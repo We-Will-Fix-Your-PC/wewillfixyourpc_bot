@@ -195,7 +195,7 @@ def update_facebook_profile(psid: str, cid: int) -> None:
 
     pic_r = requests.get(profile_pic)
     if pic_r.status_code == 200:
-        conversation.customer_pic = InMemoryUploadedFile(
+        conversation.conversation_pic = InMemoryUploadedFile(
             file=BytesIO(pic_r.content),
             size=len(pic_r.content),
             charset=pic_r.encoding,
@@ -203,7 +203,7 @@ def update_facebook_profile(psid: str, cid: int) -> None:
             field_name=psid,
             name=psid,
         )
-    conversation.customer_name = name
+    conversation.conversation_name = name
 
     if not conversation.conversation_user_id:
         app_ids = profile.get("ids_for_apps", {}).get("data", [])

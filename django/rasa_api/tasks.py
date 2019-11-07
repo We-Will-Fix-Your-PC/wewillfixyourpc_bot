@@ -96,7 +96,7 @@ def handle_text(conversation, text):
                         {
                             "type": "alert",
                             "cid": conversation.id,
-                            "name": conversation.customer_name,
+                            "name": conversation.conversation_name,
                             "text": "Human needed!",
                         }
                     )

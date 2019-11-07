@@ -171,7 +171,7 @@ def update_telegram_profile(chat_id, cid):
                     f"https://api.telegram.org/file/bot{settings.TELEGRAM_TOKEN}/{file['file_path']}"
                 )
                 if file.status_code == 200:
-                    conversation.customer_pic = InMemoryUploadedFile(
+                    conversation.conversation_pic = InMemoryUploadedFile(
                         file=BytesIO(file.content),
                         size=len(file.content),
                         charset=file.encoding,
@@ -179,8 +179,7 @@ def update_telegram_profile(chat_id, cid):
                         field_name=profile_pic["small_file_id"],
                         name=profile_pic["small_file_id"],
                     )
-        conversation.customer_name = name
-        conversation.customer_username = username
+        conversation.conversation_name = name
         conversation.save()
         operator_interface.consumers.conversation_saved(None, conversation)
 
