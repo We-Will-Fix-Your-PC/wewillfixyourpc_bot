@@ -1,0 +1,97 @@
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: storage
+  namespace: well-known
+  annotations:
+    volume.beta.kubernetes.io/storage-class: "managed-nfs-storage"
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx
+  namespace: well-known
+  labels:
+    app: nginx
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: storage
+      containers:
+        - name: nginx
+          image: theenbyperor/nginx-well-known
+          ports:
+            - containerPort: 80
+          volumeMounts:
+            - mountPath: "/data"
+              name: data
+---
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: well-known
+  name: well-known
+  labels:
+    app: nginx
+spec:
+  selector:
+    app: nginx
+  ports:
+    - port: 80
+      targetPort: 80
+---
+apiVersion: networking.k8s.io/v1beta1
+kind: Ingress
+metadata:
+  name: keycloak-ingress
+  namespace: well-known
+  annotations:
+    certmanager.k8s.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/proxy-body-size: "0"
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+spec:
+  tls:
+    - hosts:
+        - account.cardifftec.uk
+        - payments.cardifftec.uk
+        - cardifftec.uk
+      secretName: keycloak-tls
+  rules:
+  - host: account.cardifftec.uk
+    http:
+      paths:
+      - path: /.well-known/
+        backend:
+          serviceName: well-known
+          servicePort: 80
+  - host: payments.cardifftec.uk
+    http:
+      paths:
+      - path: /.well-known/
+        backend:
+          serviceName: well-known
+          servicePort: 80
+  - host: cardifftec.uk
+    http:
+      paths:
+      - path: /.well-known/
+        backend:
+          serviceName: well-known
+          servicePort: 80
+
