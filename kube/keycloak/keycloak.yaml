@@ -30,6 +30,7 @@ spec:
       containers:
         - name: keycloak
           image: jboss/keycloak
+          args: ["-Dkeycloak.profile=preview"]
           ports:
             - containerPort: 8080
           envFrom:
