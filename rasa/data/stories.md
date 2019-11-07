@@ -46,6 +46,34 @@
     - repair
 > repairable
 
+## greet unlock
+* greet
+  - update_info_slots
+  - greet
+* unlock
+    - unlock_lookup_form
+    - unlock_lookup
+    - update_info_slots
+> unlockable
+
+## greet repair
+* greet
+  - update_info_slots
+  - greet
+* repair
+    - repair_form
+    - form{"name": "repair_form"}
+    - form{"name": null}
+    - repair
+> repairable
+
+## greet end
+* greet
+  - update_info_slots
+  - greet
+* end
+> end
+
 ## end
 * end
 > end

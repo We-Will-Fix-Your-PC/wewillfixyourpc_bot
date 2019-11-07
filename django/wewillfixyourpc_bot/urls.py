@@ -13,7 +13,6 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
-import django.views.generic
 from django.contrib import admin
 from django.urls import path, include
 from django.conf.urls.static import static
@@ -22,8 +21,6 @@ import os
 import payment.views
 
 urlpatterns = [
-    path('admin/login/', django.views.generic.RedirectView.as_view(
-        pattern_name=settings.LOGIN_URL, permanent=True, query_string=True)),
     path("admin/", admin.site.urls),
     path("accounts/", include("django.contrib.auth.urls")),
     path("auth/", include("django_keycloak_auth.urls")),

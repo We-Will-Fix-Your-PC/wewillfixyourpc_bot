@@ -1180,7 +1180,7 @@ class ActionOrderUnlock(Action):
                     "network": network_o.name,
                     "make": brand_o.name,
                     "model": device_model_o.name if device_model_o else None,
-                    "days": unlock_o.time,
+                    "days": unlock_o.ti
                 }
             )
             payment_item_o = payment.models.PaymentItem(

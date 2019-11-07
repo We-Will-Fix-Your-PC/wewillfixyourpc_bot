@@ -134,7 +134,7 @@ def payment(request, payment_id):
                     "id": customer_user.user.get("id"),
                     "name": f'{customer_user.user.get("firstName")} {customer_user.user.get("lastName")}',
                     "email": customer_user.user.get("email"),
-                    "phone": next(customer_user.user.get("attributes", {}).get("phone", []), None)
+                    "phone": next(iter(customer_user.user.get("attributes", {}).get("phone", [])), None)
                 },
                 "items": list(
                     map(

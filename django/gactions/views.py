@@ -4,6 +4,8 @@ import os
 import re
 import urllib.parse
 import uuid
+import jwt
+import jose.exceptions
 from io import BytesIO
 
 import google.auth.transport.requests
@@ -15,6 +17,7 @@ from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseForbid
 from django.views.decorators.csrf import csrf_exempt
 
 import django_keycloak_auth.users
+import django_keycloak_auth.clients
 import operator_interface.consumers
 import operator_interface.tasks
 from operator_interface.models import Conversation, Message
@@ -223,7 +226,7 @@ def webhook(request):
     conversation_id = data.get("conversation", {}).get("conversationId", "")
 
     if not is_guest_user:
-        user_id = user.get("userStorage", str(uuid.uuid4()))
+        user_id = user.get("userStorage", None)
     else:
         user_id = None
     conversation: Conversation = Conversation.get_or_create_conversation(
@@ -239,6 +242,30 @@ def webhook(request):
     conversation.save()
 
     user_id_token = user.get("idToken")
+    user_access_token = user.get("accessToken")
+
+    if user_id:
+        conversation.conversation_user_id = user_id
+        conversation.save()
+
+    if user_access_token:
+        oidc_client = django_keycloak_auth.clients.get_openid_connect_client()
+
+        certs = oidc_client.certs().get("keys", [])
+        header = jwt.get_unverified_header(user_access_token)
+        cert = next(filter(lambda c: c.get("kid") == header.get("kid"), certs), None)
+
+        if cert is None:
+            return HttpResponseForbidden()
+
+        try:
+            user_token = oidc_client.decode_token(user_access_token, cert)
+        except jose.exceptions.JWTError:
+            return HttpResponseForbidden()
+
+        conversation.conversation_user_id = user_token.get("sub")
+        conversation.save()
+
     if user_id_token:
         try:
             user_id_token = google.oauth2.id_token.verify_token(
@@ -320,5 +347,5 @@ def webhook(request):
 
     print(out_data)
     if not is_guest_user:
-        out_data["userStorage"] = user_id
+        out_data["userStorage"] = conversation.conversation_user_id
     return HttpResponse(json.dumps(out_data), content_type="application/json")

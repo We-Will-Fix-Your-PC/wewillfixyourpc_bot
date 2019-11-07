@@ -91,7 +91,7 @@ ASGI_APPLICATION = "wewillfixyourpc_bot.routing.application"
 AUTHENTICATION_BACKENDS = ["django_keycloak_auth.auth.KeycloakAuthorization"]
 
 LOGIN_URL = "oidc_login"
-LOGOUT_REDIRECT_URL = "oidc_logout"
+LOGOUT_REDIRECT_URL = "oidc_login"
 
 # Database
 # https://docs.djangoproject.com/en/2.1/ref/settings/#databases
@@ -199,7 +199,7 @@ MASTERPASS_TEST_P12_KEY = masterpass_test_p12
 
 GPAY_TEST_PRIVATE_KEYS = [gpay_priv_key_test]
 
-GOOGLE_PROJECT_ID = "we-will-fix-your-pc-c0198"
+GOOGLE_PROJECT_ID = "we-will-fix-your-pc-dev"
 
 RASA_HTTP_URL = "http://172.30.0.13:5005"
 
@@ -209,8 +209,8 @@ ORDER_NOTIFICATION_EMAIL = "q@misell.cymru"
 ORDER_NOTIFICATION_FROM = "noreply@noreply.wewillfixyourpc.co.uk"
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 
-KEYCLOAK_SERVER_URL = "https://account.cardifftec.uk/"
-KEYCLOAK_REALM = "wwfypc"
+KEYCLOAK_SERVER_URL = keycloak_conf["server_url"]
+KEYCLOAK_REALM = keycloak_conf["realm"]
 OIDC_CLIENT_ID = keycloak_conf["client_id"]
 OIDC_CLIENT_SECRET = keycloak_conf["client_secret"]
 OIDC_SCOPES = keycloak_conf["scopes"]

@@ -11,6 +11,7 @@ import fulfillment.models
 
 @login_required
 def index(request):
+    print(request.user)
     return render(request, "operator_interface/index.html")
 
 

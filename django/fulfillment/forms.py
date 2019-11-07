@@ -31,10 +31,15 @@ class IMEIField(forms.CharField):
 
 
 class UnlockForm(forms.Form):
-    name = forms.CharField(
-        label="Your name",
+    first_name = forms.CharField(
+        label="Your first name",
         max_length=255,
-        widget=forms.TextInput(attrs={"autocomplete": "name"}),
+        widget=forms.TextInput(attrs={"autocomplete": "given-name"}),
+    )
+    last_name = forms.CharField(
+        label="Your last name",
+        max_length=255,
+        widget=forms.TextInput(attrs={"autocomplete": "family-name"}),
     )
     email = forms.EmailField(
         label="Your email",

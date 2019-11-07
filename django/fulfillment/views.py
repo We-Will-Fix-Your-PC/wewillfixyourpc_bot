@@ -3,6 +3,7 @@ from django.shortcuts import get_object_or_404, redirect, render, reverse
 from . import models, forms
 import payment.models
 import json
+import django_keycloak_auth.users
 
 
 def form(request, form_type, form_id):
@@ -16,13 +17,17 @@ def form(request, form_type, form_id):
                 unlock_form.clean()
                 phone_unlock = unlock_form_o.phone_unlock
 
-                customer_o = payment.models.Customer.find_customer(
-                    name=unlock_form.cleaned_data["name"],
-                    email=unlock_form.cleaned_data["email"],
-                    phone=unlock_form.cleaned_data["phone"],
+                django_keycloak_auth.users.update_user(
+                    unlock_form_o.customer_id,
+                    force_update=True,
+                    first_name=unlock_form.cleaned_data.get("first_name"),
+                    last_name=unlock_form.cleaned_data.get("last_name"),
+                    email=unlock_form.cleaned_data.get("email"),
+                    phone=unlock_form.cleaned_data.get("phone").as_e164,
                 )
+
                 payment_o = payment.models.Payment(
-                    state=payment.models.Payment.STATE_OPEN, customer=customer_o
+                    state=payment.models.Payment.STATE_OPEN, customer_id=unlock_form_o.customer_id
                 )
                 item_data = json.dumps(
                     {
@@ -50,8 +55,14 @@ def form(request, form_type, form_id):
 
                 return redirect("payment:gactions_payment", payment_id=payment_o.id)
         else:
+            user = django_keycloak_auth.users.get_user_by_id(unlock_form_o.customer_id)
             unlock_form = forms.UnlockForm(
-                initial={"name": unlock_form_o.name, "email": unlock_form_o.email}
+                initial={
+                    "first_name": user.user.get("firstName"),
+                    "last_name": user.user.get("lastName"),
+                    "email": user.user.get("email"),
+                    "phone": next(iter(user.user.get("attributes", {}).get("phone", [])), ""),
+                }
             )
 
         return render(

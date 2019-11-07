@@ -7,6 +7,5 @@ class PaymentTokenAdmin(admin.ModelAdmin):
     readonly_fields = ("token",)
 
 
-admin.site.register(models.Customer)
 admin.site.register(models.Payment)
 admin.site.register(models.PaymentItem)

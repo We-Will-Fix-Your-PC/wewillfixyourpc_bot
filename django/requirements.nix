@@ -10,6 +10,7 @@ self: super: {
     doCheck = false;
     propagatedBuildInputs = [
       self."Django"
+      self."python-keycloak-client"
     ];
   };
   "Automat" = super.buildPythonPackage rec {

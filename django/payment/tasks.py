@@ -35,7 +35,7 @@ Payment method: {payment_o.payment_method}
 ---
 Customer name: {user.user.get("firstName")} {user.user.get("lastName")}
 Customer email: {user.user.get("email")}
-Customer phone: {next(user.user.get("attributes", {}).get("phone", []), "")}
+Customer phone: {next(iter(user.user.get("attributes", {}).get("phone", [])), "")}
 ---
 Items:
 
