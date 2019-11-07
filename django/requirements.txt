@@ -29,4 +29,5 @@ python-magic
 pyjwt
 mastercard-oauth1-signer
 google-auth
+blinker
 git+https://github.com/Peter-Slump/python-keycloak-client.git@master
