@@ -128,7 +128,7 @@ export default class Conversation extends Component {
                             fullWidth
                             outlined
                             onTrailingIconSelect={() => {
-                                if (this.state.value.length && !this.props.conversation.can_message()) {
+                                if (this.state.value.length && this.props.conversation.can_message()) {
                                     this.props.conversation.send(this.state.value);
                                     this.setState({value: ""});
                                 }

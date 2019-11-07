@@ -222,22 +222,23 @@ class OperatorConsumer(AsyncJsonWebsocketConsumer):
     def save_object(self, object):
         object.save()
 
-    @database_sync_to_async
-    def lookup_customer(self, email, phone, name):
-        try:
-            return payment.models.Customer.objects.get(
-                email=email, phone=phone, name=name
-            )
-        except payment.models.Customer.DoesNotExist:
-            customer = payment.models.Customer(email=email, phone=phone, name=name)
-            customer.save()
-            return customer
-
-    @database_sync_to_async
-    def get_payment_item(self, pid):
-        return payment.models.PaymentItem.objects.get(id=pid)
-
     # TODO: Integrate with new system
+    # @database_sync_to_async
+    # def lookup_customer(self, email, phone, name):
+    #     try:
+    #         return payment.models.Customer.objects.get(
+    #             email=email, phone=phone, name=name
+    #         )
+    #     except payment.models.Customer.DoesNotExist:
+    #         customer = payment.models.Customer(email=email, phone=phone, name=name)
+    #         customer.save()
+    #         return customer
+    #
+    # @database_sync_to_async
+    # def get_payment_item(self, pid):
+    #     return payment.models.PaymentItem.objects.get(id=pid)
+    #
+    #
     # async def make_payment_request(self, cid, items):
     #     conversation = await self.get_conversation(cid)
     #     customer = (
