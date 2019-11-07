@@ -294,7 +294,8 @@ class ConversationData {
         } else if (this.platform === "FB") {
             let d = new Date(0);
             let now = new Date();
-            let messages = this.messages;
+            let messages = this.messages.filter(m => m.direction === "O");
+            let messages_i = this.messages.filter(m => m.direction === "I");
             let last_message = messages[messages.length - 1];
 
             if (typeof last_message === "undefined") {
@@ -304,7 +305,17 @@ class ConversationData {
             d.setUTCSeconds(last_message.timestamp);
             let difference = (now - d) / 1000 / 60 / 60;
 
-            return difference < 24;
+            if (difference < 24) {
+                return true;
+            }
+
+            let last_message_i = messages_i[messages_i.length - 1];
+
+            if (typeof last_message === "undefined") {
+                return true;
+            }
+
+            return last_message_i.timestamp < last_message.timestamp;
         } else {
             return true;
         }
