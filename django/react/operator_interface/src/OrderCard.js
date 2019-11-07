@@ -99,10 +99,13 @@ class OrderCard extends Component {
             <Button onClick={() => this.setState({isOpen: true})}>Add item</Button>
             <div className="summary">
                 <div><span>Total:</span> {this.total().toFixed(2)} GBP</div>
-                <Button onClick={this.send} disabled={
-                    !this.state.items.length || !this.props.conversation.can_message()
-                }>
-                    Send</Button>
+                {/*<Button onClick={this.send} disabled={*/}
+                {/*    !this.state.items.length || !this.props.conversation.can_message()*/}
+                {/*}>*/}
+                {/*    Send</Button>*/}
+                <Button onClick={this.send} disabled={true}>
+                    Send
+                </Button>
             </div>
             <Dialog
                 onClose={this.startAddItem}

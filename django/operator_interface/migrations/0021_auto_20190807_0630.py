@@ -7,7 +7,6 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("payment", "0009_auto_20190806_1359"),
         ("operator_interface", "0020_auto_20190807_0621"),
     ]
 
@@ -16,23 +15,17 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name="message",
             name="payment_confirm",
-            field=models.ForeignKey(
+            field=models.PositiveIntegerField(
                 blank=True,
                 null=True,
-                on_delete=django.db.models.deletion.SET_NULL,
-                related_name="confirm_message",
-                to="payment.Payment",
             ),
         ),
         migrations.AddField(
             model_name="message",
             name="payment_request",
-            field=models.ForeignKey(
+            field=models.PositiveIntegerField(
                 blank=True,
                 null=True,
-                on_delete=django.db.models.deletion.SET_NULL,
-                related_name="request_message",
-                to="payment.Payment",
             ),
         ),
         migrations.DeleteModel(name="PaymentConfirmMessage"),

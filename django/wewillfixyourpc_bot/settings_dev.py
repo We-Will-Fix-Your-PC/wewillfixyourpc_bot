@@ -48,7 +48,6 @@ INSTALLED_APPS = [
     "telegram_bot",
     "azure_bot",
     "operator_interface",
-    "payment",
     "rasa_api",
     "gactions",
     "corsheaders",
@@ -115,9 +114,7 @@ CHANNEL_LAYERS = {
 # https://docs.djangoproject.com/en/2.1/ref/settings/#auth-password-validators
 
 AUTH_PASSWORD_VALIDATORS = [
-    {
-        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"
-    },
+    {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
     {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator"},
     {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
     {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
@@ -161,18 +158,10 @@ with open(os.path.join(BASE_DIR, "secrets/twitter.json")) as f:
     twitter_conf = json.load(f)
 with open(os.path.join(BASE_DIR, "secrets/telegram.json")) as f:
     telegram_conf = json.load(f)
-with open(os.path.join(BASE_DIR, "secrets/worldpay.json")) as f:
-    worldpay_conf = json.load(f)
 with open(os.path.join(BASE_DIR, "secrets/azure.json")) as f:
     azure_conf = json.load(f)
-with open(os.path.join(BASE_DIR, "secrets/masterpass.json")) as f:
-    masterpass_conf = json.load(f)
 with open(os.path.join(BASE_DIR, "secrets/keycloak.json")) as f:
     keycloak_conf = json.load(f)
-with open(os.path.join(BASE_DIR, "secrets/gpay-key-test.pem"), "rb") as f:
-    gpay_priv_key_test = f.read()
-with open(os.path.join(BASE_DIR, "secrets/masterpass-test.p12"), "rb") as f:
-    masterpass_test_p12 = f.read()
 
 AZURE_APP_ID = azure_conf["app-id"]
 AZURE_APP_PASSWORD = azure_conf["app-password"]
@@ -190,23 +179,12 @@ TWITTER_ENVNAME = "main"
 TELEGRAM_TOKEN = telegram_conf["token"]
 TELEGRAM_PAYMENT_TOKEN = telegram_conf["payment_token"]
 
-WORLDPAY_TEST_KEY = worldpay_conf["test_key"]
-WORLDPAY_LIVE_KEY = worldpay_conf["live_key"]
-
-MASTERPASS_TEST_KEY = masterpass_conf["test_key"]
-MASTERPASS_TEST_KEY_PASS = masterpass_conf["test_key_pass"]
-MASTERPASS_TEST_P12_KEY = masterpass_test_p12
-
-GPAY_TEST_PRIVATE_KEYS = [gpay_priv_key_test]
-
 GOOGLE_PROJECT_ID = "we-will-fix-your-pc-dev"
 
 RASA_HTTP_URL = "http://172.30.0.13:5005"
 
 DEFAULT_PAYMENT_ENVIRONMENT = "T"
 
-ORDER_NOTIFICATION_EMAIL = "q@misell.cymru"
-ORDER_NOTIFICATION_FROM = "noreply@noreply.wewillfixyourpc.co.uk"
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 
 KEYCLOAK_SERVER_URL = keycloak_conf["server_url"]

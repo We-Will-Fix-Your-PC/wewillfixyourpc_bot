@@ -520,14 +520,14 @@ class App extends Component {
                                 {this.state.selectedCid === null ||
                                 !this.state.conversations[this.state.selectedCid].can_interact() ? null :
                                     <React.Fragment>
-                                        <Button raised onClick={this.onEnd}>
-                                            End conversation
-                                        </Button>
+                                        {/*<Button raised onClick={this.onEnd}>*/}
+                                        {/*    End conversation*/}
+                                        {/*</Button>*/}
                                         {!this.state.conversations[this.state.selectedCid].agent_responding ?
                                             <React.Fragment>
-                                                <Button raised onClick={this.onHandBack}>
-                                                    Hand back to bot
-                                                </Button>
+                                                {/*<Button raised onClick={this.onHandBack}>*/}
+                                                {/*    Hand back to bot*/}
+                                                {/*</Button>*/}
                                                 {!this.state.conversations[this.state.selectedCid]
                                                     .current_user_responding ?
                                                     <Button raised onClick={this.onTakeOver}>

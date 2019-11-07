@@ -1,9 +1,7 @@
 from django.db import models
 from django.utils import timezone
 import json
-import payment.models
 from django.contrib.auth.models import User
-from phonenumber_field.modelfields import PhoneNumberField
 
 
 class UserProfile(models.Model):
@@ -58,7 +56,7 @@ class Conversation(models.Model):
 
     @classmethod
     def get_or_create_conversation(
-        cls, platform, platform_id, conversation_name=None, conversation_pic=None
+        cls, platform, platform_id, conversation_name=None, conversation_pic=None, agent_responding=True
     ):
         try:
             conv = cls.objects.get(platform=platform, platform_id=platform_id)
@@ -74,6 +72,7 @@ class Conversation(models.Model):
                 platform_id=platform_id,
                 conversation_name=conversation_name,
                 conversation_pic=conversation_pic,
+                agent_responding=agent_responding
             )
             conv.save()
             return conv
@@ -106,20 +105,8 @@ class Message(models.Model):
     read = models.BooleanField(default=False)
     delivered = models.BooleanField(default=False)
     image = models.URLField(blank=True, null=True)
-    payment_request = models.ForeignKey(
-        payment.models.Payment,
-        on_delete=models.SET_NULL,
-        blank=True,
-        null=True,
-        related_name="request_message",
-    )
-    payment_confirm = models.ForeignKey(
-        payment.models.Payment,
-        on_delete=models.SET_NULL,
-        blank=True,
-        null=True,
-        related_name="confirm_message",
-    )
+    payment_request = models.UUIDField(blank=True, null=True)
+    payment_confirm = models.UUIDField(blank=True, null=True)
     card = models.TextField(blank=True, null=True)
     selection = models.TextField(blank=True, null=True)
     request = models.CharField(max_length=255, null=True, blank=True)

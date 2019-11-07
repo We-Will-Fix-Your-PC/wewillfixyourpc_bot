@@ -6,7 +6,6 @@ import requests
 import json
 import logging
 import uuid
-import payment.models
 import operator_interface.tasks
 import django_keycloak_auth.users
 from operator_interface.models import Message, MessageSuggestion, Conversation
@@ -81,11 +80,12 @@ def handle_text(conversation, text):
                 event_type = custom["type"]
 
                 if event_type == "payment":
-                    payment_id = custom.get("payment_id")
-                    payment_o = payment.models.Payment.objects.get(id=payment_id)
+                    # TODO: Integrate with new system
+                    # payment_id = custom.get("payment_id")
+                    # payment_o = payment.models.Payment.objects.get(id=payment_id)
 
                     message.text = "To complete payment follow this link 💸"
-                    message.payment_request = payment_o
+                    # message.payment_request = payment_o
                     message.save()
                 elif event_type == "request_human":
                     conversation.agent_responding = False

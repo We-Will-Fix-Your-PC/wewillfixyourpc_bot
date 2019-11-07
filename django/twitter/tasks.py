@@ -27,7 +27,7 @@ def handle_twitter_message(mid: str, psid, message, user):
     attachment: dict = message.get("attachment")
     if text is not None:
         conversation: Conversation = Conversation.get_or_create_conversation(
-            Conversation.TWITTER, psid,
+            Conversation.TWITTER, psid, agent_responding=False
         )
 
         if not conversation.conversation_user_id:
@@ -172,33 +172,34 @@ def send_twitter_message(mid: int):
             "options": quick_replies,
         }
 
-    if message.payment_request:
-        request_body["event"]["message_create"]["message_data"]["ctas"] = [
-            {
-                "type": "web_url",
-                "label": "Pay",
-                "url": settings.EXTERNAL_URL_BASE
-                + reverse(
-                    "payment:twitter_payment",
-                    kwargs={"payment_id": message.payment_request.id},
-                ),
-            }
-        ]
-    elif message.payment_confirm:
-        request_body["event"]["message_create"]["message_data"][
-            "text"
-        ] = "You can view your receipt using the link below"
-        request_body["event"]["message_create"]["message_data"]["ctas"] = [
-            {
-                "type": "web_url",
-                "label": "View Receipt",
-                "url": settings.EXTERNAL_URL_BASE
-                + reverse(
-                    "payment:receipt", kwargs={"payment_id": message.payment_confirm.id}
-                ),
-            }
-        ]
-    else:
+    # TODO: Integrate with new system
+    # if message.payment_request:
+    #     request_body["event"]["message_create"]["message_data"]["ctas"] = [
+    #         {
+    #             "type": "web_url",
+    #             "label": "Pay",
+    #             "url": settings.EXTERNAL_URL_BASE
+    #             + reverse(
+    #                 "payment:twitter_payment",
+    #                 kwargs={"payment_id": message.payment_request.id},
+    #             ),
+    #         }
+    #     ]
+    # elif message.payment_confirm:
+    #     request_body["event"]["message_create"]["message_data"][
+    #         "text"
+    #     ] = "You can view your receipt using the link below"
+    #     request_body["event"]["message_create"]["message_data"]["ctas"] = [
+    #         {
+    #             "type": "web_url",
+    #             "label": "View Receipt",
+    #             "url": settings.EXTERNAL_URL_BASE
+    #             + reverse(
+    #                 "payment:receipt", kwargs={"payment_id": message.payment_confirm.id}
+    #             ),
+    #         }
+    #     ]
+    if True:
         urls = re.findall(
             "(http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*(),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+)",
             message.text,

@@ -1,7 +1,6 @@
 from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect, render, reverse
 from . import models, forms
-import payment.models
 import json
 import django_keycloak_auth.users
 
@@ -26,9 +25,10 @@ def form(request, form_type, form_id):
                     phone=unlock_form.cleaned_data.get("phone").as_e164,
                 )
 
-                payment_o = payment.models.Payment(
-                    state=payment.models.Payment.STATE_OPEN, customer_id=unlock_form_o.customer_id
-                )
+                # TODO: Integrate with new system
+                # payment_o = payment.models.Payment(
+                #     state=payment.models.Payment.STATE_OPEN, customer_id=unlock_form_o.customer_id
+                # )
                 item_data = json.dumps(
                     {
                         "imei": unlock_form.cleaned_data["imei"],
@@ -40,20 +40,20 @@ def form(request, form_type, form_id):
                         "days": phone_unlock.time,
                     }
                 )
-                payment_item_o = payment.models.PaymentItem(
-                    payment=payment_o,
-                    item_type="unlock",
-                    item_data=item_data,
-                    title=f"Unlock {phone_unlock.brand.display_name} "
-                    f"{phone_unlock.device.display_name if phone_unlock.device else ''} from "
-                    f"{unlock_form_o.network_name}",
-                    price=phone_unlock.price,
-                )
+                # payment_item_o = payment.models.PaymentItem(
+                #     payment=payment_o,
+                #     item_type="unlock",
+                #     item_data=item_data,
+                #     title=f"Unlock {phone_unlock.brand.display_name} "
+                #     f"{phone_unlock.device.display_name if phone_unlock.device else ''} from "
+                #     f"{unlock_form_o.network_name}",
+                #     price=phone_unlock.price,
+                # )
 
-                payment_o.save()
-                payment_item_o.save()
+                # payment_o.save()
+                # payment_item_o.save()
 
-                return redirect("payment:gactions_payment", payment_id=payment_o.id)
+                return redirect("payment:gactions_payment", payment_id="")
         else:
             user = django_keycloak_auth.users.get_user_by_id(unlock_form_o.customer_id)
             unlock_form = forms.UnlockForm(

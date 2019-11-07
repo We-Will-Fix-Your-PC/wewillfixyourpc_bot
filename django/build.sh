@@ -9,9 +9,7 @@ cd react/operator_interface || exit
 yarn build || exit
 cd ../..
 
-cd react/payments_form || exit
-yarn webpack --config webpack.prod.js || exit
-cd ../..
+cp ../django-keycloak-auth/dist/django-keycloak-auth-1.0.any-any.tar.gz .
 
 docker build -t "theenbyperor/wewillfixyourpcbot_django:$VERSION" . || exit
 docker push "theenbyperor/wewillfixyourpcbot_django:$VERSION" || exit

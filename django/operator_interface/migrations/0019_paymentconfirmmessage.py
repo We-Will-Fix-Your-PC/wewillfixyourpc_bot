@@ -7,7 +7,6 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("payment", "0009_auto_20190806_1359"),
         ("operator_interface", "0018_auto_20190805_2029"),
     ]
 
@@ -29,13 +28,6 @@ class Migration(migrations.Migration):
                     models.OneToOneField(
                         on_delete=django.db.models.deletion.CASCADE,
                         to="operator_interface.Message",
-                    ),
-                ),
-                (
-                    "payment",
-                    models.ForeignKey(
-                        on_delete=django.db.models.deletion.CASCADE,
-                        to="payment.Payment",
                     ),
                 ),
             ],

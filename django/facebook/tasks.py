@@ -32,7 +32,7 @@ def handle_facebook_message(psid: dict, message: dict) -> None:
     is_echo: bool = message.get("is_echo")
     psid: typing.Text = psid["sender"] if not is_echo else psid["recipient"]
     conversation: Conversation = Conversation.get_or_create_conversation(
-        Conversation.FACEBOOK, psid
+        Conversation.FACEBOOK, psid, agent_responding=False
     )
     if not is_echo:
         update_facebook_profile(psid, conversation.id)
@@ -310,73 +310,74 @@ def send_facebook_message(mid: int) -> None:
     if len(quick_replies) > 0:
         request_body["message"]["quick_replies"] = quick_replies
 
-    if message.payment_request:
-        request_body["message"]["attachment"] = {
-            "type": "template",
-            "payload": {
-                "template_type": "button",
-                "text": message.text,
-                "buttons": [
-                    {
-                        "type": "web_url",
-                        "url": settings.EXTERNAL_URL_BASE
-                        + reverse(
-                            "payment:fb_payment",
-                            kwargs={"payment_id": message.payment_request.id},
-                        ),
-                        "title": "Pay",
-                        "webview_height_ratio": "compact",
-                        "messenger_extensions": True,
-                        "webview_share_button": "hide",
-                    }
-                ],
-            },
-        }
-    elif message.payment_confirm:
-        user = django_keycloak_auth.users.get_user_by_id(message.payment_confirm.customer_id)
-
-        request_body["message"]["attachment"] = {
-            "type": "template",
-            "payload": {
-                "template_type": "receipt",
-                "recipient_name": user.user.get("name"),
-                "merchant_name": "We Will Fix Your PC",
-                "timestamp": int(message.payment_confirm.timestamp.timestamp()),
-                "order_number": f"{message.payment_confirm.id}",
-                "currency": "GBP",
-                "payment_method": message.payment_confirm.payment_method,
-                "summary": {
-                    "subtotal": str(
-                        (
-                            message.payment_confirm.total / decimal.Decimal("1.2")
-                        ).quantize(decimal.Decimal(".01"), rounding=decimal.ROUND_DOWN)
-                    ),
-                    "total_tax": str(
-                        (
-                            message.payment_confirm.total * decimal.Decimal("0.2")
-                        ).quantize(decimal.Decimal(".01"), rounding=decimal.ROUND_DOWN)
-                    ),
-                    "total_cost": str(
-                        message.payment_confirm.total.quantize(
-                            decimal.Decimal(".01"), rounding=decimal.ROUND_DOWN
-                        )
-                    ),
-                },
-                "elements": [
-                    {
-                        "title": item.title,
-                        "quantity": item.quantity,
-                        "price": str(
-                            item.price.quantize(
-                                decimal.Decimal(".01"), rounding=decimal.ROUND_DOWN
-                            )
-                        ),
-                    }
-                    for item in message.payment_confirm.paymentitem_set.all()
-                ],
-            },
-        }
-    elif message.selection:
+    # TODO: Integrate with new system
+    # if message.payment_request:
+    #     request_body["message"]["attachment"] = {
+    #         "type": "template",
+    #         "payload": {
+    #             "template_type": "button",
+    #             "text": message.text,
+    #             "buttons": [
+    #                 {
+    #                     "type": "web_url",
+    #                     "url": settings.EXTERNAL_URL_BASE
+    #                     + reverse(
+    #                         "payment:fb_payment",
+    #                         kwargs={"payment_id": message.payment_request.id},
+    #                     ),
+    #                     "title": "Pay",
+    #                     "webview_height_ratio": "compact",
+    #                     "messenger_extensions": True,
+    #                     "webview_share_button": "hide",
+    #                 }
+    #             ],
+    #         },
+    #     }
+    # elif message.payment_confirm:
+    #     user = django_keycloak_auth.users.get_user_by_id(message.payment_confirm.customer_id)
+    #
+    #     request_body["message"]["attachment"] = {
+    #         "type": "template",
+    #         "payload": {
+    #             "template_type": "receipt",
+    #             "recipient_name": user.user.get("name"),
+    #             "merchant_name": "We Will Fix Your PC",
+    #             "timestamp": int(message.payment_confirm.timestamp.timestamp()),
+    #             "order_number": f"{message.payment_confirm.id}",
+    #             "currency": "GBP",
+    #             "payment_method": message.payment_confirm.payment_method,
+    #             "summary": {
+    #                 "subtotal": str(
+    #                     (
+    #                         message.payment_confirm.total / decimal.Decimal("1.2")
+    #                     ).quantize(decimal.Decimal(".01"), rounding=decimal.ROUND_DOWN)
+    #                 ),
+    #                 "total_tax": str(
+    #                     (
+    #                         message.payment_confirm.total * decimal.Decimal("0.2")
+    #                     ).quantize(decimal.Decimal(".01"), rounding=decimal.ROUND_DOWN)
+    #                 ),
+    #                 "total_cost": str(
+    #                     message.payment_confirm.total.quantize(
+    #                         decimal.Decimal(".01"), rounding=decimal.ROUND_DOWN
+    #                     )
+    #                 ),
+    #             },
+    #             "elements": [
+    #                 {
+    #                     "title": item.title,
+    #                     "quantity": item.quantity,
+    #                     "price": str(
+    #                         item.price.quantize(
+    #                             decimal.Decimal(".01"), rounding=decimal.ROUND_DOWN
+    #                         )
+    #                     ),
+    #                 }
+    #                 for item in message.payment_confirm.paymentitem_set.all()
+    #             ],
+    #         },
+    #     }
+    if message.selection:
         selection_data = json.loads(message.selection)
         request_body["message"]["attachment"] = {
             "type": "template",

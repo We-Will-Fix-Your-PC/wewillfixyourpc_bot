@@ -27,7 +27,6 @@ from rasa_sdk.executor import CollectingDispatcher
 from rasa_sdk.forms import FormAction
 
 import operator_interface.models
-import payment.models
 import rasa_api.models
 import django_keycloak_auth.users
 from fulfillment import models
@@ -1171,9 +1170,10 @@ class ActionOrderUnlock(Action):
                 network=network_o, brand=brand_o, device=device_model_o
             )
 
-            payment_o = payment.models.Payment(
-                state=payment.models.Payment.STATE_OPEN, customer_id=conversation.conversation_user_id
-            )
+            # TODO: Integrate with new system
+            # payment_o = payment.models.Payment(
+            #     state=payment.models.Payment.STATE_OPEN, customer_id=conversation.conversation_user_id
+            # )
             item_data = json.dumps(
                 {
                     "imei": imei,
@@ -1183,21 +1183,21 @@ class ActionOrderUnlock(Action):
                     "days": unlock_o.ti
                 }
             )
-            payment_item_o = payment.models.PaymentItem(
-                payment=payment_o,
-                item_type="unlock",
-                item_data=item_data,
-                title=f"Unlock {brand_o.display_name} {device_model_o.display_name if device_model_o else ''} from "
-                f"{network_name}",
-                price=unlock_o.price,
-            )
+            # payment_item_o = payment.models.PaymentItem(
+            #     payment=payment_o,
+            #     item_type="unlock",
+            #     item_data=item_data,
+            #     title=f"Unlock {brand_o.display_name} {device_model_o.display_name if device_model_o else ''} from "
+            #     f"{network_name}",
+            #     price=unlock_o.price,
+            # )
 
-            payment_o.save()
-            payment_item_o.save()
+            # payment_o.save()
+            # payment_item_o.save()
 
-            dispatcher.utter_custom_json(
-                {"type": "payment", "payment_id": str(payment_o.id)}
-            )
+            # dispatcher.utter_custom_json(
+            #     {"type": "payment", "payment_id": str(payment_o.id)}
+            # )
 
         return []
 

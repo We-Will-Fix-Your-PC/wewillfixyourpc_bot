@@ -11,7 +11,6 @@ from django.shortcuts import reverse
 
 import operator_interface.consumers
 import operator_interface.tasks
-import payment.models
 from operator_interface.models import Conversation, Message
 
 
@@ -28,7 +27,7 @@ def handle_telegram_message(message):
     chat_id = message["chat"]["id"]
     timestamp = message["date"]
     conversation = Conversation.get_or_create_conversation(
-        Conversation.TELEGRAM, chat_id
+        Conversation.TELEGRAM, chat_id, agent_responding=False
     )
     update_telegram_profile(chat_id, conversation.id)
     if not Message.message_exits(conversation, mid):

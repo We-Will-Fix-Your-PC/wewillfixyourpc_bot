@@ -18,7 +18,6 @@ from django.urls import path, include
 from django.conf.urls.static import static
 from django.conf import settings
 import os
-import payment.views
 
 urlpatterns = [
     path("admin/", admin.site.urls),
@@ -31,11 +30,6 @@ urlpatterns = [
     path("telegram/", include("telegram_bot.urls", namespace="telegram")),
     path("azure/", include("azure_bot.urls", namespace="azure")),
     path("gactions/", include("gactions.urls", namespace="gactions")),
-    path("payment/", include("payment.urls", namespace="payment")),
-    path(
-        ".well-known/apple-developer-merchantid-domain-association",
-        payment.views.apple_mechantid,
-    ),
     path("", include("operator_interface.urls", namespace="operator")),
 ]
 

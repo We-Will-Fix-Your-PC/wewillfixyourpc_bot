@@ -44,7 +44,6 @@ INSTALLED_APPS = [
     "telegram_bot",
     "azure_bot",
     "operator_interface",
-    "payment",
     "rasa_api",
     "gactions",
     "corsheaders",
@@ -58,6 +57,7 @@ MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "django_keycloak_auth.middleware.OIDCMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
@@ -83,6 +83,7 @@ TEMPLATES = [
 WSGI_APPLICATION = "wewillfixyourpc_bot.wsgi.application"
 ASGI_APPLICATION = "wewillfixyourpc_bot.routing.application"
 
+AUTHENTICATION_BACKENDS = ["django_keycloak_auth.auth.KeycloakAuthorization"]
 
 # Database
 # https://docs.djangoproject.com/en/2.1/ref/settings/#databases
@@ -152,9 +153,6 @@ CELERY_BROKER_URL = os.getenv("CELERY_BROKER_URL", "pyamqp://")
 CELERY_TASK_SERIALIZER = "json"
 CELERY_ACCEPT_CONTENT = ["json"]
 
-with open(os.path.join(BASE_DIR, "/gpay-keys/gpay-key-test.pem"), "rb") as f:
-    gpay_priv_key_test = f.read()
-
 AZURE_APP_ID = os.getenv("AZURE_APP_ID")
 AZURE_APP_PASSWORD = os.getenv("AZURE_APP_PASSWORD")
 
@@ -167,24 +165,11 @@ TWITTER_ACCESS_TOKEN = os.getenv("TWITTER_ACCESS_TOKEN")
 TWITTER_ACCESS_TOKEN_SECRET = os.getenv("TWITTER_ACCESS_TOKEN_SECRET")
 TWITTER_ENVNAME = "main"
 
-TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
-
-WORLDPAY_TEST_KEY = os.getenv("WORLDPAY_TEST_KEY")
-WORLDPAY_LIVE_KEY = os.getenv("WORLDPAY_LIVE_KEY")
-
-GPAY_TEST_PRIVATE_KEYS = [gpay_priv_key_test]
-
 GOOGLE_PROJECT_ID = "we-will-fix-your-pc-c0198"
 
 PUSH_PRIV_KEY = os.getenv("PUSH_PRIV_KEY")
 
 RASA_HTTP_URL = os.getenv("RASA_HTTP_URL", "http://localhost:5005")
-
-payment_environment = os.getenv("PAYMENT_ENVIRONMENT", "test")
-if payment_environment == "live":
-    DEFAULT_PAYMENT_ENVIRONMENT = "L"
-else:
-    DEFAULT_PAYMENT_ENVIRONMENT = "T"
 
 EMAIL_HOST = os.getenv("EMAIL_HOST")
 EMAIL_PORT = int(os.getenv("EMAIL_PORT", 25))
@@ -192,10 +177,12 @@ EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER")
 EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD")
 EMAIL_USE_TLS = os.getenv("EMAIL_USE_TLS", False)
 EMAIL_USE_SSL = os.getenv("EMAIL_USE_SSL", False)
-ORDER_NOTIFICATION_EMAIL = os.getenv("ORDER_NOTIFICATION_EMAIL", "q@misell.cymru")
-ORDER_NOTIFICATION_FROM = os.getenv(
-    "ORDER_CONFIRMATION_FROM", "noreply@noreply.wewillfixyourpc.co.uk"
-)
+
+KEYCLOAK_SERVER_URL = os.getenv("KEYCLOAK_SERVER_URL")
+KEYCLOAK_REALM = os.getenv("KEYCLOAK_REALM")
+OIDC_CLIENT_ID = os.getenv("KEYCLOAK_CLIENT_ID")
+OIDC_CLIENT_SECRET = os.getenv("KEYCLOAK_CLIENT_SECRET")
+OIDC_SCOPES = os.getenv("KEYCLOAK_CLIENT_SCOPES")
 
 CORS_ORIGIN_ALLOW_ALL = True
 CORS_ALLOW_CREDENTIALS = True
