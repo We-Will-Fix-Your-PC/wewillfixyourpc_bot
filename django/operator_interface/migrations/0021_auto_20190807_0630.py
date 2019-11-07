@@ -14,7 +14,7 @@ class Migration(migrations.Migration):
         migrations.RemoveField(model_name="paymentmessage", name="message"),
         migrations.AddField(
             model_name="message",
-            name="payment_confirm",
+            name="payment_confirm_id",
             field=models.PositiveIntegerField(
                 blank=True,
                 null=True,
@@ -22,7 +22,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AddField(
             model_name="message",
-            name="payment_request",
+            name="payment_request_id",
             field=models.PositiveIntegerField(
                 blank=True,
                 null=True,

@@ -10,8 +10,8 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RemoveField(model_name='message', name='payment_confirm'),
-        migrations.RemoveField(model_name='message', name='payment_request'),
+        migrations.RemoveField(model_name='message', name='payment_confirm_id'),
+        migrations.RemoveField(model_name='message', name='payment_request_id'),
         migrations.AddField(
             model_name='message',
             name='payment_confirm',
