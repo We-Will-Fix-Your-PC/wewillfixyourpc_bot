@@ -37,16 +37,16 @@ data:
 
         root /data/;
 
-        location / {
-          try_files $uri @proxy_to_app;
-        }
-
         location /rasa {
           return 403;
         }
 
         location /sw.js {
           alias /data/static/operator_interface/build/sw.js;
+        }
+
+        location / {
+          try_files $uri @proxy_to_app;
         }
 
         location @proxy_to_app {

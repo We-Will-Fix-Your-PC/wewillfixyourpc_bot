@@ -152,4 +152,3 @@ def send_azure_message(mid):
         message.message_id = r["id"]
         message.delivered = True
         message.save()
-        operator_interface.consumers.message_saved(None, message)

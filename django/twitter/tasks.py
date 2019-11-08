@@ -304,4 +304,3 @@ def send_twitter_message(mid: int):
         message.message_id = r["event"]["id"]
         message.delivered = True
         message.save()
-        operator_interface.consumers.message_saved(None, message)

@@ -1,6 +1,7 @@
 import json
 import uuid
 import sentry_sdk
+import requests
 
 from asgiref.sync import async_to_sync
 from celery import shared_task
@@ -62,6 +63,33 @@ def send_message_notifications(data):
 
 
 @shared_task
+def extract_entities_from_message(mid):
+    message = models.Message.objects.get(id=mid)
+
+    ref_time = int(message.timestamp.timestamp()) * 1000
+    duckling_url = settings.DUCKLING_HTTP_URL + "/parse"
+    headers = {
+        "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"
+    }
+    payload = {
+        "text": message.text,
+        "locale": "en_GB",
+        "reftime": ref_time,
+    }
+    r = requests.post(
+        duckling_url,
+        data=payload,
+        headers=headers,
+    )
+    r.raise_for_status()
+    matches = r.json()
+
+    for match in matches:
+        match_o = models.MessageEntity(message=message, entity=match["dim"], value=json.dumps(match["value"]))
+        match_o.save()
+
+
+@shared_task
 def process_message(mid):
     message = models.Message.objects.get(id=mid)
     conversation = message.conversation
@@ -69,6 +97,7 @@ def process_message(mid):
     send_message_to_interface.delay(mid)
 
     if message.direction == models.Message.FROM_CUSTOMER:
+        extract_entities_from_message.delay(mid)
         if conversation.agent_responding:
             return rasa_api.tasks.handle_message(mid)
         else:
@@ -76,12 +105,11 @@ def process_message(mid):
             if message.conversation.conversation_user_id:
                 try:
                     user = admin_client.users.by_id(message.conversation.conversation_user_id).user
+                    name = f'{user.get("firstName", "")} {user.get("lastName", "")}'
                 except keycloak.exceptions.KeycloakClientError:
-                    user = {"firstName": message.conversation.conversation_name}
+                    name = message.conversation.conversation_name
             else:
-                user = {"firstName": message.conversation.conversation_name}
-
-            name = f'{user.get("firstName", "")} {user.get("lastName", "")}'
+                name = message.conversation.conversation_name
 
             send_message_notifications(
                 {
@@ -114,7 +142,6 @@ def process_event(cid, event):
         conversation.agent_responding = True
         conversation.current_agent = None
         conversation.save()
-        consumers.conversation_saved(None, conversation)
 
     return rasa_api.tasks.handle_event(cid, event)
 
@@ -125,7 +152,6 @@ def hand_back(cid):
     conversation.agent_responding = True
     conversation.current_agent = None
     conversation.save()
-    consumers.conversation_saved(None, conversation)
     message = models.Message(
         message_id=uuid.uuid4(),
         conversation=conversation,
@@ -143,7 +169,6 @@ def end_conversation(cid):
     conversation.agent_responding = True
     conversation.current_agent = None
     conversation.save()
-    consumers.conversation_saved(None, conversation)
     process_event.delay(cid, "end")
 
 
@@ -154,7 +179,6 @@ def take_over(cid, uid):
     conversation.agent_responding = False
     conversation.current_agent = user
     conversation.save()
-    consumers.conversation_saved(None, conversation)
     message = models.Message(
         message_id=uuid.uuid4(),
         conversation=conversation,

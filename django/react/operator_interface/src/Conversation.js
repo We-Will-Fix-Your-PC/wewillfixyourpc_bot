@@ -5,6 +5,23 @@ import dateformat from 'dateformat';
 import MaterialIcon from '@material/react-material-icon';
 import CustomerPanel from "./CustomerPanel";
 import './App.scss';
+import Dialog, {DialogButton, DialogContent, DialogFooter, DialogTitle} from "@material/react-dialog";
+
+export const entity_map = {
+    "phone-number": "phone number",
+    "email": "email",
+    "first-name": "first name",
+    "last-name": "first name",
+};
+
+export const a_or_an = (word) => {
+    const vowelRegex = '^[aieouAIEOU].*';
+    if (word.match(vowelRegex)) {
+        return `An ${word}`;
+    } else {
+        return `A ${word}`;
+    }
+};
 
 export default class Conversation extends Component {
     constructor(props) {
@@ -12,14 +29,18 @@ export default class Conversation extends Component {
 
         this.state = {
             value: "",
+            isOpen: false,
+            entity: null,
         };
 
         this.messageObserverCallback = this.messageObserverCallback.bind(this);
+        this.openEntityDialog = this.openEntityDialog.bind(this);
+        this.updateEntity = this.updateEntity.bind(this);
 
         this.observer = new IntersectionObserver(this.messageObserverCallback, {
             root: null,
             rootMargin: '0px',
-            threshold: 0
+            threshold: 1
         });
     }
 
@@ -61,10 +82,41 @@ export default class Conversation extends Component {
         });
     }
 
+    openEntityDialog(entity) {
+        this.setState({isOpen: true, entity: entity});
+    }
+
+    updateEntity(choice) {
+        if (choice === "confirm") {
+            this.props.conversation.save_entity(this.state.entity);
+        }
+        this.setState({isOpen: false});
+    }
+
     render() {
         return (
             <div className='conversation'>
                 <div className="main">
+                    <Dialog
+                        onClose={this.updateEntity}
+                        open={this.state.isOpen}>
+                        {this.state.isOpen ? <React.Fragment>
+                            <DialogTitle>Save the {entity_map[this.state.entity.entity]} to customer?</DialogTitle>
+                            <DialogContent>
+                                The customer's {entity_map[this.state.entity.entity]} will be set
+                                to {this.state.entity.text_value}
+                                <br/>
+                                <b>
+                                    Note: please be certain this is the real data of the customer, the system may also
+                                    request further authentication from the customer automatically
+                                </b>
+                            </DialogContent>
+                            <DialogFooter>
+                                <DialogButton action='dismiss'>Cancel</DialogButton>
+                                <DialogButton action='confirm' isDefault>Ok</DialogButton>
+                            </DialogFooter>
+                        </React.Fragment> : null}
+                    </Dialog>
                     <div className="messages" ref="messages">
                         {this.props.conversation.messages.map((m, i, a) => {
                             let out = [];
@@ -104,6 +156,14 @@ export default class Conversation extends Component {
                                                 dangerouslySetInnerHTML={{__html: m.text.replace(/\n/g, "<br />")}}/> : (
                                                 m.image ? <img src={m.image} alt=""/> : null
                                             )}
+                                        {m.entities
+                                            .filter(e => typeof entity_map[e.entity] !== "undefined")
+                                            .map((entity, i) => (
+                                                <span className="entity" key={i} onClick={() => this.openEntityDialog(entity)}>
+                                                    {a_or_an(entity_map[entity.entity])} was detected. Click here to save it.
+                                                </span>
+                                            ))
+                                        }
                                         {m.payment_request ?
                                             <span>Payment request for: {m.payment_request.id}</span> : null
                                         }

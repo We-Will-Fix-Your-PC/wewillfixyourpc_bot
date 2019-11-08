@@ -116,6 +116,18 @@ main {
             > span {
               color: gray;
               font-size: 12px;
+
+              &.entity {
+                border-radius: 5px;
+                padding: 3px;
+                border: 1px solid gray;
+                margin: 2px;
+                cursor: pointer;
+
+                &:hover {
+                  background: lightblue;
+                }
+              }
             }
 
             &.dir-O {
@@ -163,12 +175,12 @@ main {
 
       .custInfo {
         display: grid;
-        grid-template-columns: repeat(2, 1fr);
+        grid-template-columns: repeat(2, 1fr) auto;
         align-self: stretch;
         padding: 10px;
         grid-gap: 10px;
 
-        span:nth-of-type(2n+1) {
+        span:nth-of-type(3n+1) {
           font-weight: bold;
         }
       }

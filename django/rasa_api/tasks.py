@@ -90,7 +90,6 @@ def handle_text(conversation, text):
                 elif event_type == "request_human":
                     conversation.agent_responding = False
                     conversation.save()
-                    operator_interface.consumers.conversation_saved(None, conversation)
 
                     operator_interface.tasks.send_message_notifications.delay(
                         {

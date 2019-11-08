@@ -182,6 +182,7 @@ TELEGRAM_PAYMENT_TOKEN = telegram_conf["payment_token"]
 GOOGLE_PROJECT_ID = "we-will-fix-your-pc-dev"
 
 RASA_HTTP_URL = "http://172.30.0.13:5005"
+DUCKLING_HTTP_URL = "http://localhost:8001"
 
 DEFAULT_PAYMENT_ENVIRONMENT = "T"
 

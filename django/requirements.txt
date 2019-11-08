@@ -30,4 +30,7 @@ pyjwt
 mastercard-oauth1-signer
 google-auth
 blinker
+pytest-runner<5
+six==1.12.0
 git+https://github.com/Peter-Slump/python-keycloak-client.git@master
+../../django-keycloak-auth

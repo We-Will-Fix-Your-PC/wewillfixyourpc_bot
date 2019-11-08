@@ -181,7 +181,6 @@ def update_telegram_profile(chat_id, cid):
                     )
         conversation.conversation_name = name
         conversation.save()
-        operator_interface.consumers.conversation_saved(None, conversation)
 
 
 @shared_task
@@ -244,7 +243,6 @@ def send_telegram_message(mid):
             message.message_id = mid
             message.delivered = True
             message.save()
-            operator_interface.consumers.message_saved(None, message)
 
     if message.payment_request:
         data = {

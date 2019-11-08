@@ -98,7 +98,7 @@ def update_user_info(conversation: operator_interface.models.Conversation, email
             email=email,
             first_name=conversation.conversation_name,
             required_actions=["UPDATE_PASSWORD", "UPDATE_PROFILE", "VERIFY_EMAIL"],
-            *kwargs
+            **kwargs
         )
         if user:
             django_keycloak_auth.users.link_roles_to_user(user.get("id"), ["customer"])
@@ -109,7 +109,7 @@ def update_user_info(conversation: operator_interface.models.Conversation, email
         django_keycloak_auth.users.update_user(
             conversation.conversation_user_id,
             force_update=True,
-            *kwargs
+            **kwargs
         )
 
 

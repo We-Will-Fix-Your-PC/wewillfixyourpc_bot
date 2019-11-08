@@ -133,3 +133,12 @@ class MessageSuggestion(models.Model):
 
     def __str__(self):
         return self.suggested_response
+
+
+class MessageEntity(models.Model):
+    message = models.ForeignKey(Message, on_delete=models.CASCADE)
+    entity = models.CharField(max_length=255)
+    value = models.TextField()
+
+    def __str__(self):
+        return self.entity

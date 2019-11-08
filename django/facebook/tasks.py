@@ -233,7 +233,6 @@ def update_facebook_profile(psid: str, cid: int) -> None:
         )
 
     conversation.save()
-    operator_interface.consumers.conversation_saved(None, conversation)
 
 
 @shared_task
@@ -454,4 +453,3 @@ def send_facebook_message(mid: int) -> None:
         message.message_id = mid
         message.delivered = True
         message.save()
-        operator_interface.consumers.message_saved(None, message)

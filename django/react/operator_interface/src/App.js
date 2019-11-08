@@ -14,6 +14,7 @@ import ReconnectingWebSocket from './reconnecting-websocket';
 import Conversation from './Conversation';
 
 import './App.scss';
+import Dialog, {DialogButton, DialogContent, DialogFooter, DialogTitle} from "@material/react-dialog";
 
 export const ROOT_URL = process.env.NODE_ENV === 'production' ?
     "https://" + window.location.host + "/" : "http://localhost:8000/";
@@ -177,12 +178,71 @@ class MessageData {
         return this.load() ? (this.data.payment_confirm ? this.get_payment(this.data.payment_confirm) : null) : null;
     }
 
+    get entities() {
+        let entities = [];
+
+        if (this.load()) {
+            this.data.entities.forEach(e => {
+                entities.push(this.get_entity(e));
+            });
+        }
+
+        return entities;
+    }
+
+    get_entity(e) {
+        if (typeof this.app.state.message_entities[e] === "undefined") {
+            return new MessageEntityData(e, null, this.app);
+        } else {
+            return this.app.state.message_entities[e];
+        }
+    }
+
     get_payment(p) {
         if (typeof this.app.state.payments[p] === "undefined") {
             return new PaymentData(p, null, this.app);
         } else {
             return this.app.state.payments[p];
         }
+    }
+}
+
+class MessageEntityData {
+    constructor(id, data, app) {
+        this.id = id;
+        this.data = data;
+        this.app = app;
+    }
+
+    isLoaded() {
+        return this.data !== null;
+    }
+
+    load() {
+        if (!this.isLoaded()) {
+            if (this.app.pending_message_entities.indexOf(this.id) === -1) {
+                this.app.sock.send(JSON.stringify({
+                    type: "getMessageEntity",
+                    id: this.id
+                }));
+                this.app.pending_message_entities.push(this.id);
+            }
+            return false;
+        }
+        return true;
+    }
+
+    get entity() {
+        return this.load() ? this.data.entity : "";
+    }
+
+    get value() {
+        return this.load() ? this.data.value : "";
+    }
+
+    get text_value() {
+        const data = JSON.parse(this.value);
+        return data.value;
     }
 }
 
@@ -227,6 +287,14 @@ class ConversationData {
 
     get customer_name() {
         return this.data.customer_name ? this.data.customer_name : "Unknown"
+    }
+
+    get customer_first_name() {
+        return this.data.customer_first_name
+    }
+
+    get customer_last_name() {
+        return this.data.customer_last_name
     }
 
     get agent_responding() {
@@ -294,28 +362,45 @@ class ConversationData {
         } else if (this.platform === "FB") {
             let d = new Date(0);
             let now = new Date();
-            let messages = this.messages.filter(m => m.direction === "O");
-            let messages_i = this.messages.filter(m => m.direction === "I");
-            let last_message = messages[messages.length - 1];
 
-            if (typeof last_message === "undefined") {
+            let last_o = null;
+            let last_i = null;
+
+            for(let i = this.messages.length; i--;) {
+                const message = this.messages[i];
+
+                if (!message.isLoaded()) {
+                    message.load();
+                    return false;
+                }
+
+                if (message.direction === "O") {
+                    last_o = message;
+                } else if (message.direction === "I") {
+                    last_i = message;
+                }
+
+                if (last_o !== null && last_i !== null) {
+                    break
+                }
+            }
+
+            if (last_o == null) {
                 return false;
             }
 
-            d.setUTCSeconds(last_message.timestamp);
+            d.setUTCSeconds(last_o.timestamp);
             let difference = (now - d) / 1000 / 60 / 60;
 
             if (difference < 24) {
                 return true;
             }
 
-            let last_message_i = messages_i[messages_i.length - 1];
-
-            if (typeof last_message === "undefined") {
+            if (last_i == null) {
                 return true;
             }
 
-            return last_message_i.timestamp < last_message.timestamp;
+            return last_i.timestamp < last_o.timestamp;
         } else {
             return true;
         }
@@ -330,6 +415,15 @@ class ConversationData {
             }));
         }
     }
+
+    save_entity(entity) {
+        this.app.sock.send(JSON.stringify({
+            type: "attribute_update",
+            cid: this.id,
+            attribute: entity.entity,
+            value: entity.value
+        }))
+    }
 }
 
 class App extends Component {
@@ -337,23 +431,25 @@ class App extends Component {
         super(props);
 
         this.state = {
+            error: null,
             open: true,
             lastMessage: 0,
             selectedCid: null,
             conversations: {},
             messages: {},
+            message_entities: {},
             payments: {},
             payment_items: {},
         };
 
         this.pending_messages = [];
+        this.pending_message_entities = [];
         this.pending_payments = [];
         this.pending_payment_items = [];
 
         this.selectConversation = this.selectConversation.bind(this);
         this.handleOpen = this.handleOpen.bind(this);
         this.handleReceiveMessage = this.handleReceiveMessage.bind(this);
-        this.onSend = this.onSend.bind(this);
         this.onEnd = this.onEnd.bind(this);
         this.onTakeOver = this.onTakeOver.bind(this);
         this.onHandBack = this.onHandBack.bind(this);
@@ -391,6 +487,16 @@ class App extends Component {
                 messages: messages,
                 lastMessage: data.timestamp
             });
+        } else if (data.type === "message_entity") {
+            const message_entities = this.state.message_entities;
+            message_entities[data.id] = new MessageEntityData(data.id, data, this);
+            let p_index = this.pending_message_entities.indexOf(data.id);
+            if (p_index > -1) {
+                this.pending_message_entities.splice(p_index, 1);
+            }
+            this.setState({
+                message_entities: message_entities
+            });
         } else if (data.type === "conversation") {
             const conversations = this.state.conversations;
             conversations[data.id] = new ConversationData(data.id, data, this);
@@ -417,6 +523,10 @@ class App extends Component {
             this.setState({
                 payment_items: paymentItems
             });
+        } else if (data.type === "error") {
+            this.setState({
+                error: data.msg
+            });
         }
     }
 
@@ -425,9 +535,6 @@ class App extends Component {
             type: "resyncReq",
             lastMessage: this.state.lastMessage
         }));
-    }
-
-    onSend(text) {
     }
 
     onEnd() {
@@ -517,6 +624,17 @@ class App extends Component {
                 </Drawer>
 
                 <DrawerAppContent className='drawer-app-content'>
+                    <Dialog
+                        onClose={() => this.setState({ error: null })}
+                        open={!!this.state.error}>
+                            <DialogTitle>An error occurred</DialogTitle>
+                            <DialogContent>
+                                {this.state.error}
+                            </DialogContent>
+                            <DialogFooter>
+                                <DialogButton action='dismiss' isDefault>Ok</DialogButton>
+                            </DialogFooter>
+                    </Dialog>
                     <TopAppBar>
                         <TopAppBarRow>
                             <TopAppBarSection align='start'>

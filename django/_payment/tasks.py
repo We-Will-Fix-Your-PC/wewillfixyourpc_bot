@@ -52,7 +52,6 @@ Items:
 
     payment_o.state = payment_o.STATE_COMPLETE
     payment_o.save()
-    operator_interface.consumers.payment_saved(None, payment_o)
 
     try:
         message = operator_interface.models.Message.objects.get(

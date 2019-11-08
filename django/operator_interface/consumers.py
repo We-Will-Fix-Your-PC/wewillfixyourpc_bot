@@ -1,5 +1,7 @@
 import datetime
 import uuid
+import json
+import phonenumbers
 
 import keycloak.exceptions
 from asgiref.sync import async_to_sync
@@ -7,8 +9,10 @@ from channels.db import database_sync_to_async
 from channels.generic.websocket import AsyncJsonWebsocketConsumer
 from channels.layers import get_channel_layer
 from django.contrib.staticfiles.templatetags.staticfiles import static
+from django.db import transaction
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from django.conf import settings
 
 import operator_interface.models
 import operator_interface.tasks
@@ -18,19 +22,24 @@ channel_layer = get_channel_layer()
 
 
 @receiver(post_save, sender=operator_interface.models.Conversation)
-def conversation_saved(
-    sender, instance: operator_interface.models.Conversation, **kwargs
-):
-    async_to_sync(channel_layer.group_send)(
+def conversation_saved(sender, instance: operator_interface.models.Conversation, **kwargs):
+    transaction.on_commit(lambda: async_to_sync(channel_layer.group_send)(
         "operator_interface", {"type": "conversation_update", "cid": instance.id}
-    )
+    ))
 
 
 @receiver(post_save, sender=operator_interface.models.Message)
 def message_saved(sender, instance: operator_interface.models.Message, **kwargs):
-    async_to_sync(channel_layer.group_send)(
+    transaction.on_commit(lambda: async_to_sync(channel_layer.group_send)(
         "operator_interface", {"type": "message_update", "mid": instance.id}
-    )
+    ))
+
+
+@receiver(post_save, sender=operator_interface.models.MessageEntity)
+def message_saved(sender, instance: operator_interface.models.MessageEntity, **kwargs):
+    transaction.on_commit(lambda: async_to_sync(channel_layer.group_send)(
+        "operator_interface", {"type": "message_update", "mid": instance.message.id}
+    ))
 
 # TODO: Integrate with new system
 # @receiver(post_save, sender=payment.models.Payment)
@@ -97,13 +106,28 @@ class OperatorConsumer(AsyncJsonWebsocketConsumer):
                 "image": message.image,
                 "read": message.read,
                 "delivered": message.delivered,
-                "payment_request": message.payment_request.id
-                if message.payment_request
-                else None,
-                "payment_confirm": message.payment_confirm.id
-                if message.payment_confirm
-                else None,
+                "payment_request": message.payment_request.id if message.payment_request else None,
+                "payment_confirm": message.payment_confirm.id if message.payment_confirm else None,
                 "conversation_id": message.conversation.id,
+                "entities": [e.id for e in message.messageentity_set.all()]
+            }
+        )
+
+    async def send_message_entity(self, entity: operator_interface.models.MessageEntity):
+        await self.send_json(
+            {
+                "type": "message_entity",
+                "id": entity.id,
+                "entity": entity.entity,
+                "value": entity.value,
+            }
+        )
+
+    async def send_error(self, error: str):
+        await self.send_json(
+            {
+                "type": "error",
+                "msg": error
             }
         )
 
@@ -120,7 +144,7 @@ class OperatorConsumer(AsyncJsonWebsocketConsumer):
             except keycloak.exceptions.KeycloakClientError:
                 user = {}
         else:
-            user = {"firstName": conversation.conversation_name}
+            user = {"name": conversation.conversation_name}
 
         first_name = user.get("firstName", "")
         last_name = user.get("lastName", "")
@@ -144,10 +168,11 @@ class OperatorConsumer(AsyncJsonWebsocketConsumer):
                 "id": conversation.id,
                 "agent_responding": conversation.agent_responding,
                 "current_user_responding": conversation.current_agent.id == self.user.id
-                if conversation.current_agent
-                else False,
+                if conversation.current_agent else False,
                 "platform": conversation.platform,
-                "customer_name": f"{first_name} {last_name}",
+                "customer_name": user.get("name", f"{first_name} {last_name}"),
+                "customer_first_name": first_name,
+                "customer_last_name": last_name,
                 "customer_username": user.get("username"),
                 "customer_pic": pic,
                 "timezone": timezone,
@@ -211,16 +236,20 @@ class OperatorConsumer(AsyncJsonWebsocketConsumer):
         return operator_interface.models.Message.objects.get(id=mid)
 
     @database_sync_to_async
+    def get_message_entity(self, eid):
+        return operator_interface.models.MessageEntity.objects.get(id=eid)
+
+    @database_sync_to_async
     def get_conversation(self, cid):
         return operator_interface.models.Conversation.objects.get(id=cid)
 
-    @database_sync_to_async
-    def get_payment(self, pid):
-        return payment.models.Payment.objects.get(id=pid)
+    # @database_sync_to_async
+    # def get_payment(self, pid):
+    #     return payment.models.Payment.objects.get(id=pid)
 
     @database_sync_to_async
-    def save_object(self, object):
-        object.save()
+    def save_object(self, obj):
+        obj.save()
 
     # TODO: Integrate with new system
     # @database_sync_to_async
@@ -277,6 +306,48 @@ class OperatorConsumer(AsyncJsonWebsocketConsumer):
     #     await self.save_object(message)
     #     operator_interface.tasks.process_message.delay(message.id)
 
+    async def decode_attribute(self, attribute: str, value):
+        if attribute == "phone-number":
+            value = value.get("value")
+            try:
+                phone = phonenumbers.parse(value, settings.PHONENUMBER_DEFAULT_REGION)
+            except phonenumbers.phonenumberutil.NumberParseException:
+                await self.send_error("Invalid phone number")
+                return None
+
+            if not phonenumbers.is_valid_number(phone):
+                await self.send_error("Invalid phone number")
+                return None
+            else:
+                phone = phonenumbers.format_number(phone, phonenumbers.PhoneNumberFormat.E164)
+                return {"phone": phone}
+        elif attribute == "first-name":
+            return {"first_name": value.get("value")}
+        elif attribute == "last-name":
+            return {"last_name": value.get("value")}
+        elif attribute == "email":
+            return value.get("value")
+
+    async def attribute_update(self, conversation: operator_interface.models.Conversation, attribute: str, value: str):
+        value = json.loads(value)
+        if conversation.conversation_user_id:
+            attr = await self.decode_attribute(attribute, value)
+            if attr:
+                django_keycloak_auth.users.update_user(conversation.conversation_user_id, force_update=True, **attr)
+                await self.send_conversation(conversation)
+        elif attribute != "email":
+            await self.send_error("No user account is currently associated with this conversation, "
+                                  "please set an email first")
+        else:
+            attr = await self.decode_attribute(attribute, value)
+            user = django_keycloak_auth.users.get_or_create_user(
+                email=attr,
+                first_name=conversation.conversation_name,
+                required_actions=["UPDATE_PASSWORD", "UPDATE_PROFILE", "VERIFY_EMAIL"]
+            )
+            conversation.conversation_user_id = user.get("id")
+            await self.save_object(conversation)
+
     async def receive_json(self, message, **kwargs):
         if message["type"] == "resyncReq":
             last_message = message["lastMessage"]
@@ -292,6 +363,13 @@ class OperatorConsumer(AsyncJsonWebsocketConsumer):
             try:
                 msg = await self.get_message(msg_id)
                 await self.send_message(msg)
+            except operator_interface.models.Message.DoesNotExist:
+                pass
+        elif message["type"] == "getMessageEntity":
+            eid = message["id"]
+            try:
+                entity = await self.get_message_entity(eid)
+                await self.send_message_entity(entity)
             except operator_interface.models.Message.DoesNotExist:
                 pass
         elif message["type"] == "getConversation":
@@ -328,6 +406,13 @@ class OperatorConsumer(AsyncJsonWebsocketConsumer):
         elif message["type"] == "takeOver":
             cid = message["cid"]
             operator_interface.tasks.take_over.delay(cid, self.user.id)
+        elif message["type"] == "attribute_update":
+            cid = message["cid"]
+            try:
+                conv = await self.get_conversation(cid)
+                await self.attribute_update(conv, message["attribute"], message["value"])
+            except operator_interface.models.Conversation.DoesNotExist:
+                pass
         # elif message["type"] == "requestPayment":
         #     cid = message["cid"]
         #     await self.make_payment_request(cid, message["items"])
