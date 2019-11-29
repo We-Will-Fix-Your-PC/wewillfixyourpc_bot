@@ -150,6 +150,10 @@ slots:
     type: unfeaturized
   requested_slot:
     type: unfeaturized
+  date:
+    type: unfeaturized
+  time:
+    type: unfeaturized
   unlockable:
     type: bool
   repairable:

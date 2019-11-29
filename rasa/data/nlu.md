@@ -515,7 +515,7 @@
 - and what about the [screen](device_repair)?
 - how much for an [iphone 6](device_model)?
 - [screen](device_repair)
-- Do you have a [iPhone 7plus](device_model:iPhone 7+) [battery](device_repair) in stock??
+- Do you have a [iPhone 7plus](device_model:iPhone 7 plus) [battery](device_repair) in stock??
 - what is the cost of an [ipad](brand:iPad) repair?
 - [battery](device_repair)
 - do you fix [samsungs](brand:Samsung)?
@@ -535,6 +535,7 @@
 - help, ive broken my [iphone 3](device_model:iPhone 3) [screen](device_repair)
 - ive dropped my [iphone](brand) [in water](device_repair:water damage) now it no longer turns on
 - [iphone 6](device_model:iPhone 6)
+- Do you fix [iPad Air 2](device_model:iPad air 2)?
 
 ## intent:request_human
 - escalate
@@ -959,7 +960,9 @@
 ## synonym:iPhone 6
 - iphone 6
 
-## synonym:iPhone 6+
+## synonym:iPhone 6 plus
+- iPhone 6+
+- 6+
 - 6 plus
 - 6plus
 - iPhone 6 plus
@@ -969,10 +972,11 @@
 - iphone 6s
 - 6S
 
-## synonym:iPhone 6S+
+## synonym:iPhone 6S plus
+- iPhone 6s+
+- 6s+
 - 6S plus
 - 6Splus
-- iPhone 6S plus
 - iPhone 6Splus
 
 ## synonym:iPhone 7
@@ -980,14 +984,14 @@
 
 ## synonym:iPhone 7 plus
 - iphone 7+
-
-## synonym:iPhone 7+
 - iPhone 7plus
 - 7 plus
 - 7plus
 - iPhone 7 plus
 
-## synonym:iPhone 8+
+## synonym:iPhone 8 plus
+- 8+
+- iPhone 8+
 - 8 plus
 - 8plus
 - iPhone 8 plus

@@ -5,10 +5,10 @@ models:
   wait_time_between_pulls: 10
 
 action_endpoint:
-  url: "http://q-laptop.home.misell.cymru:8000/rasa/webhook/"
+  url: "http://172.30.0.13:8000/rasa/webhook/"
 
 nlg:
-  url: "http://q-laptop.home.misell.cymru:8000/rasa/nlg/"
+  url: "http://172.30.0.13:8000/rasa/nlg/"
 
 # Tracker store which is used to store the conversations.
 # By default the conversations are stored in memory.
