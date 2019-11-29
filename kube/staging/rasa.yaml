@@ -22,7 +22,7 @@ spec:
       containers:
         - name: rasa
           image: theenbyperor/rasa
-          args: ["run", "--endpoints", "/secrets/endpoints.yml", "--credentials", "/secrets/credentials.yml", "-v"]
+          args: ["run", "--endpoints", "/secrets/endpoints.yml", "--credentials", "/secrets/credentials.yml", "-v", "--enable-api"]
           ports:
             - containerPort: 5005
           volumeMounts:

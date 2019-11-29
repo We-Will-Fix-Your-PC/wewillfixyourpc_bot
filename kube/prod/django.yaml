@@ -4,7 +4,7 @@ metadata:
   name: django-static
   namespace: chatbot
   annotations:
-    volume.beta.kubernetes.io/storage-class: "managed-nfs-storage"
+    volume.beta.kubernetes.io/storage-class: "gluster-heketi"
 spec:
   accessModes:
     - ReadWriteMany
@@ -18,7 +18,7 @@ metadata:
   name: django-media
   namespace: chatbot
   annotations:
-    volume.beta.kubernetes.io/storage-class: "managed-nfs-storage"
+    volume.beta.kubernetes.io/storage-class: "gluster-heketi"
 spec:
   accessModes:
     - ReadWriteMany
