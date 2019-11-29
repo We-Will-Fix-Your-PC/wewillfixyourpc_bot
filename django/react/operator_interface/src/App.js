@@ -159,15 +159,19 @@ class MessageData {
     }
 
     get image() {
-        return this.load() ? this.data.image : 0;
+        return this.load() ? this.data.image : null;
     }
 
     get read() {
-        return this.load() ? this.data.read : 0;
+        return this.load() ? this.data.read : false;
     }
 
     get delivered() {
-        return this.load() ? this.data.delivered : 0;
+        return this.load() ? this.data.delivered : false;
+    }
+
+    get request() {
+        return this.load() ? this.data.request: null;
     }
 
     get payment_request() {
@@ -179,22 +183,10 @@ class MessageData {
     }
 
     get entities() {
-        let entities = [];
-
-        if (this.load()) {
-            this.data.entities.forEach(e => {
-                entities.push(this.get_entity(e));
-            });
-        }
-
-        return entities;
-    }
-
-    get_entity(e) {
-        if (typeof this.app.state.message_entities[e] === "undefined") {
-            return new MessageEntityData(e, null, this.app);
+        if (typeof this.app.state.message_entities[this.id] === "undefined") {
+            return new MessageEntitiesData(this.id, null, this.app);
         } else {
-            return this.app.state.message_entities[e];
+            return this.app.state.message_entities[this.id];
         }
     }
 
@@ -207,7 +199,7 @@ class MessageData {
     }
 }
 
-class MessageEntityData {
+class MessageEntitiesData {
     constructor(id, data, app) {
         this.id = id;
         this.data = data;
@@ -222,7 +214,7 @@ class MessageEntityData {
         if (!this.isLoaded()) {
             if (this.app.pending_message_entities.indexOf(this.id) === -1) {
                 this.app.sock.send(JSON.stringify({
-                    type: "getMessageEntity",
+                    type: "getMessageEntities",
                     id: this.id
                 }));
                 this.app.pending_message_entities.push(this.id);
@@ -232,17 +224,29 @@ class MessageEntityData {
         return true;
     }
 
+    get entities() {
+        return this.load() ? this.data.entities.map(e => new MessageEntityData(e)) : [];
+    }
+
+    get guessed_intent() {
+        return this.load() ? this.data.guessed_intent : null;
+    }
+}
+
+class MessageEntityData {
+    constructor(data) {
+        this.data = data;
+    }
     get entity() {
-        return this.load() ? this.data.entity : "";
+        return this.data.entity
     }
 
     get value() {
-        return this.load() ? this.data.value : "";
+        return this.data.value
     }
 
     get text_value() {
-        const data = JSON.parse(this.value);
-        return data.value;
+        return JSON.parse(this.value);
     }
 }
 
@@ -487,9 +491,9 @@ class App extends Component {
                 messages: messages,
                 lastMessage: data.timestamp
             });
-        } else if (data.type === "message_entity") {
+        } else if (data.type === "message_entities") {
             const message_entities = this.state.message_entities;
-            message_entities[data.id] = new MessageEntityData(data.id, data, this);
+            message_entities[data.id] = new MessageEntitiesData(data.id, data, this);
             let p_index = this.pending_message_entities.indexOf(data.id);
             if (p_index > -1) {
                 this.pending_message_entities.splice(p_index, 1);

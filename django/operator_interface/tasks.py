@@ -66,26 +66,17 @@ def send_message_notifications(data):
 def extract_entities_from_message(mid):
     message = models.Message.objects.get(id=mid)
 
-    ref_time = int(message.timestamp.timestamp()) * 1000
-    duckling_url = settings.DUCKLING_HTTP_URL + "/parse"
-    headers = {
-        "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"
-    }
-    payload = {
-        "text": message.text,
-        "locale": "en_GB",
-        "reftime": ref_time,
-    }
-    r = requests.post(
-        duckling_url,
-        data=payload,
-        headers=headers,
-    )
+    r = requests.post(settings.RASA_HTTP_URL + "/model/parse", json={
+        "text": message.text
+    })
     r.raise_for_status()
-    matches = r.json()
+    data = r.json()
 
-    for match in matches:
-        match_o = models.MessageEntity(message=message, entity=match["dim"], value=json.dumps(match["value"]))
+    message.guessed_intent = data.get("intent")
+    message.save()
+
+    for match in data.get("entities", []):
+        match_o = models.MessageEntity(message=message, entity=match["entity"], value=json.dumps(match["value"]))
         match_o.save()
 
 

@@ -1,22 +1,23 @@
 import datetime
-import uuid
 import json
-import phonenumbers
+import uuid
 
+import django_keycloak_auth.users
 import keycloak.exceptions
+import phonenumbers
+import aiohttp
 from asgiref.sync import async_to_sync
 from channels.db import database_sync_to_async
 from channels.generic.websocket import AsyncJsonWebsocketConsumer
 from channels.layers import get_channel_layer
+from django.conf import settings
 from django.contrib.staticfiles.templatetags.staticfiles import static
 from django.db import transaction
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-from django.conf import settings
 
 import operator_interface.models
 import operator_interface.tasks
-import django_keycloak_auth.users
 
 channel_layer = get_channel_layer()
 
@@ -41,6 +42,7 @@ def message_saved(sender, instance: operator_interface.models.MessageEntity, **k
         "operator_interface", {"type": "message_update", "mid": instance.message.id}
     ))
 
+
 # TODO: Integrate with new system
 # @receiver(post_save, sender=payment.models.Payment)
 # def payment_saved(sender, instance: payment.models.Payment, **kwargs):
@@ -60,6 +62,11 @@ class OperatorConsumer(AsyncJsonWebsocketConsumer):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.user = None
+        self._session = aiohttp.ClientSession()
+
+    async def close(self, code=None):
+        await self._session.close()
+        return super().close(code)
 
     async def message(self, event):
         message = await self.get_message(event["mid"])
@@ -109,17 +116,26 @@ class OperatorConsumer(AsyncJsonWebsocketConsumer):
                 "payment_request": message.payment_request.id if message.payment_request else None,
                 "payment_confirm": message.payment_confirm.id if message.payment_confirm else None,
                 "conversation_id": message.conversation.id,
-                "entities": [e.id for e in message.messageentity_set.all()]
+                "request": message.request
             }
         )
 
-    async def send_message_entity(self, entity: operator_interface.models.MessageEntity):
+    async def send_message_entities(self, message: operator_interface.models.Message):
+        async with self._session.post(settings.RASA_HTTP_URL + "/model/parse", json={
+            "text": message.text
+        }) as r:
+            r.raise_for_status()
+            data = await r.json()
+
         await self.send_json(
             {
-                "type": "message_entity",
-                "id": entity.id,
-                "entity": entity.entity,
-                "value": entity.value,
+                "type": "message_entities",
+                "id": message.id,
+                "guessed_intent": data.get("intent"),
+                "entities": [{
+                    "entity": m["entity"],
+                    "value": json.dumps(m["value"])
+                } for m in data.get("entities", [])]
             }
         )
 
@@ -132,7 +148,7 @@ class OperatorConsumer(AsyncJsonWebsocketConsumer):
         )
 
     async def send_conversation(
-        self, conversation: operator_interface.models.Conversation
+            self, conversation: operator_interface.models.Conversation
     ):
         pic = static("operator_interface/img/default_profile_normal.png")
         if conversation.conversation_pic:
@@ -345,8 +361,21 @@ class OperatorConsumer(AsyncJsonWebsocketConsumer):
                 first_name=conversation.conversation_name,
                 required_actions=["UPDATE_PASSWORD", "UPDATE_PROFILE", "VERIFY_EMAIL"]
             )
-            conversation.conversation_user_id = user.get("id")
-            await self.save_object(conversation)
+
+            if user.get("new"):
+                conversation.conversation_user_id = user.get("id")
+                await self.save_object(conversation)
+            else:
+                message = operator_interface.models.Message(
+                    conversation=conversation,
+                    text="An account is already associated with that email address. Please log in.",
+                    direction=operator_interface.models.Message.TO_CUSTOMER,
+                    message_id=uuid.uuid4(),
+                    user=self.user,
+                    request="sign_in",
+                )
+                await self.save_object(message)
+                operator_interface.tasks.process_message.delay(message.id)
 
     async def receive_json(self, message, **kwargs):
         if message["type"] == "resyncReq":
@@ -365,11 +394,11 @@ class OperatorConsumer(AsyncJsonWebsocketConsumer):
                 await self.send_message(msg)
             except operator_interface.models.Message.DoesNotExist:
                 pass
-        elif message["type"] == "getMessageEntity":
-            eid = message["id"]
+        elif message["type"] == "getMessageEntities":
+            mid = message["id"]
             try:
-                entity = await self.get_message_entity(eid)
-                await self.send_message_entity(entity)
+                msg = await self.get_message(mid)
+                await self.send_message_entities(msg)
             except operator_interface.models.Message.DoesNotExist:
                 pass
         elif message["type"] == "getConversation":

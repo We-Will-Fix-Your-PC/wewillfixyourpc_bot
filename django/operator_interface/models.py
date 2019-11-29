@@ -110,6 +110,7 @@ class Message(models.Model):
     card = models.TextField(blank=True, null=True)
     selection = models.TextField(blank=True, null=True)
     request = models.CharField(max_length=255, null=True, blank=True)
+    guessed_intent = models.CharField(max_length=255, null=True, blank=True)
     end = models.BooleanField(default=False, null=True)
 
     class Meta:

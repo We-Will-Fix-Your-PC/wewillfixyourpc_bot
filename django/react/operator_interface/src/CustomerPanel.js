@@ -81,7 +81,7 @@ export default class CustomerPanel extends Component {
             {this.state.activeTab === 0 ?
                 <div className="custInfo">
                     <span>First name:</span>
-                    <span>{this.props.conversation.customer_first_name}</span>
+                    <span>{this.props.conversation.customer_first_name ? this.props.conversation.customer_first_name : "N/A"}</span>
                     <span>
                         <MaterialIcon role="button" icon="edit" onClick={() => this.setState({
                             attribute: "first-name",
@@ -89,7 +89,7 @@ export default class CustomerPanel extends Component {
                         })}/>
                     </span>
                     <span>Last name:</span>
-                    <span>{this.props.conversation.customer_last_name}</span>
+                    <span>{this.props.conversation.customer_last_name ? this.props.conversation.customer_last_name : "N/A"}</span>
                     <span>
                         <MaterialIcon role="button" icon="edit" onClick={() => this.setState({
                             attribute: "last-name",

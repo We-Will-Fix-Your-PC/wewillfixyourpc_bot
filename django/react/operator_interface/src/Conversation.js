@@ -14,6 +14,10 @@ export const entity_map = {
     "last-name": "first name",
 };
 
+export const request_map = {
+    "sign_in": "login",
+};
+
 export const a_or_an = (word) => {
     const vowelRegex = '^[aieouAIEOU].*';
     if (word.match(vowelRegex)) {
@@ -107,8 +111,8 @@ export default class Conversation extends Component {
                                 to {this.state.entity.text_value}
                                 <br/>
                                 <b>
-                                    Note: please be certain this is the real data of the customer, the system may also
-                                    request further authentication from the customer automatically
+                                    Note: please be certain this is the legitimate data of the customer, the system may
+                                    also request further authentication from the customer automatically
                                 </b>
                             </DialogContent>
                             <DialogFooter>
@@ -156,13 +160,16 @@ export default class Conversation extends Component {
                                                 dangerouslySetInnerHTML={{__html: m.text.replace(/\n/g, "<br />")}}/> : (
                                                 m.image ? <img src={m.image} alt=""/> : null
                                             )}
-                                        {m.entities
+                                        {m.entities.entities
                                             .filter(e => typeof entity_map[e.entity] !== "undefined")
                                             .map((entity, i) => (
                                                 <span className="entity" key={i} onClick={() => this.openEntityDialog(entity)}>
                                                     {a_or_an(entity_map[entity.entity])} was detected. Click here to save it.
                                                 </span>
                                             ))
+                                        }
+                                        {m.request ?
+                                            <span>{request_map[m.request]} request</span> : null
                                         }
                                         {m.payment_request ?
                                             <span>Payment request for: {m.payment_request.id}</span> : null
