@@ -1,16 +1,22 @@
 from django.http import HttpResponse, HttpResponseServerError, HttpResponseBadRequest
+from operator_interface.models import Message
 from django.shortcuts import redirect, reverse
 from django.views.decorators.csrf import csrf_exempt
+from django.contrib.auth.decorators import login_required
 from django.conf import settings
+from django.utils import timezone
+import operator_interface.tasks
 import json
 import hashlib
 import hmac
+import uuid
 import base64
 import requests
 import requests_oauthlib
 import urllib.parse
 import logging
 import sentry_sdk
+import datetime
 from . import models
 from . import tasks
 
@@ -185,3 +191,30 @@ def webhook(request):
             tasks.handle_twitter_read.delay(psid, last_read)
 
     return HttpResponse("")
+
+
+@login_required
+def account_linking(request):
+    state = request.GET.get("state")
+
+    try:
+        state = models.AccountLinkingState.objects.get(id=state)
+    except models.AccountLinkingState.DoesNotExist:
+        return HttpResponseBadRequest()
+
+    if state.timestamp + datetime.timedelta(minutes=5) < timezone.now():
+        return HttpResponseBadRequest()
+    state.conversation.conversation_user_id = request.user.username
+    state.conversation.save()
+    state.delete()
+
+    message = Message(
+        conversation=state.conversation,
+        message_id=uuid.uuid4(),
+        text="Login complete, thanks!",
+        direction=Message.TO_CUSTOMER,
+    )
+    message.save()
+    operator_interface.tasks.process_message.delay(message.id)
+
+    return HttpResponse('<script type="text/javascript">window.close();</script><h1>You can now close this window</h1>')

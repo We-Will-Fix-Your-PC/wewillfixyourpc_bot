@@ -19,6 +19,7 @@ import django_keycloak_auth.users
 from operator_interface.consumers import conversation_saved
 from operator_interface.models import Conversation, Message
 from . import views
+from . import models
 
 
 @shared_task
@@ -31,15 +32,15 @@ def handle_twitter_message(mid: str, psid, message, user):
         )
 
         if not conversation.conversation_user_id:
-            user = django_keycloak_auth.users.get_or_create_user(
+            kc_user = django_keycloak_auth.users.get_or_create_user(
                 federated_provider="twitter",
                 federated_user_id=user.get("id"),
                 federated_user_name=user.get("screen_name"),
                 first_name=user.get("name"),
             )
-            if user:
-                django_keycloak_auth.users.link_roles_to_user(user.get("id"), ["customer"])
-                conversation.conversation_user_id = user.get("id")
+            if kc_user:
+                django_keycloak_auth.users.link_roles_to_user(kc_user.get("id"), ["customer"])
+                conversation.conversation_user_id = kc_user.get("id")
                 conversation.save()
 
         if conversation.conversation_user_id:
@@ -97,7 +98,6 @@ def handle_twitter_message(mid: str, psid, message, user):
                 name=file_name,
             )
             conversation.save()
-            conversation_saved(None, conversation)
 
 
 @shared_task
@@ -199,7 +199,17 @@ def send_twitter_message(mid: int):
     #             ),
     #         }
     #     ]
-    if True:
+    if message.request == "sign_in":
+        state = models.AccountLinkingState(conversation=message.conversation)
+        state.save()
+        request_body["event"]["message_create"]["message_data"]["ctas"] = [
+            {
+                "type": "web_url",
+                "label": "Log in",
+                "url": settings.EXTERNAL_URL_BASE + reverse("twitter:account_linking") + f"?state={state.id}",
+            }
+        ]
+    else:
         urls = re.findall(
             "(http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*(),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+)",
             message.text,
