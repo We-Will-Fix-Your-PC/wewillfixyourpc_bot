@@ -1,5 +1,4 @@
 import datetime
-import decimal
 import json
 import logging
 import os.path
@@ -9,6 +8,7 @@ import urllib.parse
 import uuid
 from io import BytesIO
 
+import django_keycloak_auth.users
 import requests
 from celery import shared_task
 from django.conf import settings
@@ -18,7 +18,6 @@ from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.shortcuts import reverse
 from django.utils import timezone
 
-import django_keycloak_auth.users
 import operator_interface.consumers
 import operator_interface.tasks
 from operator_interface.models import Conversation, Message
@@ -78,8 +77,8 @@ def handle_facebook_message(psid: dict, message: dict) -> None:
                                     message_id=mid,
                                     direction=Message.FROM_CUSTOMER,
                                     text=f'<a href="{fs.base_url + file_name}" target="_blank">'
-                                    f"{orig_file_name}"
-                                    f"</a>",
+                                         f"{orig_file_name}"
+                                         f"</a>",
                                 )
                                 message_m.save()
                                 operator_interface.tasks.send_message_to_interface.delay(
@@ -272,7 +271,7 @@ def send_facebook_message(mid: int) -> None:
                     json={
                         "name": message.user.first_name,
                         "profile_picture_url": settings.EXTERNAL_URL_BASE
-                        + reverse("operator:profile_pic", args=[message.user.id]),
+                                               + reverse("operator:profile_pic", args=[message.user.id]),
                     },
                 )
                 if persona_r.status_code == 200:
@@ -389,12 +388,26 @@ def send_facebook_message(mid: int) -> None:
                                 "type": "postback",
                                 "title": f"Select {item.get('title', '')}",
                                 "payload": json.dumps(
-                                    {"action": f'resolve_entity{{"number": "{i+1}"}}'}
+                                    {"action": f'resolve_entity{{"number": "{i + 1}"}}'}
                                 ),
                             }
                         ],
                     }
                     for i, item in enumerate(selection_data.get("items", []))
+                ],
+            },
+        }
+    elif message.request == "sign_in":
+        request_body["message"]["attachment"] = {
+            "type": "template",
+            "payload": {
+                "template_type": "button",
+                "text": message.text,
+                "buttons": [
+                    {
+                        "type": "account_link",
+                        "url": settings.EXTERNAL_URL_BASE + reverse("facebook:account_linking"),
+                    }
                 ],
             },
         }

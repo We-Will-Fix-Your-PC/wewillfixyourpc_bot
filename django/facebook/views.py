@@ -3,11 +3,17 @@ from django.http import (
     HttpResponseForbidden,
     HttpResponseBadRequest,
     HttpResponseNotFound,
+    HttpResponseRedirect
 )
 from django.views.decorators.csrf import csrf_exempt
+from django.contrib.auth.decorators import login_required
 from django.conf import settings
+from operator_interface.models import Conversation
+from django.utils import timezone
 from . import tasks
+from . import models
 import json
+import datetime
 import logging
 
 logger = logging.getLogger(__name__)
@@ -49,6 +55,7 @@ def webhook(request):
         message = entry.get("message")
         postback = entry.get("postback")
         read = entry.get("read")
+        acccount_linking = entry.get("account_linking")
 
         if message is not None:
             tasks.handle_facebook_message.delay(psid, message)
@@ -56,5 +63,33 @@ def webhook(request):
             tasks.handle_facebook_postback.delay(psid, postback)
         if read is not None:
             tasks.handle_facebook_read.delay(psid, read)
+        if acccount_linking is not None:
+            if acccount_linking.get("status") == "linked":
+                try:
+                    conversation = Conversation.get_or_create_conversation(
+                        Conversation.FACEBOOK, psid["sender"]
+                    )
+                except Conversation.DoesNotExist:
+                    return HttpResponseBadRequest()
+                try:
+                    state = models.AccountLinkingState.objects.get(id=acccount_linking.get("authorization_code"))
+                except models.AccountLinkingState.DoesNotExist:
+                    return HttpResponseBadRequest()
+                if state.timestamp + datetime.timedelta(minutes=5) < timezone.now():
+                    return HttpResponseBadRequest()
+                conversation.conversation_user_id = state.user_id
+                conversation.save()
+                state.delete()
 
     return HttpResponse("")
+
+
+@login_required
+def account_linking(request):
+    redirect_uri = request.GET.get("redirect_uri")
+    state = models.AccountLinkingState(user_id=request.user.username)
+    state.save()
+
+    return HttpResponseRedirect(
+        f"{redirect_uri}&authorization_code={state.id}"
+    )
