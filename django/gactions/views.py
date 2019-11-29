@@ -110,7 +110,7 @@ def process_outputs(outputs_l, is_guest_user, user_id_token, conversation):
     possible_intents = []
     responses = []
 
-    if last_output.request == "google_sign_in":
+    if last_output.request == "sign_in":
         if not is_guest_user:
             if not user_id_token:
                 possible_intents.append(
@@ -225,10 +225,7 @@ def webhook(request):
     is_guest_user = user.get("userVerificationStatus", "GUEST") != "VERIFIED"
     conversation_id = data.get("conversation", {}).get("conversationId", "")
 
-    if not is_guest_user:
-        user_id = user.get("userStorage", None)
-    else:
-        user_id = None
+    user_id = user.get("userStorage", None) if not is_guest_user else None
     conversation: Conversation = Conversation.get_or_create_conversation(
         Conversation.GOOGLE_ACTIONS, conversation_id
     )

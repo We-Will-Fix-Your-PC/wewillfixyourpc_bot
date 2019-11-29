@@ -1,12 +1,14 @@
+import abc
 import collections
 import datetime
 import functools
 import json
 import random
 from io import BytesIO
-from typing import Any, Dict, List, Optional, Text, Union, Tuple
+from typing import Any, Dict, List, Optional, Text, Tuple, Union
 
 import dateutil.parser
+import django_keycloak_auth.users
 import fuzzywuzzy.fuzz
 import fuzzywuzzy.process
 import fuzzywuzzy.string_processing
@@ -19,8 +21,8 @@ import rasa_sdk.events
 import requests
 from django.conf import settings
 from django.core.files.storage import DefaultStorage
-from django.utils import timezone
 from django.urls import reverse
+from django.utils import timezone
 from PIL import Image
 from rasa_sdk import Action, Tracker
 from rasa_sdk.executor import CollectingDispatcher
@@ -28,7 +30,6 @@ from rasa_sdk.forms import FormAction
 
 import operator_interface.models
 import rasa_api.models
-import django_keycloak_auth.users
 from fulfillment import models
 
 tz = pytz.timezone("Europe/London")
@@ -40,7 +41,7 @@ def get_one_or_none(**kwargs):
     return query[0] if len(query) > 0 else None
 
 
-def is_open():
+def is_open_on(date: datetime.date) -> Union[bool, models.OpeningHours, models.OpeningHoursOverride]:
     opening_hours_defs = [
         get_one_or_none(monday=True),
         get_one_or_none(tuesday=True),
@@ -50,31 +51,86 @@ def is_open():
         get_one_or_none(saturday=True),
         get_one_or_none(sunday=True),
     ]
-    today = datetime.date.today()
-    weekday = today.weekday()
+    weekday = date.weekday()
     hours = opening_hours_defs[weekday]
 
-    if hours is None:
+    override = models.OpeningHoursOverride.objects.filter(day=datetime.date.today())
+    if len(override) > 0:
+        override = override[0]
+        return False if override.close else override
+
+    return False if hours is None else hours
+
+
+def is_open_at(date, time):
+    hours = is_open_on(date)
+    if not hours:
         return False
 
-    now = datetime.datetime.now().time()
     time_open = timezone.make_naive(
         timezone.make_aware(
-            datetime.datetime.combine(today, hours.open), tz
+            datetime.datetime.combine(date, hours.open), tz
         ).astimezone(pytz.utc)
     ).time()
     time_close = timezone.make_naive(
         timezone.make_aware(
-            datetime.datetime.combine(today, hours.close), tz
+            datetime.datetime.combine(date, hours.close), tz
         ).astimezone(pytz.utc)
     ).time()
 
-    if now < time_open:
+    if time < time_open:
         return False
-    elif now > time_close:
+    elif time > time_close:
         return False
 
     return True
+
+
+def is_open():
+    return is_open_at(datetime.datetime.today(), datetime.datetime.now().time())
+
+
+def format_hours(time: Union[models.OpeningHours, models.OpeningHoursOverride]):
+    try:
+        if time.closed:
+            return "closed"
+    except AttributeError:
+        pass
+    if time is None:
+        return "closed"
+    open_t = time.open.strftime("%I:%M %p")
+    close_t = time.close.strftime("%I:%M %p")
+    return f"open {open_t} - {close_t}"
+
+
+def format_day(self, day):
+    if day[0] == day[1]:
+        day_range = day[0]
+    else:
+        day_range = f"{day[0]}-{day[1]}"
+    return f"On {day_range} we are {format_hours(day[2])}."
+
+
+def reduce_days(days: List[Tuple[str, str, models.OpeningHours]]):
+    cur_day = 0
+    while cur_day < len(days):
+        next_day = cur_day + 1
+        if next_day == len(days):
+            next_day = 0
+        if (days[cur_day][2] is None) and (days[next_day][2] is None):
+            days[cur_day] = (days[cur_day][0], days[next_day][1], days[cur_day][2])
+            days.remove(days[next_day])
+            continue
+        elif (days[cur_day][2] is None) or (days[next_day][2] is None):
+            pass
+        elif (days[cur_day][2].open == days[next_day][2].open) and (
+                days[cur_day][2].close == days[next_day][2].close
+        ):
+            days[cur_day] = (days[cur_day][0], days[next_day][1], days[cur_day][2])
+            days.remove(days[next_day])
+            continue
+        cur_day += 1
+    return days
 
 
 def sender_id_to_conversation(sender_id):
@@ -92,7 +148,7 @@ def sender_id_to_conversation(sender_id):
             return None
 
 
-def update_user_info(conversation: operator_interface.models.Conversation, email=None, **kwargs):
+def update_user_info(conversation: operator_interface.models.Conversation, email=None, force_update=True, **kwargs):
     if not conversation.conversation_user_id and email:
         user = django_keycloak_auth.users.get_or_create_user(
             email=email,
@@ -108,7 +164,7 @@ def update_user_info(conversation: operator_interface.models.Conversation, email
     if conversation.conversation_user_id:
         django_keycloak_auth.users.update_user(
             conversation.conversation_user_id,
-            force_update=True,
+            force_update=force_update,
             **kwargs
         )
 
@@ -118,23 +174,23 @@ class ActionRequestHuman(Action):
         return "request_human"
 
     def run(
-        self,
-        dispatcher: CollectingDispatcher,
-        tracker: Tracker,
-        domain: Dict[Text, Any],
+            self,
+            dispatcher: CollectingDispatcher,
+            tracker: Tracker,
+            domain: Dict[Text, Any],
     ) -> List[Dict[Text, Any]]:
         conversation = sender_id_to_conversation(tracker.sender_id)
 
         if (
-            not conversation
-            or conversation.platform
-            != operator_interface.models.Conversation.GOOGLE_ACTIONS
+                not conversation
+                or conversation.platform
+                != operator_interface.models.Conversation.GOOGLE_ACTIONS
         ):
             dispatcher.utter_message(
                 f"Someone will be here to help you shortly..."
                 if is_open()
                 else f"We're currently closed but this conversation has been flagged and someone"
-                f" will be here to help you as soon as we're open again."
+                     f" will be here to help you as soon as we're open again."
             )
             dispatcher.utter_custom_json({"type": "request_human"})
         else:
@@ -163,10 +219,10 @@ class ActionGreet(Action):
         return "greet"
 
     def run(
-        self,
-        dispatcher: CollectingDispatcher,
-        tracker: Tracker,
-        domain: Dict[Text, Any],
+            self,
+            dispatcher: CollectingDispatcher,
+            tracker: Tracker,
+            domain: Dict[Text, Any],
     ) -> List[Dict[Text, Any]]:
         utterance: rasa_api.models.Utterance = rasa_api.models.Utterance.objects.get(
             name="utter_greet"
@@ -185,10 +241,10 @@ class ActionUpdateInfoSlots(Action):
         return "update_info_slots"
 
     def run(
-        self,
-        dispatcher: CollectingDispatcher,
-        tracker: Tracker,
-        domain: Dict[Text, Any],
+            self,
+            dispatcher: CollectingDispatcher,
+            tracker: Tracker,
+            domain: Dict[Text, Any],
     ) -> List[Dict[Text, Any]]:
         conversation = sender_id_to_conversation(tracker.sender_id)
 
@@ -200,8 +256,8 @@ class ActionUpdateInfoSlots(Action):
 
         if conversation:
             if (
-                conversation.platform
-                == operator_interface.models.Conversation.GOOGLE_ACTIONS
+                    conversation.platform
+                    == operator_interface.models.Conversation.GOOGLE_ACTIONS
             ):
                 instant_response_required = True
                 supports_sign_in = True
@@ -265,25 +321,18 @@ class ActionSignIn(Action):
         return "sign_in"
 
     def run(
-        self,
-        dispatcher: CollectingDispatcher,
-        tracker: Tracker,
-        domain: Dict[Text, Any],
+            self,
+            dispatcher: CollectingDispatcher,
+            tracker: Tracker,
+            domain: Dict[Text, Any],
     ) -> List[Dict[Text, Any]]:
-        conversation = sender_id_to_conversation(tracker.sender_id)
-
-        if conversation:
-            if (
-                conversation.platform
-                == operator_interface.models.Conversation.GOOGLE_ACTIONS
-            ):
-                dispatcher.utter_custom_json(
-                    {
-                        "type": "request",
-                        "request": "google_sign_in",
-                        "text": "Please sign in",
-                    }
-                )
+        dispatcher.utter_custom_json(
+            {
+                "type": "request",
+                "request": "sign_in",
+                "text": "Please sign in",
+            }
+        )
 
         return []
 
@@ -293,17 +342,17 @@ class ActionMoveToWebForm(Action):
         return "move_to_web_form_device"
 
     def run(
-        self,
-        dispatcher: CollectingDispatcher,
-        tracker: Tracker,
-        domain: Dict[Text, Any],
+            self,
+            dispatcher: CollectingDispatcher,
+            tracker: Tracker,
+            domain: Dict[Text, Any],
     ) -> List[Dict[Text, Any]]:
         conversation = sender_id_to_conversation(tracker.sender_id)
 
         if conversation:
             if (
-                conversation.platform
-                == operator_interface.models.Conversation.GOOGLE_ACTIONS
+                    conversation.platform
+                    == operator_interface.models.Conversation.GOOGLE_ACTIONS
             ):
                 dispatcher.utter_custom_json(
                     {
@@ -321,10 +370,10 @@ class ActionCatPic(Action):
         return "cat_pic"
 
     def run(
-        self,
-        dispatcher: CollectingDispatcher,
-        tracker: Tracker,
-        domain: Dict[Text, Any],
+            self,
+            dispatcher: CollectingDispatcher,
+            tracker: Tracker,
+            domain: Dict[Text, Any],
     ) -> List[Dict[Text, Any]]:
         utterance: rasa_api.models.Utterance = rasa_api.models.Utterance.objects.get(
             name="utter_cheer_up"
@@ -354,10 +403,10 @@ class ActionAskAffirmation(Action):
         return "action_default_ask_affirmation"
 
     def run(
-        self,
-        dispatcher: CollectingDispatcher,
-        tracker: Tracker,
-        domain: Dict[Text, Any],
+            self,
+            dispatcher: CollectingDispatcher,
+            tracker: Tracker,
+            domain: Dict[Text, Any],
     ) -> List[Dict[Text, Any]]:
         possible_intent = tracker.latest_message["intent"]["name"]
 
@@ -381,53 +430,11 @@ class ActionOpeningHours(Action):
     def name(self) -> Text:
         return "support_opening_hours"
 
-    @staticmethod
-    def format_hours(time: Union[models.OpeningHours, models.OpeningHoursOverride]):
-        try:
-            if time.closed:
-                return "closed"
-        except AttributeError:
-            pass
-        if time is None:
-            return "closed"
-        open_t = time.open.strftime("%I:%M %p")
-        close_t = time.close.strftime("%I:%M %p")
-        return f"open {open_t} - {close_t}"
-
-    def format_day(self, day):
-        if day[0] == day[1]:
-            day_range = day[0]
-        else:
-            day_range = f"{day[0]}-{day[1]}"
-        return f"On {day_range} we are {self.format_hours(day[2])}."
-
-    @staticmethod
-    def reduce_days(days: List[Tuple[str, str, models.OpeningHours]]):
-        cur_day = 0
-        while cur_day < len(days):
-            next_day = cur_day + 1
-            if next_day == len(days):
-                next_day = 0
-            if (days[cur_day][2] is None) and (days[next_day][2] is None):
-                days[cur_day] = (days[cur_day][0], days[next_day][1], days[cur_day][2])
-                days.remove(days[next_day])
-                continue
-            elif (days[cur_day][2] is None) or (days[next_day][2] is None):
-                pass
-            elif (days[cur_day][2].open == days[next_day][2].open) and (
-                days[cur_day][2].close == days[next_day][2].close
-            ):
-                days[cur_day] = (days[cur_day][0], days[next_day][1], days[cur_day][2])
-                days.remove(days[next_day])
-                continue
-            cur_day += 1
-        return days
-
     def run(
-        self,
-        dispatcher: CollectingDispatcher,
-        tracker: Tracker,
-        domain: Dict[Text, Any],
+            self,
+            dispatcher: CollectingDispatcher,
+            tracker: Tracker,
+            domain: Dict[Text, Any],
     ) -> List[Dict[Text, Any]]:
         entities = tracker.latest_message.get("entities", [])
         time = next((x for x in entities if x.get("entity") == "time"), None)
@@ -485,7 +492,7 @@ class ActionOpeningHours(Action):
                         dispatcher.utter_message("We are closed today.")
                     else:
                         dispatcher.utter_message(
-                            f"Today we are {self.format_hours(hours)}."
+                            f"Today we are {format_hours(hours)}."
                         )
                 else:
                     next_of_weekday = datetime.date.today() + dateutil.relativedelta.relativedelta(
@@ -501,7 +508,7 @@ class ActionOpeningHours(Action):
                         else:
                             dispatcher.utter_message(
                                 f"{want_date.strftime('%A')} we are "
-                                f"{self.format_hours(hours)}."
+                                f"{format_hours(hours)}."
                             )
                     else:
                         if hours is None:
@@ -512,7 +519,7 @@ class ActionOpeningHours(Action):
                         else:
                             dispatcher.utter_message(
                                 f"On {want_date.strftime('%A %B')} the {p.ordinal(want_date.day)}"
-                                f" we are {self.format_hours(hours)}."
+                                f" we are {format_hours(hours)}."
                             )
                 return []
             else:
@@ -544,8 +551,8 @@ class ActionOpeningHours(Action):
                 days_in_period = days_in_period.keys()
                 day_ids_in_period = day_ids_in_period.keys()
 
-                days_in_period = self.reduce_days(list(days_in_period))
-                days_in_period = map(self.format_day, days_in_period)
+                days_in_period = reduce_days(list(days_in_period))
+                days_in_period = map(format_day, days_in_period)
                 days = "\n".join(days_in_period)
 
                 future_overrides = filter(
@@ -553,7 +560,7 @@ class ActionOpeningHours(Action):
                 )
                 future_overrides_txt = map(
                     lambda d: f"\nOn {d.day.strftime('%A %B')} the {p.ordinal(d.day.day)} we will be "
-                    f"{self.format_hours(d)}.",
+                              f"{format_hours(d)}.",
                     future_overrides,
                 )
                 future_overrides_txt = "".join(future_overrides_txt)
@@ -561,13 +568,13 @@ class ActionOpeningHours(Action):
                 dispatcher.utter_message(f"{days}{future_overrides_txt}")
                 return []
 
-        days = self.reduce_days(days)
-        days = map(self.format_day, days)
+        days = reduce_days(days)
+        days = map(format_day, days)
         days = "\n".join(days)
 
         future_overrides_txt = map(
             lambda d: f"\nOn {d.day.strftime('%A %B')} the {p.ordinal(d.day.day)} we will be "
-            f"{self.format_hours(d)}.",
+                      f"{format_hours(d)}.",
             future_overrides,
         )
         future_overrides_txt = "".join(future_overrides_txt)
@@ -580,10 +587,10 @@ class ActionContact(Action):
         return "support_contact"
 
     def run(
-        self,
-        dispatcher: CollectingDispatcher,
-        tracker: Tracker,
-        domain: Dict[Text, Any],
+            self,
+            dispatcher: CollectingDispatcher,
+            tracker: Tracker,
+            domain: Dict[Text, Any],
     ) -> List[Dict[Text, Any]]:
         contact_details = models.ContactDetails.objects.get()
         dispatcher.utter_message(
@@ -598,10 +605,10 @@ class ActionContactPhone(Action):
         return "support_contact_phone"
 
     def run(
-        self,
-        dispatcher: CollectingDispatcher,
-        tracker: Tracker,
-        domain: Dict[Text, Any],
+            self,
+            dispatcher: CollectingDispatcher,
+            tracker: Tracker,
+            domain: Dict[Text, Any],
     ) -> List[Dict[Text, Any]]:
         contact_details = models.ContactDetails.objects.get()
         dispatcher.utter_message(
@@ -615,10 +622,10 @@ class ActionContactEmail(Action):
         return "support_contact_email"
 
     def run(
-        self,
-        dispatcher: CollectingDispatcher,
-        tracker: Tracker,
-        domain: Dict[Text, Any],
+            self,
+            dispatcher: CollectingDispatcher,
+            tracker: Tracker,
+            domain: Dict[Text, Any],
     ) -> List[Dict[Text, Any]]:
         contact_details = models.ContactDetails.objects.get()
         dispatcher.utter_message(f"You can email us at {contact_details.email}.")
@@ -630,10 +637,10 @@ class ActionLocation(Action):
         return "support_location"
 
     def run(
-        self,
-        dispatcher: CollectingDispatcher,
-        tracker: Tracker,
-        domain: Dict[Text, Any],
+            self,
+            dispatcher: CollectingDispatcher,
+            tracker: Tracker,
+            domain: Dict[Text, Any],
     ) -> List[Dict[Text, Any]]:
         contact_details = models.ContactDetails.objects.get()
         dispatcher.utter_message(
@@ -647,10 +654,10 @@ class ActionRepair(Action):
         return "repair"
 
     def run(
-        self,
-        dispatcher: CollectingDispatcher,
-        tracker: Tracker,
-        domain: Dict[Text, Any],
+            self,
+            dispatcher: CollectingDispatcher,
+            tracker: Tracker,
+            domain: Dict[Text, Any],
     ) -> List[Dict[Text, Any]]:
         device_model = tracker.get_slot("device_model")
         repair_name = tracker.get_slot("device_repair")
@@ -711,16 +718,16 @@ class ActionRepairBookCheck(Action):
         return "repair_book_check"
 
     def run(
-        self,
-        dispatcher: CollectingDispatcher,
-        tracker: Tracker,
-        domain: Dict[Text, Any],
+            self,
+            dispatcher: CollectingDispatcher,
+            tracker: Tracker,
+            domain: Dict[Text, Any],
     ) -> List[Dict[Text, Any]]:
         device_model = tracker.get_slot("device_model")
         repair_name = tracker.get_slot("device_repair")
 
         device_models = (
-            models.Model.objects.filter(name__startswith=device_model.lower())
+            list(models.Model.objects.filter(name__startswith=device_model.lower()))
             if device_model
             else []
         )
@@ -735,6 +742,12 @@ class ActionRepairBookCheck(Action):
 
         if len(device_models) > 1 and repair is not None:
             dispatcher.utter_template("utter_clarify_model", tracker)
+            dispatcher.utter_message(
+                ", or ".join([
+                    ", ".join([m.display_name for m in device_models[:-1]]),
+                    device_models[-1].display_name
+                ]) + "?"
+            )
             dispatcher.utter_custom_json(
                 {
                     "type": "selection",
@@ -766,10 +779,10 @@ class ActionRepairBookClarify(Action):
         return "repair_book_clarify"
 
     def run(
-        self,
-        dispatcher: CollectingDispatcher,
-        tracker: Tracker,
-        domain: Dict[Text, Any],
+            self,
+            dispatcher: CollectingDispatcher,
+            tracker: Tracker,
+            domain: Dict[Text, Any],
     ) -> List[Dict[Text, Any]]:
         list_items = tracker.get_slot("list_items")
         device_model = next(
@@ -816,7 +829,7 @@ class ActionRepairBookClarify(Action):
 
         device_model = (
             next(
-                models.Model.objects.filter(name__startswith=device_model.lower()), None
+                models.Model.objects.filter(name__startswith=device_model.lower()).iterator(), None
             )
             if device_model
             else None
@@ -828,12 +841,12 @@ class ActionRepairBookClarify(Action):
             if mention == "last":
                 return [
                     rasa_sdk.events.SlotSet("repairable", True),
-                    rasa_sdk.events.SlotSet("device_model", list_items[-1].name),
+                    rasa_sdk.events.SlotSet("device_model", list_items[-1]["name"]),
                 ]
             elif mention == "first":
                 return [
                     rasa_sdk.events.SlotSet("repairable", True),
-                    rasa_sdk.events.SlotSet("device_model", list_items[0].name),
+                    rasa_sdk.events.SlotSet("device_model", list_items[0]["name"]),
                 ]
         elif number or ordinal:
             if ordinal and not number:
@@ -842,17 +855,23 @@ class ActionRepairBookClarify(Action):
             if number < len(list_items):
                 return [
                     rasa_sdk.events.SlotSet("repairable", True),
-                    rasa_sdk.events.SlotSet("device_model", list_items[number].name),
+                    rasa_sdk.events.SlotSet("device_model", list_items[number]["name"]),
                 ]
 
-        dispatcher.utter_message("utter_clarify_model")
+        dispatcher.utter_template("utter_clarify_model", tracker)
+        dispatcher.utter_message(
+            ", or".join([
+                ", ".join([m["display_name"] for m in list_items[:-1]]),
+                list_items[-1]["display_name"]
+            ]) + "?"
+        )
         dispatcher.utter_custom_json(
             {
                 "type": "selection",
                 "selection": {
                     "title": "Device model",
                     "items": [
-                        {"title": m.display_name, "key": f"device_mode:{m.id}"}
+                        {"title": m["display_name"], "key": f"device_mode:{m['id']}"}
                         for m in list_items
                     ],
                 },
@@ -861,72 +880,134 @@ class ActionRepairBookClarify(Action):
         return []
 
 
-def validate_brand(value: Text, dispatcher: CollectingDispatcher, tracker: Tracker):
-    asked_once = tracker.get_slot("asked_once")
-    asked_once = True if asked_once else False
-    brand = models.Brand.objects.all()
-    top_choice = fuzzywuzzy.process.extractOne(
-        value.lower(),
-        brand,
-        lambda v: fuzzywuzzy.utils.full_process(getattr(v, "name", v)),
-    )
+class BaseForm(abc.ABC, FormAction):
+    def name(self):
+        return None
 
-    if not top_choice or top_choice[1] <= 50:
-        if not asked_once:
-            dispatcher.utter_message("Hmmm 🤔, I don't recognise that brand.")
-            return {"brand": None, "asked_once": True}
+    def validate_brand(self, value: Text, dispatcher: CollectingDispatcher, tracker: Tracker, domain: Dict[Text, Any]):
+        asked_once = tracker.get_slot("asked_once")
+        asked_once = True if asked_once else False
+        brand = models.Brand.objects.all()
+        top_choice = fuzzywuzzy.process.extractOne(
+            value.lower(),
+            brand,
+            lambda v: fuzzywuzzy.utils.full_process(getattr(v, "name", v)),
+        )
+
+        if not top_choice or top_choice[1] <= 50:
+            if not asked_once:
+                dispatcher.utter_message("Hmmm 🤔, I don't recognise that brand.")
+                return {"brand": None, "asked_once": True}
+            else:
+                return {"brand": value, "asked_once": False}
+        elif top_choice[1] > 70:
+            return {"brand": top_choice[0].name}
         else:
-            return {"brand": value, "asked_once": False}
-    elif top_choice[1] > 70:
-        return {"brand": top_choice[0].name}
-    else:
-        if not asked_once:
+            if not asked_once:
+                dispatcher.utter_message(
+                    f"Hmmm 🤔, I don't recognise that brand, did you mean "
+                    f"{top_choice[0].display_name}?"
+                )
+                return {"brand": None, "asked_once": True}
+            else:
+                return {"brand": value, "asked_once": False}
+
+    def validate_device_model(
+            self, value: Text, dispatcher: CollectingDispatcher, tracker: Tracker, domain: Dict[Text, Any],
+    ):
+        asked_once = tracker.get_slot("asked_once")
+        asked_once = True if asked_once else False
+        model = models.Model.objects.all()
+        top_choice = fuzzywuzzy.process.extractOne(
+            value.lower(),
+            model,
+            lambda v: fuzzywuzzy.string_processing.StringProcessor.strip(
+                fuzzywuzzy.string_processing.StringProcessor.to_lower_case(
+                    getattr(v, "name", v)
+                )
+            ),
+            functools.partial(fuzzywuzzy.fuzz.WRatio, full_process=False),
+        )
+
+        if not top_choice or top_choice[1] <= 50:
+            if not asked_once:
+                dispatcher.utter_message("Hmmm 🤔, I don't recognise that model")
+                return {"device_model": None, "asked_once": True}
+            else:
+                return {"device_model": value, "asked_once": False}
+        elif top_choice[1] > 70:
+            return {"device_model": top_choice[0].name}
+        else:
+            if not asked_once:
+                dispatcher.utter_message(
+                    f"Hmmm 🤔, I don't recognise that model, did you mean "
+                    f"{top_choice[0].display_name}?"
+                )
+                return {"device_model": None, "asked_once": True}
+            else:
+                return {"device_model": value, "asked_once": False}
+
+    def validate_phone_number(
+            self,
+            value: Text,
+            dispatcher: CollectingDispatcher,
+            tracker: Tracker,
+            domain: Dict[Text, Any],
+    ) -> Optional[Dict[Text, Any]]:
+        try:
+            phone = phonenumbers.parse(value, settings.PHONENUMBER_DEFAULT_REGION)
+        except phonenumbers.phonenumberutil.NumberParseException:
             dispatcher.utter_message(
-                f"Hmmm 🤔, I don't recognise that brand, did you mean "
-                f"{top_choice[0].display_name}?"
+                "Hmmm 🤔, that's doesn't look like a valid phone number ☎️ to me."
             )
-            return {"brand": None, "asked_once": True}
-        else:
-            return {"brand": value, "asked_once": False}
+            return {"phone_number": None}
 
-
-def validate_device_model(
-    value: Text, dispatcher: CollectingDispatcher, tracker: Tracker
-):
-    asked_once = tracker.get_slot("asked_once")
-    asked_once = True if asked_once else False
-    model = models.Model.objects.all()
-    top_choice = fuzzywuzzy.process.extractOne(
-        value.lower(),
-        model,
-        lambda v: fuzzywuzzy.string_processing.StringProcessor.strip(
-            fuzzywuzzy.string_processing.StringProcessor.to_lower_case(
-                getattr(v, "name", v)
-            )
-        ),
-        functools.partial(fuzzywuzzy.fuzz.WRatio, full_process=False),
-    )
-
-    if not top_choice or top_choice[1] <= 50:
-        if not asked_once:
-            dispatcher.utter_message("Hmmm 🤔, I don't recognise that model")
-            return {"device_model": None, "asked_once": True}
-        else:
-            return {"device_model": value, "asked_once": False}
-    elif top_choice[1] > 70:
-        return {"device_model": top_choice[0].name}
-    else:
-        if not asked_once:
+        if not phonenumbers.is_valid_number(phone):
             dispatcher.utter_message(
-                f"Hmmm 🤔, I don't recognise that model, did you mean "
-                f"{top_choice[0].display_name}?"
+                "Hmmm 🤔, that's doesn't look like a valid phone number ☎️ to me."
             )
-            return {"device_model": None, "asked_once": True}
+            return {"phone_number": None}
         else:
-            return {"device_model": value, "asked_once": False}
+            phone = phonenumbers.format_number(
+                phone, phonenumbers.PhoneNumberFormat.E164
+            )
+            conversation = sender_id_to_conversation(tracker.sender_id)
+
+            if conversation:
+                update_user_info(conversation, phone=phone)
+
+            return {"phone_number": phone}
+
+    def validate_email(
+            self,
+            value: Text,
+            dispatcher: CollectingDispatcher,
+            tracker: Tracker,
+            domain: Dict[Text, Any],
+    ) -> Optional[Dict[Text, Any]]:
+        conversation = sender_id_to_conversation(tracker.sender_id)
+
+        if conversation:
+            update_user_info(conversation, email=value)
+
+        return {"email": value}
+
+    def validate_name(
+            self,
+            value: Text,
+            dispatcher: CollectingDispatcher,
+            tracker: Tracker,
+            domain: Dict[Text, Any],
+    ) -> Optional[Dict[Text, Any]]:
+        conversation = sender_id_to_conversation(tracker.sender_id)
+
+        if conversation:
+            update_user_info(conversation, first_name=value, force_update=False)
+
+        return {"name": value}
 
 
-class RepairForm(FormAction):
+class RepairForm(BaseForm):
     def name(self) -> Text:
         return "repair_form"
 
@@ -952,43 +1033,34 @@ class RepairForm(FormAction):
         }
 
     def submit(
-        self,
-        dispatcher: CollectingDispatcher,
-        tracker: Tracker,
-        domain: Dict[Text, Any],
+            self,
+            dispatcher: CollectingDispatcher,
+            tracker: Tracker,
+            domain: Dict[Text, Any],
     ) -> List[Dict]:
         dispatcher.utter_template("utter_looking_up", tracker)
         return []
 
-    def validate_brand(
-        self,
-        value: Text,
-        dispatcher: CollectingDispatcher,
-        tracker: Tracker,
-        domain: Dict[Text, Any],
-    ) -> Optional[Dict[Text, Any]]:
-        return validate_brand(value, dispatcher, tracker)
-
     def validate_device_model(
-        self,
-        value: Text,
-        dispatcher: CollectingDispatcher,
-        tracker: Tracker,
-        domain: Dict[Text, Any],
+            self,
+            value: Text,
+            dispatcher: CollectingDispatcher,
+            tracker: Tracker,
+            domain: Dict[Text, Any],
     ) -> Optional[Dict[Text, Any]]:
         brand = tracker.get_slot("brand")
         brand = brand if brand else ""
         if brand.lower() in ["iphone", "ipad", ""]:
-            return validate_device_model(value, dispatcher, tracker)
+            return super().validate_device_model(value, dispatcher, tracker, domain)
         else:
             return {"device_model": None}
 
     def validate_device_repair(
-        self,
-        value: Text,
-        dispatcher: CollectingDispatcher,
-        tracker: Tracker,
-        domain: Dict[Text, Any],
+            self,
+            value: Text,
+            dispatcher: CollectingDispatcher,
+            tracker: Tracker,
+            domain: Dict[Text, Any],
     ) -> Optional[Dict[Text, Any]]:
         asked_once = tracker.get_slot("asked_once")
         asked_once = True if asked_once else False
@@ -1018,7 +1090,7 @@ class RepairForm(FormAction):
                 return {"device_repair": value, "asked_once": False}
 
 
-class RepairBookForm(FormAction):
+class RepairBookForm(BaseForm):
     def name(self) -> Text:
         return "repair_book_form"
 
@@ -1027,13 +1099,10 @@ class RepairBookForm(FormAction):
         conversation = sender_id_to_conversation(tracker.sender_id)
         ask_phone = (
             (
-                False
-                if conversation.platform
-                == operator_interface.models.Conversation.GOOGLE_ACTIONS
+                False if conversation.platform == operator_interface.models.Conversation.GOOGLE_ACTIONS
                 else True
             )
-            if conversation
-            else True
+            if conversation else True
         )
 
         if not ask_phone:
@@ -1052,14 +1121,71 @@ class RepairBookForm(FormAction):
             "time": self.from_entity(entity="time"),
         }
 
+    def validate_date(
+            self,
+            value: Text,
+            dispatcher: CollectingDispatcher,
+            tracker: Tracker,
+            domain: Dict[Text, Any],
+    ) -> Optional[Dict[Text, Any]]:
+        value_dt = datetime.datetime.fromisoformat(value)
+
+        if value_dt < timezone.now():
+            dispatcher.utter_message("That date is in the past")
+            return {"date": None}
+
+        if not is_open_on(value_dt.date()):
+            dispatcher.utter_message(
+                f"Sorry, but we're closed on {value_dt.strftime('%A')} the {p.ordinal(value_dt.day)}.")
+            return {"date": None}
+
+        return {"date": value}
+
+    def validate_time(
+            self,
+            value: Text,
+            dispatcher: CollectingDispatcher,
+            tracker: Tracker,
+            domain: Dict[Text, Any],
+    ) -> Optional[Dict[Text, Any]]:
+        date = tracker.get_slot("date")
+        if not date:
+            return {"time": None}
+        date = datetime.datetime.fromisoformat(date)
+        value = next(filter(lambda e: e.get("entity") == "time", tracker.latest_message.get("entities")), None)
+
+        if value:
+            value = value.get("additional_info", {})
+            if value.get("grain") in ["no-grain", "second", "minute", "hour"]:
+                value_dt = datetime.datetime.fromisoformat(value.get("value"))
+                if is_open_at(date, value_dt.time()):
+                    pass
+                elif is_open_at(date, (value_dt + datetime.timedelta(hours=12)).time()):
+                    value_dt = (value_dt + datetime.timedelta(hours=12))
+                    value_dt.replace(date.year, date.month, date.day)
+                else:
+                    dispatcher.utter_message(f"Sorry, we're not open then. "
+                                             f"On that day we are {format_hours(is_open_on(date))}")
+                    return {"time": None}
+
+                if value_dt < timezone.now():
+                    dispatcher.utter_message("That time is in the past")
+                    return {"time": None}
+
+                return {"time": value_dt.time().isoformat()}
+
+        return {"time": None}
+
     def submit(
-        self,
-        dispatcher: CollectingDispatcher,
-        tracker: Tracker,
-        domain: Dict[Text, Any],
+            self,
+            dispatcher: CollectingDispatcher,
+            tracker: Tracker,
+            domain: Dict[Text, Any],
     ) -> List[Dict]:
+        print(tracker.get_slot("date"), tracker.get_slot("time"))
+
         dispatcher.utter_template("utter_booking", tracker)
-        return []
+        return [rasa_sdk.events.SlotSet("date", None), rasa_sdk.events.SlotSet("time", None)]
 
 
 class ActionUnlockLookup(Action):
@@ -1067,10 +1193,10 @@ class ActionUnlockLookup(Action):
         return "unlock_lookup"
 
     def run(
-        self,
-        dispatcher: CollectingDispatcher,
-        tracker: Tracker,
-        domain: Dict[Text, Any],
+            self,
+            dispatcher: CollectingDispatcher,
+            tracker: Tracker,
+            domain: Dict[Text, Any],
     ) -> List[Dict[Text, Any]]:
         brand = tracker.get_slot("brand")  # type: Text
         device_model = tracker.get_slot("device_model")  # type: Text
@@ -1137,10 +1263,10 @@ class ActionOrderUnlock(Action):
         return "unlock_order"
 
     def run(
-        self,
-        dispatcher: CollectingDispatcher,
-        tracker: Tracker,
-        domain: Dict[Text, Any],
+            self,
+            dispatcher: CollectingDispatcher,
+            tracker: Tracker,
+            domain: Dict[Text, Any],
     ) -> List[Dict[Text, Any]]:
         brand: Text = tracker.get_slot("brand")
         device_model: Text = tracker.get_slot("device_model")
@@ -1207,10 +1333,10 @@ class ActionUnlockClear(Action):
         return "unlock_clear"
 
     def run(
-        self,
-        dispatcher: CollectingDispatcher,
-        tracker: Tracker,
-        domain: Dict[Text, Any],
+            self,
+            dispatcher: CollectingDispatcher,
+            tracker: Tracker,
+            domain: Dict[Text, Any],
     ) -> List[Dict[Text, Any]]:
         return [
             rasa_sdk.events.SlotSet("brand", None),
@@ -1220,7 +1346,7 @@ class ActionUnlockClear(Action):
         ]
 
 
-class UnlockLookupForm(FormAction):
+class UnlockLookupForm(BaseForm):
     def name(self) -> Text:
         return "unlock_lookup_form"
 
@@ -1257,30 +1383,12 @@ class UnlockLookupForm(FormAction):
             "network": [self.from_entity(entity="network"), self.from_text()],
         }
 
-    def validate_brand(
-        self,
-        value: Text,
-        dispatcher: CollectingDispatcher,
-        tracker: Tracker,
-        domain: Dict[Text, Any],
-    ) -> Optional[Dict[Text, Any]]:
-        return validate_brand(value, dispatcher, tracker)
-
-    def validate_device_model(
-        self,
-        value: Text,
-        dispatcher: CollectingDispatcher,
-        tracker: Tracker,
-        domain: Dict[Text, Any],
-    ) -> Optional[Dict[Text, Any]]:
-        return validate_device_model(value, dispatcher, tracker)
-
     def validate_network(
-        self,
-        value: Text,
-        dispatcher: CollectingDispatcher,
-        tracker: Tracker,
-        domain: Dict[Text, Any],
+            self,
+            value: Text,
+            dispatcher: CollectingDispatcher,
+            tracker: Tracker,
+            domain: Dict[Text, Any],
     ) -> Optional[Dict[Text, Any]]:
         asked_once = tracker.get_slot("asked_once")
         asked_once = True if asked_once else False
@@ -1312,16 +1420,16 @@ class UnlockLookupForm(FormAction):
                 return {"network": value, "asked_once": False}
 
     def submit(
-        self,
-        dispatcher: CollectingDispatcher,
-        tracker: Tracker,
-        domain: Dict[Text, Any],
+            self,
+            dispatcher: CollectingDispatcher,
+            tracker: Tracker,
+            domain: Dict[Text, Any],
     ) -> List[Dict]:
         dispatcher.utter_template("utter_looking_up", tracker)
         return []
 
 
-class UnlockOrderForm(FormAction):
+class UnlockOrderForm(BaseForm):
     def name(self) -> Text:
         return "unlock_order_form"
 
@@ -1332,7 +1440,7 @@ class UnlockOrderForm(FormAction):
             (
                 False
                 if conversation.platform
-                == operator_interface.models.Conversation.GOOGLE_ACTIONS
+                   == operator_interface.models.Conversation.GOOGLE_ACTIONS
                 else True
             )
             if conversation
@@ -1373,11 +1481,11 @@ class UnlockOrderForm(FormAction):
         return checksum % 10
 
     def validate_imei(
-        self,
-        value: Text,
-        dispatcher: CollectingDispatcher,
-        tracker: Tracker,
-        domain: Dict[Text, Any],
+            self,
+            value: Text,
+            dispatcher: CollectingDispatcher,
+            tracker: Tracker,
+            domain: Dict[Text, Any],
     ) -> Optional[Dict[Text, Any]]:
         try:
             checksum = self.luhn_checksum(value)
@@ -1393,11 +1501,11 @@ class UnlockOrderForm(FormAction):
         return {"imei": value}
 
     def validate_network(
-        self,
-        value: Text,
-        dispatcher: CollectingDispatcher,
-        tracker: Tracker,
-        domain: Dict[Text, Any],
+            self,
+            value: Text,
+            dispatcher: CollectingDispatcher,
+            tracker: Tracker,
+            domain: Dict[Text, Any],
     ) -> Optional[Dict[Text, Any]]:
         asked_once = tracker.get_slot("asked_once")
         asked_once = True if asked_once else False
@@ -1428,70 +1536,11 @@ class UnlockOrderForm(FormAction):
             else:
                 return {"network": value, "asked_once": False}
 
-    def validate_phone_number(
-        self,
-        value: Text,
-        dispatcher: CollectingDispatcher,
-        tracker: Tracker,
-        domain: Dict[Text, Any],
-    ) -> Optional[Dict[Text, Any]]:
-        try:
-            phone = phonenumbers.parse(value, settings.PHONENUMBER_DEFAULT_REGION)
-        except phonenumbers.phonenumberutil.NumberParseException:
-            dispatcher.utter_message(
-                "Hmmm 🤔, that's doesn't look like a valid phone number ☎️ to me."
-            )
-            return {"phone_number": None}
-
-        if not phonenumbers.is_valid_number(phone):
-            dispatcher.utter_message(
-                "Hmmm 🤔, that's doesn't look like a valid phone number ☎️ to me."
-            )
-            return {"phone_number": None}
-        else:
-            phone = phonenumbers.format_number(
-                phone, phonenumbers.PhoneNumberFormat.E164
-            )
-            conversation = sender_id_to_conversation(tracker.sender_id)
-
-            if conversation:
-                update_user_info(conversation, phone=phone)
-
-            return {"phone_number": phone}
-
-    def validate_email(
-        self,
-        value: Text,
-        dispatcher: CollectingDispatcher,
-        tracker: Tracker,
-        domain: Dict[Text, Any],
-    ) -> Optional[Dict[Text, Any]]:
-        conversation = sender_id_to_conversation(tracker.sender_id)
-
-        if conversation:
-            update_user_info(conversation, email=value)
-
-        return {"email": value}
-
-    def validate_name(
-        self,
-        value: Text,
-        dispatcher: CollectingDispatcher,
-        tracker: Tracker,
-        domain: Dict[Text, Any],
-    ) -> Optional[Dict[Text, Any]]:
-        conversation = sender_id_to_conversation(tracker.sender_id)
-
-        if conversation:
-            update_user_info(conversation, first_name=value)
-
-        return {"name": value}
-
     def submit(
-        self,
-        dispatcher: CollectingDispatcher,
-        tracker: Tracker,
-        domain: Dict[Text, Any],
+            self,
+            dispatcher: CollectingDispatcher,
+            tracker: Tracker,
+            domain: Dict[Text, Any],
     ) -> List[Dict]:
         return []
 
@@ -1501,10 +1550,10 @@ class UnlockOrderWebForm(Action):
         return "unlock_order_web_form"
 
     def run(
-        self,
-        dispatcher: CollectingDispatcher,
-        tracker: Tracker,
-        domain: Dict[Text, Any],
+            self,
+            dispatcher: CollectingDispatcher,
+            tracker: Tracker,
+            domain: Dict[Text, Any],
     ) -> List[Dict[Text, Any]]:
         brand = tracker.get_slot("brand")  # type: Text
         device_model = tracker.get_slot("device_model")  # type: Text
@@ -1548,7 +1597,7 @@ class UnlockOrderWebForm(Action):
                         "button": {
                             "title": "Open",
                             "link": settings.EXTERNAL_URL_BASE
-                            + reverse(
+                                    + reverse(
                                 "fulfillment:form",
                                 kwargs={
                                     "form_type": "unlocking",
@@ -1567,10 +1616,10 @@ class ActionRateSlot(Action):
         return "rate_slot"
 
     def run(
-        self,
-        dispatcher: CollectingDispatcher,
-        tracker: Tracker,
-        domain: Dict[Text, Any],
+            self,
+            dispatcher: CollectingDispatcher,
+            tracker: Tracker,
+            domain: Dict[Text, Any],
     ) -> List[Dict[Text, Any]]:
         val = next(tracker.get_latest_entity_values("number"), None)
         if val:
@@ -1590,11 +1639,11 @@ class RateForm(FormAction):
         return {"rating": [self.from_entity(entity="number")]}
 
     def validate_rating(
-        self,
-        value: Text,
-        dispatcher: CollectingDispatcher,
-        tracker: Tracker,
-        domain: Dict[Text, Any],
+            self,
+            value: Text,
+            dispatcher: CollectingDispatcher,
+            tracker: Tracker,
+            domain: Dict[Text, Any],
     ) -> Optional[Dict[Text, Any]]:
         try:
             value = int(value)
@@ -1609,10 +1658,10 @@ class RateForm(FormAction):
             return {"rating": None}
 
     def submit(
-        self,
-        dispatcher: CollectingDispatcher,
-        tracker: Tracker,
-        domain: Dict[Text, Any],
+            self,
+            dispatcher: CollectingDispatcher,
+            tracker: Tracker,
+            domain: Dict[Text, Any],
     ) -> List[Dict]:
         rating = operator_interface.models.ConversationRating(
             sender_id=tracker.sender_id, rating=tracker.get_slot("rating")
