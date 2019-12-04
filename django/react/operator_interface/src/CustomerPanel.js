@@ -38,9 +38,9 @@ export default class CustomerPanel extends Component {
 
     render() {
         let orderStates = {
-            "O": "Open",
-            "P": "Paid",
-            "C": "Complete",
+            "OPEN": "Open",
+            "PAID": "Paid",
+            "COMPLETE": "Complete",
         };
 
         return <React.Fragment>
@@ -135,13 +135,13 @@ export default class CustomerPanel extends Component {
                     <OrderCard conversation={this.props.conversation}/>
                     <h3>Order History</h3>
                     <div className="orderHistory">
-                        {this.props.conversation.payments.map(p => {
+                        {this.props.conversation.payments
+                            .sort((x, y) => y.timestamp - x.timestamp).map(p => {
                             let d = new Date(0);
                             d.setUTCSeconds(p.timestamp);
 
                             return <Card key={p.id} className="order" outlined>
-                                <span>ID:</span>
-                                <span>{p.id}</span>
+                                <div>{p.id}</div>
                                 <span>State:</span>
                                 <span>{orderStates[p.state]}</span>
                                 <span>Time:</span>

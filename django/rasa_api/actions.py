@@ -1130,7 +1130,7 @@ class RepairBookForm(BaseForm):
     ) -> Optional[Dict[Text, Any]]:
         value_dt = datetime.datetime.fromisoformat(value)
 
-        if value_dt < timezone.now():
+        if value_dt.date() < timezone.now().date():
             dispatcher.utter_message("That date is in the past")
             return {"date": None}
 
@@ -1162,13 +1162,13 @@ class RepairBookForm(BaseForm):
                     pass
                 elif is_open_at(date, (value_dt + datetime.timedelta(hours=12)).time()):
                     value_dt = (value_dt + datetime.timedelta(hours=12))
-                    value_dt.replace(date.year, date.month, date.day)
+                    value_dh = value_dt.replace(date.year, date.month, date.day)
                 else:
                     dispatcher.utter_message(f"Sorry, we're not open then. "
                                              f"On that day we are {format_hours(is_open_on(date))}")
                     return {"time": None}
 
-                if value_dt < timezone.now():
+                if value_dt < timezone.now() and date.date() == datetime.datetime.today():
                     dispatcher.utter_message("That time is in the past")
                     return {"time": None}
 
@@ -1182,7 +1182,21 @@ class RepairBookForm(BaseForm):
             tracker: Tracker,
             domain: Dict[Text, Any],
     ) -> List[Dict]:
-        print(tracker.get_slot("date"), tracker.get_slot("time"))
+        conversation = sender_id_to_conversation(tracker.sender_id)
+
+        date = datetime.datetime.fromisoformat(tracker.get_slot("date"))
+        time = datetime.time.fromisoformat(tracker.get_slot("time"))
+        date = date.replace(hour=time.hour, minute=time.minute, second=time.second, microsecond=time.microsecond)
+
+        device_model = tracker.get_slot("device_model")
+        repair_name = tracker.get_slot("device_repair")
+
+        device_model = models.Model.objects.filter(name=device_model.lower()).first()
+        repair = models.RepairType.objects.filter(name=repair_name.lower()).first()
+
+        repair_m = models.Repair.objects.filter(device=device_model, repair=repair).first()
+        booking_m = models.RepairBooking(repair=repair_m, customer_id=conversation.conversation_user_id, time=date)
+        booking_m.save()
 
         dispatcher.utter_template("utter_booking", tracker)
         return [rasa_sdk.events.SlotSet("date", None), rasa_sdk.events.SlotSet("time", None)]

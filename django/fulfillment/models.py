@@ -129,3 +129,12 @@ class UnlockForm(models.Model):
     phone_unlock = models.ForeignKey(PhoneUnlock, on_delete=models.CASCADE)
     network_name = models.CharField(max_length=255)
     customer_id = models.CharField(max_length=255)
+
+
+class RepairBooking(models.Model):
+    repair = models.ForeignKey(Repair, on_delete=models.CASCADE)
+    customer_id = models.CharField(max_length=255)
+    time = models.DateTimeField()
+
+    def __str__(self):
+        return f"{self.repair}: {self.time.isoformat()}"

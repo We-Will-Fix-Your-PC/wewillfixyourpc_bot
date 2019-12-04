@@ -226,9 +226,14 @@ def update_facebook_profile(psid: str, cid: int) -> None:
             conversation.conversation_user_id,
             first_name=first_name,
             last_name=last_name,
+            force_update=False
+        )
+        django_keycloak_auth.users.update_user(
+            conversation.conversation_user_id,
             gender=gender,
             locale=locale,
-            timezone=user_timezone
+            timezone=user_timezone,
+            force_update=True
         )
 
     conversation.save()
@@ -308,28 +313,24 @@ def send_facebook_message(mid: int) -> None:
         request_body["message"]["quick_replies"] = quick_replies
 
     # TODO: Integrate with new system
-    # if message.payment_request:
-    #     request_body["message"]["attachment"] = {
-    #         "type": "template",
-    #         "payload": {
-    #             "template_type": "button",
-    #             "text": message.text,
-    #             "buttons": [
-    #                 {
-    #                     "type": "web_url",
-    #                     "url": settings.EXTERNAL_URL_BASE
-    #                     + reverse(
-    #                         "payment:fb_payment",
-    #                         kwargs={"payment_id": message.payment_request.id},
-    #                     ),
-    #                     "title": "Pay",
-    #                     "webview_height_ratio": "compact",
-    #                     "messenger_extensions": True,
-    #                     "webview_share_button": "hide",
-    #                 }
-    #             ],
-    #         },
-    #     }
+    if message.payment_request:
+        request_body["message"]["attachment"] = {
+            "type": "template",
+            "payload": {
+                "template_type": "button",
+                "text": message.text,
+                "buttons": [
+                    {
+                        "type": "web_url",
+                        "url": settings.PAYMENT_EXTERNAL_URL + f"/payment/fb/{message.payment_request}/",
+                        "title": "Pay",
+                        "webview_height_ratio": "compact",
+                        "messenger_extensions": True,
+                        "webview_share_button": "hide",
+                    }
+                ],
+            },
+        }
     # elif message.payment_confirm:
     #     user = django_keycloak_auth.users.get_user_by_id(message.payment_confirm.customer_id)
     #
@@ -374,7 +375,7 @@ def send_facebook_message(mid: int) -> None:
     #             ],
     #         },
     #     }
-    if message.selection:
+    elif message.selection:
         selection_data = json.loads(message.selection)
         request_body["message"]["attachment"] = {
             "type": "template",

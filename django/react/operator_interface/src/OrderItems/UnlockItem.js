@@ -181,8 +181,7 @@ export default class UnlockItem extends Component {
             let brand = this.state.brands.filter(b => b.name === this.state.brand)[0].display_name;
             let model = this.state.models.filter(m => m.name === this.state.network)[0];
             model = model ? model.display_name : "";
-            console.log(data);
-            this.props.onAdd(`Unlock ${brand} ${model} from ${network}`, "unlock", JSON.stringify(data), this.state.unlock.price);
+            this.props.onAdd(`Unlock ${brand} ${model} from ${network}`, "unlock", data, this.state.unlock.price);
         }
     }
 

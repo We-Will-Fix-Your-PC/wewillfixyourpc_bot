@@ -271,6 +271,8 @@ def webhook(request):
         except ValueError:
             return HttpResponseForbidden()
 
+        profile_pic = user_id_token.get("picture")
+
         if not conversation.conversation_user_id:
             user = django_keycloak_auth.users.get_or_create_user(
                 federated_provider="google",
@@ -280,8 +282,10 @@ def webhook(request):
                 first_name=user_id_token.get("given_name"),
                 last_name=user_id_token.get("family_name"),
                 required_actions=["UPDATE_PROFILE"],
+                profile_picture=profile_pic
             )
             if user:
+                django_keycloak_auth.users.user_required_actions(user.get("id"), ["UPDATE_PROFILE"])
                 django_keycloak_auth.users.link_roles_to_user(user.get("id"), ["customer"])
                 conversation.conversation_user_id = user.get("id")
                 conversation.save()
@@ -299,10 +303,10 @@ def webhook(request):
                 first_name=user_id_token.get("given_name"),
                 last_name=user_id_token.get("family_name"),
                 email=user_id_token.get("email"),
-                email_verified=user_id_token.get("email_verified", True)
+                email_verified=user_id_token.get("email_verified", True),
+                profile_picture=profile_pic
             )
 
-        profile_pic = user_id_token.get("picture")
         if profile_pic:
             r = requests.get(profile_pic)
             if r.status_code == 200:

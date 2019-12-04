@@ -46,7 +46,7 @@ main {
   .conversation {
     height: 100%;
     display: grid;
-    grid-template-columns: 3fr 1fr;
+    grid-template-columns: 1fr 500px;
 
     .main {
       height: 100%;
@@ -203,6 +203,10 @@ main {
 
           &:last-of-type {
             border-bottom: none;
+          }
+
+          div {
+            grid-column: 1 / 3;
           }
 
           span:nth-of-type(2n+1) {

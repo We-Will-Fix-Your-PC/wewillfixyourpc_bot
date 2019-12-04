@@ -21,40 +21,20 @@ export const ROOT_URL = process.env.NODE_ENV === 'production' ?
 export const SockContext = React.createContext(null);
 
 class PaymentItemData {
-    constructor(id, data, app) {
-        this.id = id;
+    constructor(data) {
         this.data = data;
-        this.app = app;
-    }
-
-    isLoaded() {
-        return this.data !== null;
-    }
-
-    load() {
-        if (!this.isLoaded()) {
-            if (this.app.pending_payment_items.indexOf(this.id) === -1) {
-                this.app.sock.send(JSON.stringify({
-                    type: "getPaymentItem",
-                    id: this.id
-                }));
-                this.app.pending_payment_items.push(this.id);
-            }
-            return false;
-        }
-        return true;
     }
 
     get title() {
-        return this.load() ? this.data.title : "";
+        return this.data.title;
     }
 
     get quantity() {
-        return this.load() ? this.data.quantity : 0;
+        return this.data.quantity;
     }
 
     get price() {
-        return this.load() ? this.data.price : "";
+        return this.data.price;
     }
 }
 
@@ -88,19 +68,11 @@ class PaymentData {
         if (this.load()) {
             let items = [];
             this.data.items.forEach(i => {
-                items.push(this.get_item(i));
+                items.push(new PaymentItemData(i));
             });
             return items;
         } else {
             return [];
-        }
-    }
-
-    get_item(i) {
-        if (typeof this.app.state.payment_items[i] === "undefined") {
-            return new PaymentItemData(i, null, this.app);
-        } else {
-            return this.app.state.payment_items[i];
         }
     }
 
@@ -172,6 +144,10 @@ class MessageData {
 
     get request() {
         return this.load() ? this.data.request: null;
+    }
+
+    get sent_by() {
+        return this.load() ? this.data.sent_by: null;
     }
 
     get payment_request() {
@@ -443,13 +419,11 @@ class App extends Component {
             messages: {},
             message_entities: {},
             payments: {},
-            payment_items: {},
         };
 
         this.pending_messages = [];
         this.pending_message_entities = [];
         this.pending_payments = [];
-        this.pending_payment_items = [];
 
         this.selectConversation = this.selectConversation.bind(this);
         this.handleOpen = this.handleOpen.bind(this);
@@ -516,16 +490,6 @@ class App extends Component {
             }
             this.setState({
                 payments: payments
-            });
-        } else if (data.type === "payment_item") {
-            const paymentItems = this.state.payment_items;
-            paymentItems[data.id] = new PaymentItemData(data.id, data, this);
-            let p_index = this.pending_payment_items.indexOf(data.id);
-            if (p_index > -1) {
-                this.pending_payment_items.splice(p_index, 1);
-            }
-            this.setState({
-                payment_items: paymentItems
             });
         } else if (data.type === "error") {
             this.setState({

@@ -103,7 +103,7 @@ class OrderCard extends Component {
                 {/*    !this.state.items.length || !this.props.conversation.can_message()*/}
                 {/*}>*/}
                 {/*    Send</Button>*/}
-                <Button onClick={this.send} disabled={true}>
+                <Button onClick={this.send} disabled={this.props.conversation.can_message && !this.state.items.length}>
                     Send
                 </Button>
             </div>
