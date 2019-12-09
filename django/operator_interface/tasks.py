@@ -11,6 +11,7 @@ from pywebpush import webpush, WebPushException
 
 import facebook.tasks
 import rasa_api.tasks
+import rasa_api.actions
 import telegram_bot.tasks
 import twitter.tasks
 import azure_bot.tasks
@@ -92,6 +93,9 @@ def process_message(mid):
         if conversation.agent_responding:
             return rasa_api.tasks.handle_message(mid)
         else:
+            if conversation.messages.filter(direction=models.Message.FROM_CUSTOMER).count() == 1:
+                send_welcome_message.delay(conversation.id)
+
             admin_client = django_keycloak_auth.clients.get_keycloak_admin_client()
             if message.conversation.conversation_user_id:
                 try:
@@ -148,7 +152,25 @@ def hand_back(cid):
         conversation=conversation,
         direction=models.Message.TO_CUSTOMER,
         text=f"You've been handed back to the automated assistant.\n"
-        f"You can always request an agent at any time you wish.",
+        f"You can always request an agent at any time by saying 'request an agent'.",
+    )
+    message.save()
+    process_message(message.id)
+
+
+@shared_task
+def send_welcome_message(cid):
+    if rasa_api.actions.is_open():
+        text = "We're currently open and someone will be with you shortly."
+    else:
+        text = "We're currently closed, but someone will get back to you as soon as we're open again."
+
+    conversation = models.Conversation.objects.get(id=cid)
+    message = models.Message(
+        message_id=uuid.uuid4(),
+        conversation=conversation,
+        direction=models.Message.TO_CUSTOMER,
+        text=f"Welcome to We Will Fix Your PC.\n{text}",
     )
     message.save()
     process_message(message.id)
@@ -160,7 +182,7 @@ def end_conversation(cid):
     conversation.agent_responding = True
     conversation.current_agent = None
     conversation.save()
-    process_event.delay(cid, "end")
+    process_event(cid, "end")
 
 
 @shared_task

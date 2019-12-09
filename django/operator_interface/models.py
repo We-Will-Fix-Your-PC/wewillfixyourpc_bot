@@ -96,7 +96,7 @@ class Message(models.Model):
     FROM_CUSTOMER = "O"
     DIRECTION_CHOICES = ((TO_CUSTOMER, "To customer"), (FROM_CUSTOMER, "From customer"))
 
-    conversation = models.ForeignKey(Conversation, on_delete=models.CASCADE)
+    conversation = models.ForeignKey(Conversation, on_delete=models.CASCADE, related_name='messages')
     message_id = models.CharField(max_length=255)
     direction = models.CharField(max_length=1, choices=DIRECTION_CHOICES)
     text = models.TextField(blank=True, default="")

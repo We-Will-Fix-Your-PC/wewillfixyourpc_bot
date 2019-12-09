@@ -185,6 +185,19 @@ main {
         }
       }
 
+      .repairs {
+        align-self: stretch;
+
+        h3, h4 {
+          text-align: center;
+        }
+
+        .repair {
+          margin: 10px 5px;
+          padding: 10px;
+        }
+      }
+
       .ordering {
         align-self: stretch;
 
@@ -199,7 +212,6 @@ main {
           margin: 10px 5px;
           padding: 10px;
           grid-gap: 10px;
-          border-bottom: 1px solid #aaa;
 
           &:last-of-type {
             border-bottom: none;
@@ -252,8 +264,24 @@ main {
   }
 }
 
-.UnlockForm {
+.RepairCard {
+  display: flex;
+  flex-direction: column;
+  padding: 0 10px;
+
+  > div {
+    margin: 20px 0;
+  }
+
+  .RepairForm, .RepairBookForm {
+    display: grid;
+    grid-template-columns: 1fr;
+    grid-gap: 20px;
+  }
+}
+
+.UnlockForm{
   display: grid;
   grid-template-columns: 1fr;
-  grid-gap: 20px;
+  grid-gap: 10px;
 }

@@ -11,4 +11,6 @@ urlpatterns = [
     path("data/brands/", views.get_brands),
     path("data/models/<brand>/", views.get_models),
     path("data/unlocks/<brand>/<network>/", views.get_unlocks),
+    path("data/repairs/<model>/", views.get_repairs),
+    path("data/open/", views.get_open),
 ]

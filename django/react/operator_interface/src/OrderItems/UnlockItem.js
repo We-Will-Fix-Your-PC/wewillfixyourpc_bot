@@ -47,7 +47,7 @@ export default class UnlockItem extends Component {
         this.dialogClose = this.dialogClose.bind(this);
     }
 
-    componentWillMount() {
+    componentDidMount() {
         fetch(ROOT_URL + "data/networks/", {
             credentials: "include"
         })
@@ -182,6 +182,8 @@ export default class UnlockItem extends Component {
             let model = this.state.models.filter(m => m.name === this.state.network)[0];
             model = model ? model.display_name : "";
             this.props.onAdd(`Unlock ${brand} ${model} from ${network}`, "unlock", data, this.state.unlock.price);
+        } else {
+            this.props.onCancel();
         }
     }
 
@@ -217,7 +219,7 @@ export default class UnlockItem extends Component {
                 </div>}
             </DialogContent>
             <DialogFooter>
-                <DialogButton action='cancel' onClick={this.props.onCancel}>Cancel</DialogButton>
+                <DialogButton action='cancel'>Cancel</DialogButton>
                 <DialogButton action='add' isDefault disabled={!this.canSubmit()}>Add</DialogButton>
             </DialogFooter>
         </Dialog>

@@ -5,8 +5,10 @@ from django.http import HttpResponse, HttpResponseBadRequest
 from django.contrib.auth.models import User
 from PIL import Image
 import json
+import dateutil.parser
 from . import models
 import fulfillment.models
+import rasa_api.actions
 
 
 @login_required
@@ -136,5 +138,42 @@ def get_unlocks(request, brand, network):
                 )
             ]
         ),
+        content_type="application/json",
+    )
+
+
+@login_required
+def get_repairs(request, model):
+    return HttpResponse(
+        json.dumps(
+            [
+                {
+                    "id": u.id,
+                    "repair": {
+                        "id": u.repair.id,
+                        "name": u.repair.name,
+                        "display_name": u.repair.display_name
+                    },
+                    "price": str(u.price),
+                    "time": u.repair_time,
+                }
+                for u in fulfillment.models.Repair.objects.filter(
+                    device_id=model
+                )
+            ]
+        ),
+        content_type="application/json",
+    )
+
+
+@login_required
+def get_open(request):
+    time = request.GET.get("time", "")
+    time = dateutil.parser.isoparse(time)
+
+    return HttpResponse(
+        json.dumps({
+            "open": rasa_api.actions.is_open_at(time.date(), time.time())
+        }),
         content_type="application/json",
     )

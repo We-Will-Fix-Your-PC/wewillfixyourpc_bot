@@ -2,6 +2,7 @@ import datetime
 import json
 import uuid
 import payment
+import dateutil.parser
 
 import django_keycloak_auth.users
 import keycloak.exceptions
@@ -19,6 +20,7 @@ from django.dispatch import receiver
 
 import operator_interface.models
 import operator_interface.tasks
+import fulfillment.models
 
 channel_layer = get_channel_layer()
 
@@ -37,12 +39,11 @@ def message_saved(sender, instance: operator_interface.models.Message, **kwargs)
     ))
 
 
-@receiver(post_save, sender=operator_interface.models.MessageEntity)
-def message_saved(sender, instance: operator_interface.models.MessageEntity, **kwargs):
+@receiver(post_save, sender=fulfillment.models.RepairBooking)
+def repair_booking_saved(sender, instance: operator_interface.models.Message, **kwargs):
     transaction.on_commit(lambda: async_to_sync(channel_layer.group_send)(
-        "operator_interface", {"type": "message_update", "mid": instance.message.id}
+        "operator_interface", {"type": "repair_booking_update", "bid": instance.id}
     ))
-
 
 # TODO: Integrate with new system
 # @receiver(post_save, sender=payment.models.Payment)
@@ -71,6 +72,7 @@ class OperatorConsumer(AsyncJsonWebsocketConsumer):
 
     async def message(self, event):
         message = await self.get_message(event["mid"])
+        await self.send_message(message)
         await self.send_conversation(message.conversation)
 
     async def message_update(self, event):
@@ -80,6 +82,10 @@ class OperatorConsumer(AsyncJsonWebsocketConsumer):
     async def conversation_update(self, event):
         conversation = await self.get_conversation(event["cid"])
         await self.send_conversation(conversation)
+
+    async def repair_booking_update(self, event):
+        booking = await self.get_booking(event["bid"])
+        await self.send_booking(booking)
 
     # TODO: Integrate with new system
     # async def payment_update(self, event):
@@ -104,7 +110,6 @@ class OperatorConsumer(AsyncJsonWebsocketConsumer):
         await self.channel_layer.group_discard("operator_interface", self.channel_name)
 
     async def send_message(self, message: operator_interface.models.Message):
-
         await self.send_json(
             {
                 "type": "message",
@@ -158,12 +163,14 @@ class OperatorConsumer(AsyncJsonWebsocketConsumer):
             pic = conversation.conversation_pic.url
 
         if conversation.conversation_user_id:
+            bookings = fulfillment.models.RepairBooking.objects.filter(customer_id=conversation.conversation_user_id)
             try:
                 user = django_keycloak_auth.users.get_user_by_id(str(conversation.conversation_user_id)).user
             except keycloak.exceptions.KeycloakClientError:
                 user = {}
         else:
             user = {"name": conversation.conversation_name, "attributes": {"profile_picture": [pic]}}
+            bookings = []
 
         first_name = user.get("firstName", "")
         last_name = user.get("lastName", "")
@@ -174,7 +181,7 @@ class OperatorConsumer(AsyncJsonWebsocketConsumer):
         gender = next(iter(attributes.get("gender", [])), None)
         pic = next(iter(attributes.get("profile_picture", [])), pic)
 
-        messages = conversation.message_set.all()
+        messages = conversation.messages.all()
         payments = []
         for m in messages:
             if m.payment_request and str(m.payment_request) not in payments:
@@ -201,11 +208,11 @@ class OperatorConsumer(AsyncJsonWebsocketConsumer):
                 "customer_locale": locale,
                 "customer_gender": gender,
                 "messages": [m.id for m in messages],
+                "repair_bookings": [b.id for b in bookings],
                 "payments": payments,
             }
         )
 
-    # TODO: Integrate with new system
     async def send_payment(self, payment: payment.Payment):
         await self.send_json(
             {
@@ -225,6 +232,35 @@ class OperatorConsumer(AsyncJsonWebsocketConsumer):
             }
         )
 
+    async def send_booking(self, booking: fulfillment.models.RepairBooking):
+        await self.send_json(
+            {
+                "type": "booking",
+                "id": str(booking.id),
+                "time": str(booking.time.isoformat()),
+                "repair": {
+                    "id": booking.repair.id,
+                    "time": booking.repair.repair_time,
+                    "price": str(booking.repair.price),
+                    "repair": {
+                        "id": booking.repair.repair.id,
+                        "name": booking.repair.repair.name,
+                        "display_name": booking.repair.repair.display_name
+                    },
+                    "device": {
+                        "id": booking.repair.device.id,
+                        "name": booking.repair.device.name,
+                        "display_name": booking.repair.device.display_name,
+                        "brand": {
+                            "id": booking.repair.device.brand.id,
+                            "name": booking.repair.device.brand.name,
+                            "display_name": booking.repair.device.brand.display_name,
+                        }
+                    }
+                }
+            }
+        )
+
     async def make_message(self, cid, text):
         conversation = await self.get_conversation(cid)
         message = operator_interface.models.Message(
@@ -240,7 +276,7 @@ class OperatorConsumer(AsyncJsonWebsocketConsumer):
     @database_sync_to_async
     def get_messages(self, last_message):
         for conversation in operator_interface.models.Conversation.objects.all():
-            for message in conversation.message_set.filter(timestamp__gt=last_message):
+            for message in conversation.messages.filter(timestamp__gt=last_message):
                 yield message
 
     @database_sync_to_async
@@ -254,6 +290,10 @@ class OperatorConsumer(AsyncJsonWebsocketConsumer):
     @database_sync_to_async
     def get_conversation(self, cid):
         return operator_interface.models.Conversation.objects.get(id=cid)
+
+    @database_sync_to_async
+    def get_booking(self, bid):
+        return fulfillment.models.RepairBooking.objects.get(id=bid)
 
     @database_sync_to_async
     def save_object(self, obj):
@@ -288,6 +328,18 @@ class OperatorConsumer(AsyncJsonWebsocketConsumer):
         )
         await self.save_object(message)
         operator_interface.tasks.process_message.delay(message.id)
+
+    async def book_repair(self, cid, rid, time):
+        conversation = await self.get_conversation(cid)
+        time = dateutil.parser.isoparse(time)
+        print(time)
+
+        m = fulfillment.models.RepairBooking(
+            customer_id=conversation.conversation_user_id,
+            repair_id=rid,
+            time=time
+        )
+        await self.save_object(m)
 
     async def decode_attribute(self, attribute: str, value):
         if attribute == "phone-number":
@@ -382,6 +434,13 @@ class OperatorConsumer(AsyncJsonWebsocketConsumer):
                 await self.send_payment(payment_o)
             except payment.PaymentException:
                 pass
+        elif message["type"] == "getBooking":
+            booking_id = message["id"]
+            try:
+                booking_o = await self.get_booking(booking_id)
+                await self.send_booking(booking_o)
+            except fulfillment.models.RepairBooking.DoesNotExist:
+                pass
         # elif message["type"] == "getPaymentItem":
         #     payment_item_id = message["id"]
         #     try:
@@ -412,3 +471,6 @@ class OperatorConsumer(AsyncJsonWebsocketConsumer):
         elif message["type"] == "requestPayment":
             cid = message["cid"]
             await self.make_payment_request(cid, message["items"])
+        elif message["type"] == "bookRepair":
+            cid = message["cid"]
+            await self.book_repair(cid, message["rid"], message["time"])

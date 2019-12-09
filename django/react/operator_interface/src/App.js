@@ -20,6 +20,41 @@ export const ROOT_URL = process.env.NODE_ENV === 'production' ?
     "https://" + window.location.host + "/" : "http://localhost:8000/";
 export const SockContext = React.createContext(null);
 
+
+class BookingData {
+    constructor(id, data, app) {
+        this.id = id;
+        this.data = data;
+        this.app = app;
+    }
+
+    isLoaded() {
+        return this.data !== null;
+    }
+
+    load() {
+        if (!this.isLoaded()) {
+            if (this.app.pending_bookings.indexOf(this.id) === -1) {
+                this.app.sock.send(JSON.stringify({
+                    type: "getBooking",
+                    id: this.id
+                }));
+                this.app.pending_bookings.push(this.id);
+            }
+            return false;
+        }
+        return true;
+    }
+
+    get time() {
+        return this.load() ? new Date(this.data.time) : null;
+    }
+
+    get repair() {
+        return this.load() ? this.data.repair : null;
+    }
+}
+
 class PaymentItemData {
     constructor(data) {
         this.data = data;
@@ -234,19 +269,15 @@ class ConversationData {
     }
 
     get messages() {
-        let messages = [];
-        this.data.messages.forEach(m => {
-            messages.push(this.get_message(m));
-        });
-        return messages;
+        return this.data.messages.map(m => this.get_message(m));
     }
 
     get payments() {
-        let payments = [];
-        this.data.payments.forEach(p => {
-            payments.push(this.get_payment(p));
-        });
-        return payments;
+        return this.data.payments.map(p => this.get_payment(p));
+    }
+
+    get bookings() {
+        return this.data.repair_bookings.map(b => this.get_booking(b));
     }
 
     get_message(m) {
@@ -262,6 +293,14 @@ class ConversationData {
             return new PaymentData(p, null, this.app);
         } else {
             return this.app.state.payments[p];
+        }
+    }
+
+    get_booking(b) {
+        if (typeof this.app.state.bookings[b] === "undefined") {
+            return new BookingData(b, null, this.app);
+        } else {
+            return this.app.state.bookings[b];
         }
     }
 
@@ -419,11 +458,13 @@ class App extends Component {
             messages: {},
             message_entities: {},
             payments: {},
+            bookings: {},
         };
 
         this.pending_messages = [];
         this.pending_message_entities = [];
         this.pending_payments = [];
+        this.pending_bookings = [];
 
         this.selectConversation = this.selectConversation.bind(this);
         this.handleOpen = this.handleOpen.bind(this);
@@ -491,6 +532,16 @@ class App extends Component {
             this.setState({
                 payments: payments
             });
+        } else if (data.type === "booking") {
+            const bookings = this.state.bookings;
+            bookings[data.id] = new BookingData(data.id, data, this);
+            let p_index = this.pending_bookings.indexOf(data.id);
+            if (p_index > -1) {
+                this.pending_bookings.splice(p_index, 1);
+            }
+            this.setState({
+                bookings: bookings
+            });
         } else if (data.type === "error") {
             this.setState({
                 error: data.msg
@@ -503,6 +554,31 @@ class App extends Component {
             type: "resyncReq",
             lastMessage: this.state.lastMessage
         }));
+
+        this.pending_messages.forEach(m => {
+            this.sock.send(JSON.stringify({
+                type: "getMessage",
+                id: m
+            }));
+        });
+        this.pending_message_entities.forEach(e => {
+            this.sock.send(JSON.stringify({
+                type: "getMessagEntity",
+                id: e
+            }));
+        });
+        this.pending_payments.forEach(p => {
+            this.sock.send(JSON.stringify({
+                type: "getPayment",
+                id: p
+            }));
+        });
+        this.pending_bookings.forEach(b => {
+            this.sock.send(JSON.stringify({
+                type: "getBooking",
+                id: b
+            }));
+        });
     }
 
     onEnd() {
