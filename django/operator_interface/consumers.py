@@ -13,7 +13,7 @@ from channels.db import database_sync_to_async
 from channels.generic.websocket import AsyncJsonWebsocketConsumer
 from channels.layers import get_channel_layer
 from django.conf import settings
-from django.contrib.staticfiles.templatetags.staticfiles import static
+from django.contrib.staticfiles import finders
 from django.db import transaction
 from django.db.models.signals import post_save
 from django.dispatch import receiver
@@ -158,7 +158,7 @@ class OperatorConsumer(AsyncJsonWebsocketConsumer):
     async def send_conversation(
             self, conversation: operator_interface.models.Conversation
     ):
-        pic = static("operator_interface/img/default_profile_normal.png")
+        pic = finders.find("operator_interface/img/default_profile_normal.png")
         if conversation.conversation_pic:
             pic = conversation.conversation_pic.url
 
@@ -401,7 +401,7 @@ class OperatorConsumer(AsyncJsonWebsocketConsumer):
             last_message = message["lastMessage"]
             last_message = datetime.datetime.fromtimestamp(last_message)
             conversations = set()
-            for message in await self.get_messages(last_message):
+            for message in self.get_messages(last_message):
                 if message.conversation not in conversations:
                     conversations.add(message.conversation)
             for conversation in conversations:
