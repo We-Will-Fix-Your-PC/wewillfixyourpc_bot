@@ -33,4 +33,5 @@ blinker
 pytest-runner<5
 six==1.12.0
 aiohttp
+flask
 git+https://github.com/Peter-Slump/python-keycloak-client.git@master
