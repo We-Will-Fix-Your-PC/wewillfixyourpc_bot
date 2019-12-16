@@ -134,7 +134,7 @@ def process_message(mid):
 def process_event(cid, event):
     if event == "WELCOME":
         conversation = models.Conversation.objects.get(id=cid)
-        conversation.agent_responding = True
+        conversation.agent_responding = False
         conversation.current_agent = None
         conversation.save()
 
@@ -179,10 +179,18 @@ def send_welcome_message(cid):
 @shared_task
 def end_conversation(cid):
     conversation = models.Conversation.objects.get(id=cid)
-    conversation.agent_responding = True
+    # conversation.agent_responding = True
     conversation.current_agent = None
     conversation.save()
-    process_event(cid, "end")
+    # process_event(cid, "end")
+    message = models.Message(
+        message_id=uuid.uuid4(),
+        conversation=conversation,
+        direction=models.Message.TO_CUSTOMER,
+        text=f"Thanks for contacting We Will Fix Your PC. On a scale of 1 to 10 how would you rate your experience with us?",
+    )
+    message.save()
+    process_message(message.id)
 
 
 @shared_task

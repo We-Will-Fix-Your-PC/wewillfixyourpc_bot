@@ -126,21 +126,15 @@ class OperatorConsumer(JsonWebsocketConsumer):
         )
 
     def send_message_entities(self, message: operator_interface.models.Message):
-        r = requests.post(settings.RASA_HTTP_URL + "/model/parse", json={
-            "text": message.text
-        })
-        r.raise_for_status()
-        data = r.json()
-
         self.send_json(
             {
                 "type": "message_entities",
                 "id": message.id,
-                "guessed_intent": data.get("intent"),
+                "guessed_intent": message.guessed_intent,
                 "entities": [{
-                    "entity": m["entity"],
-                    "value": json.dumps(m["value"])
-                } for m in data.get("entities", [])]
+                    "entity": e.entity,
+                    "value": e.value,
+                } for e in message.messageentity_set.all()]
             }
         )
 
