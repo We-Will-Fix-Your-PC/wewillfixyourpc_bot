@@ -148,7 +148,7 @@ class OperatorConsumer(JsonWebsocketConsumer):
     def send_conversation(
             self, conversation: operator_interface.models.Conversation
     ):
-        pic = finders.find("operator_interface/img/default_profile_normal.png")
+        pic = settings.STATIC_URL + "operator_interface/img/default_profile_normal.png"
         if conversation.conversation_pic:
             pic = conversation.conversation_pic.url
 
