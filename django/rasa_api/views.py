@@ -4,7 +4,7 @@ from django.core.exceptions import SuspiciousOperation
 import json
 import logging
 import random
-import pprint
+from asgiref.sync import async_to_sync
 from . import models
 from django.views.decorators.csrf import csrf_exempt
 from rasa_sdk.executor import ActionExecutor
@@ -22,10 +22,10 @@ def webhook(request):
     except json.JSONDecodeError:
         raise SuspiciousOperation()
 
-    # logger.debug(f"Got event from rasa webhook: {pprint.pformat(data)}")
+    logger.debug(f"Got event from rasa webhook: {pprint.pformat(data)}")
 
     try:
-        out_data = json.dumps(executor.run(data))
+        out_data = json.dumps(async_to_sync(executor.run)(data))
     except ActionExecutionRejection as e:
         logger.error(str(e))
         result = {"error": str(e), "action_name": e.action_name}
@@ -45,7 +45,7 @@ def nlg(request):
     try:
         utterance = models.Utterance.objects.get(name=template)
     except models.Utterance.DoesNotExist:
-        logging.warn(f"Utterance {template} not found")
+        logging.warning(f"Utterance {template} not found")
         raise Http404()
 
     responses = utterance.utteranceresponse_set.all()

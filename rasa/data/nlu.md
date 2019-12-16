@@ -410,6 +410,8 @@
 - Hi would you be able to update the bios on my my A320 motherboard ? I have the ryzen 3400G CPU but the bios is to old so cant boot it at all and I dont have an older processor to update it .
 - Can you fix my macbook
 - My PCs broken
+- Afternoon I was wondering if I could get a update on my laptop that I brought in this morning under richard hall 🙂
+- Hi, just wondering what time to pick my laptop up please? It’s the black dell one that needed speeding up!Thanks, Claire Bell
 
 ## intent:phone_number
 - [07495627911](phone)
@@ -536,6 +538,9 @@
 - ive dropped my [iphone](brand) [in water](device_repair:water damage) now it no longer turns on
 - [iphone 6](device_model:iPhone 6)
 - Do you fix [iPad Air 2](device_model:iPad air 2)?
+- Hi, I bought my [iPad](brand) in couple weeks ago for a new [screen](device_repair), while on holiday this happened can you help please?
+- Hi, how much do your charge for an [ipad mini](device_model:iPad mini) [screen](device_repair)? Thanks
+- Hi, how much for [iPhone 6](device_model) [screen](device_repair) please?
 
 ## intent:request_human
 - escalate
