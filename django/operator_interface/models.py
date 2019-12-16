@@ -9,6 +9,13 @@ class UserProfile(models.Model):
     picture = models.ImageField()
     fb_persona_id = models.CharField(max_length=255, blank=True, null=True)
 
+    def save(self, *args, **kwargs):
+        if self.pk is not None:
+            old = UserProfile.objects.get(pk=self.pk)
+            if self.picture.name != old.picture.name:
+                self.fb_persona_id = None
+        super().save(*args, **kwargs)
+
 
 class NotificationSubscription(models.Model):
     subscription_info = models.TextField()
