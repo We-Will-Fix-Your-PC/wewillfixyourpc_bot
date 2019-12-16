@@ -7,7 +7,6 @@ import dateutil.parser
 import django_keycloak_auth.users
 import keycloak.exceptions
 import phonenumbers
-import requests
 from asgiref.sync import async_to_sync
 from channels.generic.websocket import JsonWebsocketConsumer
 from channels.layers import get_channel_layer
@@ -101,10 +100,10 @@ class OperatorConsumer(JsonWebsocketConsumer):
             return
 
         self.accept()
-        self.channel_layer.group_add("operator_interface", self.channel_name)
+        async_to_sync(self.channel_layer.group_add)("operator_interface", self.channel_name)
 
     def disconnect(self, close_code):
-        self.channel_layer.group_discard("operator_interface", self.channel_name)
+        async_to_sync(self.channel_layer.group_discard)("operator_interface", self.channel_name)
 
     def send_message(self, message: operator_interface.models.Message):
         self.send_json(
