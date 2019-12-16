@@ -60,12 +60,12 @@ def push_subscription(request):
     return HttpResponseBadRequest()
 
 
-@login_required
 def profile_picture(request, user_id):
     user = get_object_or_404(User, id=user_id)
     image = user.userprofile.picture
     i = Image.open(image)
     i.thumbnail((64, 64))
+    i = i.convert("RGB")
     response = HttpResponse(content_type="image/jpg")
     i.save(response, "JPEG")
     return response
