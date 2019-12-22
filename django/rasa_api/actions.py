@@ -733,14 +733,20 @@ class ActionRepair(Action):
                     dispatcher.utter_message(r)
                 return [repairable]
             else:
-                dispatcher.utter_template("utter_unknown_repair", tracker)
+                dispatcher.utter_message(
+                    f"Sorry, that a {device_model} {repair_name} isn't on my price list but if you bring the device "
+                    f"in we'll be happy to help!"
+                )
             return [
                 rasa_sdk.events.SlotSet("device_model", None),
                 rasa_sdk.events.SlotSet("device_repair", None),
                 not_repairable,
             ]
 
-        dispatcher.utter_template("utter_unknown_repair", tracker)
+        dispatcher.utter_message(
+            f"Sorry, that a {device_model} {repair_name} isn't on my price list but if you bring the device "
+            f"in we'll be happy to help!"
+        )
         return [
             rasa_sdk.events.SlotSet("device_model", None),
             rasa_sdk.events.SlotSet("device_repair", None),
