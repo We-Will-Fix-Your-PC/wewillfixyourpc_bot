@@ -17,6 +17,7 @@ import twitter.tasks
 import azure_bot.tasks
 import keycloak.exceptions
 import django_keycloak_auth.clients
+from django.utils import timezone
 from . import consumers, models
 from django.contrib.auth.models import User
 
@@ -93,7 +94,7 @@ def process_message(mid):
         if conversation.agent_responding:
             return rasa_api.tasks.handle_message(mid)
         else:
-            if conversation.messages.filter(direction=models.Message.FROM_CUSTOMER).count() == 1:
+            if conversation.messages.filter(timestamp__gte=timezone.now() - timezone.timedelta(hours=24)).count() == 1:
                 send_welcome_message.delay(conversation.id)
 
             admin_client = django_keycloak_auth.clients.get_keycloak_admin_client()

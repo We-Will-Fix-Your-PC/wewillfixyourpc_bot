@@ -99,8 +99,11 @@ class Payment:
 
 
 async def get_payment(payment_id: uuid.UUID) -> Payment:
+    access_token = django_keycloak_auth.clients.get_new_access_token()[0].get("access_token")
     async with aiohttp.ClientSession() as session:
-        r = await session.get(f"{settings.PAYMENT_HTTP_URL}/payment/{str(payment_id)}/")
+        r = await session.get(f"{settings.PAYMENT_HTTP_URL}/payment/{str(payment_id)}/", headers={
+            "Authorization": f"Bearer {access_token}"
+        })
     if r.status != 200:
         raise PaymentException()
     resp = await r.json()

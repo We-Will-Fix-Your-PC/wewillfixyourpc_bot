@@ -22,7 +22,7 @@ def webhook(request):
     except json.JSONDecodeError:
         raise SuspiciousOperation()
 
-    logger.debug(f"Got event from rasa webhook: {pprint.pformat(data)}")
+    # logger.debug(f"Got event from rasa webhook: {pprint.pformat(data)}")
 
     try:
         out_data = json.dumps(async_to_sync(executor.run)(data))

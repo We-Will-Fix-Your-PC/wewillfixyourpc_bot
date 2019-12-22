@@ -141,6 +141,9 @@ def process_outputs(outputs_l, is_guest_user, user_id_token, conversation):
                     conversation,
                 )
         else:
+            operator_interface.tasks.process_event.delay(
+                conversation.id, "sign_in_cancelled"
+            )
             possible_intents.append({"intent": "actions.intent.TEXT"})
             responses.append(
                 {

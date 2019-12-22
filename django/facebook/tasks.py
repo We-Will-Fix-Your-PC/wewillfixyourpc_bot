@@ -223,13 +223,13 @@ def update_facebook_profile(psid: str, cid: int) -> None:
 
     if conversation.conversation_user_id:
         django_keycloak_auth.users.update_user(
-            conversation.conversation_user_id,
+            str(conversation.conversation_user_id),
             first_name=first_name,
             last_name=last_name,
             force_update=False
         )
         django_keycloak_auth.users.update_user(
-            conversation.conversation_user_id,
+            str(conversation.conversation_user_id),
             gender=gender,
             locale=locale,
             timezone=user_timezone,
@@ -314,6 +314,8 @@ def send_facebook_message(mid: int) -> None:
 
     # TODO: Integrate with new system
     if message.payment_request:
+        magic_key = django_keycloak_auth.users.get_user_magic_key(message.conversation.conversation_user_id, 86400)\
+            .get('key')
         request_body["message"]["attachment"] = {
             "type": "template",
             "payload": {
@@ -322,9 +324,10 @@ def send_facebook_message(mid: int) -> None:
                 "buttons": [
                     {
                         "type": "web_url",
-                        "url": settings.PAYMENT_EXTERNAL_URL + f"/payment/fb/{message.payment_request}/",
+                        "url": settings.PAYMENT_EXTERNAL_URL +
+                               f"/payment/fb/{message.payment_request}/?key={magic_key}",
                         "title": "Pay",
-                        "webview_height_ratio": "compact",
+                        "webview_height_ratio": "tall",
                         "messenger_extensions": True,
                         "webview_share_button": "hide",
                     }
