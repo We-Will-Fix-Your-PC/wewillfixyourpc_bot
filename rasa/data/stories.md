@@ -18,7 +18,7 @@
 ## next question no
 > anything_else
     - utter_anything_else
-* deny
+* deny OR end
 > end
  
 ## next question ys

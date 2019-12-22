@@ -135,7 +135,7 @@ def process_message(mid):
 def process_event(cid, event):
     if event == "WELCOME":
         conversation = models.Conversation.objects.get(id=cid)
-        conversation.agent_responding = False
+        conversation.agent_responding = True
         conversation.current_agent = None
         conversation.save()
 
@@ -183,7 +183,8 @@ def end_conversation(cid):
     # conversation.agent_responding = True
     conversation.current_agent = None
     conversation.save()
-    # process_event(cid, "end")
+    # if conversation.agent_responding:
+    #     process_event(cid, "end")
     message = models.Message(
         message_id=uuid.uuid4(),
         conversation=conversation,

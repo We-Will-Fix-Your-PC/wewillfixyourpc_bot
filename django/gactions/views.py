@@ -175,17 +175,31 @@ def process_outputs(outputs_l, is_guest_user, user_id_token, conversation):
         )
     else:
         possible_intents.append({"intent": "actions.intent.TEXT"})
-        responses.append(
-            {
-                "simpleResponse": {
-                    "textToSpeech": emoji_pattern.sub(r"", messages),
-                    "displayText": messages,
-                }
-            }
-        )
 
-        if last_output.card:
-            card = json.loads(last_output.card)
+        messages = []
+        i = 0
+        cur_msg = outputs[i]
+        while not cur_msg.card:
+            messages.append(cur_msg)
+            i += 1
+            if i < len(outputs):
+                cur_msg = outputs[i]
+            else:
+                break
+
+        msg = "\n\n".join(o.text for o in messages if o.text.strip() != "")
+        if msg.strip() != "":
+            responses.append(
+                {
+                    "simpleResponse": {
+                        "textToSpeech": emoji_pattern.sub(r"", msg),
+                        "displayText": msg,
+                    }
+                }
+            )
+
+        if cur_msg.card:
+            card = json.loads(cur_msg.card)
             basic_card = {}
 
             if card.get("text"):
@@ -201,6 +215,18 @@ def process_outputs(outputs_l, is_guest_user, user_id_token, conversation):
                 ]
 
             responses.append({"basicCard": basic_card})
+
+        if i < len(outputs):
+            msg = "\n\n".join(o.text for o in outputs[i:] if o.text.strip() != "")
+            if msg.strip() != "":
+                responses.append(
+                    {
+                        "simpleResponse": {
+                            "textToSpeech": emoji_pattern.sub(r"", msg),
+                            "displayText": msg,
+                        }
+                    }
+                )
 
     return possible_intents, responses, last_output
 

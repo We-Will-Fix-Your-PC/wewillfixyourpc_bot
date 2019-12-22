@@ -8,6 +8,7 @@ class ContactDetails(SingletonModel):
     email = models.EmailField()
     phone_number = PhoneNumberField()
     maps_link = models.URLField()
+    address = models.TextField()
 
     class Meta:
         verbose_name_plural = "Contact details"

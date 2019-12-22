@@ -1,13 +1,11 @@
 from django.conf import settings
 from celery import shared_task
-import celery.result
 import operator_interface.tasks
 import requests
 import json
 import logging
 import uuid
 import operator_interface.tasks
-import django_keycloak_auth.users
 from operator_interface.models import Message, MessageSuggestion, Conversation
 import operator_interface.consumers
 
