@@ -19,7 +19,7 @@
   "conversations": {
     "wwfypc-bot": {
       "name": "wwfypc-bot",
-      "url": "https://wewillfixyourpc-bot.eu.ngrok.io/gactions/webhook/",
+      "url": "https://bot.cardifftec.uk/gactions/webhook/",
       "inDialogIntents": [{
         "name": "actions.intent.CANCEL"
       }]
