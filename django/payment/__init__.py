@@ -13,7 +13,14 @@ class PaymentException(Exception):
 
 
 class PaymentItem:
-    def __init__(self, item_type: str, item_data, title: str, quantity: int, price: decimal.Decimal):
+    def __init__(
+        self,
+        item_type: str,
+        item_data,
+        title: str,
+        quantity: int,
+        price: decimal.Decimal,
+    ):
         self.__item_type = item_type
         self.__item_data = item_data
         self.__title = title
@@ -27,7 +34,7 @@ class PaymentItem:
             "item_data": self.__item_data,
             "title": self.__title,
             "quantity": self.__quantity,
-            "price": self.__price
+            "price": self.__price,
         }
 
     @property
@@ -52,8 +59,16 @@ class PaymentItem:
 
 
 class Payment:
-    def __init__(self, payment_id: uuid.UUID, timestamp: datetime.datetime, state: str, environment: str,
-                 customer_id: uuid.UUID, items: [PaymentItem], payment_method: str):
+    def __init__(
+        self,
+        payment_id: uuid.UUID,
+        timestamp: datetime.datetime,
+        state: str,
+        environment: str,
+        customer_id: uuid.UUID,
+        items: [PaymentItem],
+        payment_method: str,
+    ):
         self.__id = payment_id
         self.__timestamp = timestamp
         self.__state = state
@@ -99,11 +114,14 @@ class Payment:
 
 
 async def get_payment(payment_id: uuid.UUID) -> Payment:
-    access_token = django_keycloak_auth.clients.get_new_access_token()[0].get("access_token")
+    access_token = django_keycloak_auth.clients.get_new_access_token()[0].get(
+        "access_token"
+    )
     async with aiohttp.ClientSession() as session:
-        r = await session.get(f"{settings.PAYMENT_HTTP_URL}/payment/{str(payment_id)}/", headers={
-            "Authorization": f"Bearer {access_token}"
-        })
+        r = await session.get(
+            f"{settings.PAYMENT_HTTP_URL}/payment/{str(payment_id)}/",
+            headers={"Authorization": f"Bearer {access_token}"},
+        )
     if r.status != 200:
         raise PaymentException()
     resp = await r.json()
@@ -114,26 +132,35 @@ async def get_payment(payment_id: uuid.UUID) -> Payment:
         environment=resp.get("environment"),
         customer_id=uuid.UUID(resp.get("customer", {}).get("id")),
         payment_method=resp.get("payment_method"),
-        items=[PaymentItem(
-            item_type=i.get("type"),
-            item_data=i.get("data"),
-            title=i.get("title"),
-            price=decimal.Decimal(i.get("price")),
-            quantity=i.get("quantity")
-        ) for i in resp.get("items")]
+        items=[
+            PaymentItem(
+                item_type=i.get("type"),
+                item_data=i.get("data"),
+                title=i.get("title"),
+                price=decimal.Decimal(i.get("price")),
+                quantity=i.get("quantity"),
+            )
+            for i in resp.get("items")
+        ],
     )
 
 
-async def create_payment(environment: str, customer_id: uuid.UUID, items: [PaymentItem]) -> uuid.UUID:
-    access_token = django_keycloak_auth.clients.get_new_access_token()[0].get("access_token")
+async def create_payment(
+    environment: str, customer_id: uuid.UUID, items: [PaymentItem]
+) -> uuid.UUID:
+    access_token = django_keycloak_auth.clients.get_new_access_token()[0].get(
+        "access_token"
+    )
     async with aiohttp.ClientSession() as session:
-        r = await session.post(f"{settings.PAYMENT_HTTP_URL}/payment/new/", headers={
-           "Authorization": f"Bearer {access_token}"
-        }, json={
-            "environment": environment,
-            "customer_id": str(customer_id),
-            "items": [i.as_json for i in items]
-        })
+        r = await session.post(
+            f"{settings.PAYMENT_HTTP_URL}/payment/new/",
+            headers={"Authorization": f"Bearer {access_token}"},
+            json={
+                "environment": environment,
+                "customer_id": str(customer_id),
+                "items": [i.as_json for i in items],
+            },
+        )
     if r.status != 200:
         raise PaymentException()
     resp = await r.json()

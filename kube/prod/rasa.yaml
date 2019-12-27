@@ -21,7 +21,7 @@ spec:
             secretName: rasa-secrets
       containers:
         - name: rasa
-          image: theenbyperor/rasa
+          image: theenbyperor/rasa@sha256:659f750b8e3e0bb080b0aacabf41f0cf3068057ebc17044b0292a7fb9b344567
           imagePullPolicy: Always
           args: ["run", "--endpoints", "/secrets/endpoints.yml", "--credentials", "/secrets/credentials.yml", "-v", "--enable-api"]
           ports:

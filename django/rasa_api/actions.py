@@ -1,9 +1,11 @@
 import abc
+import asyncio
 import collections
 import datetime
 import functools
 import json
 import random
+from collections import namedtuple
 from io import BytesIO
 from typing import Any, Dict, List, Optional, Text, Tuple, Union
 
@@ -19,7 +21,7 @@ import phonenumbers
 import pytz
 import rasa_sdk.events
 import requests
-from asgiref.sync import sync_to_async
+from asgiref.sync import async_to_sync, sync_to_async
 from django.conf import settings
 from django.core.files.storage import DefaultStorage
 from django.urls import reverse
@@ -28,7 +30,6 @@ from PIL import Image
 from rasa_sdk import Action, Tracker
 from rasa_sdk.executor import CollectingDispatcher
 from rasa_sdk.forms import FormAction
-from collections import namedtuple
 
 import operator_interface.models
 import rasa_api.models
@@ -37,10 +38,9 @@ from fulfillment import models
 tz = pytz.timezone("Europe/London")
 p = inflect.engine()
 
-
 SurfaceCapabilities = namedtuple(
-    'SurfaceCapabilities',
-    'instant_response_required supports_sign_in input_supported highest_input_supported'
+    "SurfaceCapabilities",
+    "instant_response_required supports_sign_in input_supported highest_input_supported",
 )
 
 
@@ -49,7 +49,9 @@ def get_one_or_none(**kwargs):
     return query[0] if len(query) > 0 else None
 
 
-def is_open_on(date: datetime.date) -> Union[bool, models.OpeningHours, models.OpeningHoursOverride]:
+def is_open_on(
+    date: datetime.date,
+) -> Union[bool, models.OpeningHours, models.OpeningHoursOverride]:
     opening_hours_defs = [
         get_one_or_none(monday=True),
         get_one_or_none(tuesday=True),
@@ -76,9 +78,9 @@ def is_open_at(date, time):
         return False
 
     time_open = timezone.make_naive(
-        timezone.make_aware(
-            datetime.datetime.combine(date, hours.open), tz
-        ).astimezone(pytz.utc)
+        timezone.make_aware(datetime.datetime.combine(date, hours.open), tz).astimezone(
+            pytz.utc
+        )
     ).time()
     time_close = timezone.make_naive(
         timezone.make_aware(
@@ -132,7 +134,7 @@ def reduce_days(days: List[Tuple[str, str, models.OpeningHours]]):
         elif (days[cur_day][2] is None) or (days[next_day][2] is None):
             pass
         elif (days[cur_day][2].open == days[next_day][2].open) and (
-                days[cur_day][2].close == days[next_day][2].close
+            days[cur_day][2].close == days[next_day][2].close
         ):
             days[cur_day] = (days[cur_day][0], days[next_day][1], days[cur_day][2])
             days.remove(days[next_day])
@@ -156,13 +158,18 @@ def sender_id_to_conversation(sender_id):
             return None
 
 
-def update_user_info(conversation: operator_interface.models.Conversation, email=None, force_update=True, **kwargs):
+def update_user_info(
+    conversation: operator_interface.models.Conversation,
+    email=None,
+    force_update=True,
+    **kwargs,
+):
     if not conversation.conversation_user_id and email:
         user = django_keycloak_auth.users.get_or_create_user(
             email=email,
             first_name=conversation.conversation_name,
             required_actions=["UPDATE_PASSWORD", "UPDATE_PROFILE", "VERIFY_EMAIL"],
-            **kwargs
+            **kwargs,
         )
         if user:
             django_keycloak_auth.users.link_roles_to_user(user.get("id"), ["customer"])
@@ -171,9 +178,7 @@ def update_user_info(conversation: operator_interface.models.Conversation, email
 
     if conversation.conversation_user_id:
         django_keycloak_auth.users.update_user(
-            conversation.conversation_user_id,
-            force_update=force_update,
-            **kwargs
+            conversation.conversation_user_id, force_update=force_update, **kwargs
         )
 
 
@@ -189,7 +194,10 @@ def get_conversation_capabilities(sender_id) -> SurfaceCapabilities:
     highest_input_supported = None
 
     if conversation:
-        if conversation.platform == operator_interface.models.Conversation.GOOGLE_ACTIONS:
+        if (
+            conversation.platform
+            == operator_interface.models.Conversation.GOOGLE_ACTIONS
+        ):
             instant_response_required = True
             supports_sign_in = True
             input_supported = "voice"
@@ -206,7 +214,7 @@ def get_conversation_capabilities(sender_id) -> SurfaceCapabilities:
         instant_response_required=instant_response_required,
         supports_sign_in=supports_sign_in,
         input_supported=input_supported,
-        highest_input_supported=highest_input_supported
+        highest_input_supported=highest_input_supported,
     )
 
 
@@ -215,19 +223,21 @@ class ActionRequestHuman(Action):
         return "request_human"
 
     async def run(
-            self,
-            dispatcher: CollectingDispatcher,
-            tracker: Tracker,
-            domain: Dict[Text, Any],
+        self,
+        dispatcher: CollectingDispatcher,
+        tracker: Tracker,
+        domain: Dict[Text, Any],
     ) -> List[Dict[Text, Any]]:
-        capabilities = await sync_to_async(get_conversation_capabilities)(tracker.sender_id)
+        capabilities = await sync_to_async(get_conversation_capabilities)(
+            tracker.sender_id
+        )
 
         if not capabilities or not capabilities.instant_response_required:
             dispatcher.utter_message(
                 f"Someone will be here to help you shortly..."
                 if await sync_to_async(is_open)()
                 else f"We're currently closed but this conversation has been flagged and someone"
-                     f" will be here to help you as soon as we're open again."
+                f" will be here to help you as soon as we're open again."
             )
             dispatcher.utter_custom_json({"type": "request_human"})
         else:
@@ -242,10 +252,13 @@ class ActionRequestHuman(Action):
                     "type": "card",
                     "card": {
                         "title": "Contact us",
-                        "text": f"Our email is {config.email}. \n"
-                                f"Our phone number is {config.phone_number.as_national}. \n"
-                                f"View our Google Maps listing for further details",
-                        "button": {"title": "Open google maps", "link": config.maps_link},
+                        "text": f"Our email is {config.email}.  \n"
+                        f"Our phone number is {config.phone_number.as_national}.  \n"
+                        f"View our Google Maps listing for further details",
+                        "button": {
+                            "title": "Open google maps",
+                            "link": config.maps_link,
+                        },
                     },
                 }
             )
@@ -258,17 +271,17 @@ class ActionGreet(Action):
         return "greet"
 
     async def run(
-            self,
-            dispatcher: CollectingDispatcher,
-            tracker: Tracker,
-            domain: Dict[Text, Any],
+        self,
+        dispatcher: CollectingDispatcher,
+        tracker: Tracker,
+        domain: Dict[Text, Any],
     ) -> List[Dict[Text, Any]]:
-        utterance: rasa_api.models.Utterance = await sync_to_async(rasa_api.models.Utterance.objects.get)(
-            name="utter_greet"
-        )
-        utterance_choice: rasa_api.models.UtteranceResponse = await sync_to_async(lambda: random.choice(
-            utterance.utteranceresponse_set.all()
-        ))()
+        utterance: rasa_api.models.Utterance = await sync_to_async(
+            rasa_api.models.Utterance.objects.get
+        )(name="utter_greet")
+        utterance_choice: rasa_api.models.UtteranceResponse = await sync_to_async(
+            lambda: random.choice(utterance.utteranceresponse_set.all())
+        )()
 
         dispatcher.utter_message(utterance_choice.text)
 
@@ -280,17 +293,21 @@ class ActionUpdateInfoSlots(Action):
         return "update_info_slots"
 
     async def run(
-            self,
-            dispatcher: CollectingDispatcher,
-            tracker: Tracker,
-            domain: Dict[Text, Any],
+        self,
+        dispatcher: CollectingDispatcher,
+        tracker: Tracker,
+        domain: Dict[Text, Any],
     ) -> List[Dict[Text, Any]]:
         conversation = await sync_to_async(sender_id_to_conversation)(tracker.sender_id)
-        capabilities = await sync_to_async(get_conversation_capabilities)(tracker.sender_id)
+        capabilities = await sync_to_async(get_conversation_capabilities)(
+            tracker.sender_id
+        )
         out = []
 
         if conversation:
-            admin_client = await sync_to_async(django_keycloak_auth.clients.get_keycloak_admin_client)()
+            admin_client = await sync_to_async(
+                django_keycloak_auth.clients.get_keycloak_admin_client
+            )()
 
             if not conversation.conversation_user_id:
                 if conversation.conversation_name:
@@ -299,9 +316,11 @@ class ActionUpdateInfoSlots(Action):
                     )
             else:
                 try:
-                    user = await sync_to_async(lambda: admin_client.users.by_id(
-                        conversation.conversation_user_id
-                    ).get())()
+                    user = await sync_to_async(
+                        lambda: admin_client.users.by_id(
+                            conversation.conversation_user_id
+                        ).get()
+                    )()
                 except keycloak.exceptions.KeycloakClientError:
                     user = {}
 
@@ -324,8 +343,12 @@ class ActionUpdateInfoSlots(Action):
                 rasa_sdk.events.SlotSet(
                     "instant_response_required", capabilities.instant_response_required
                 ),
-                rasa_sdk.events.SlotSet("sign_in_supported", capabilities.supports_sign_in),
-                rasa_sdk.events.SlotSet("input_supported", capabilities.input_supported),
+                rasa_sdk.events.SlotSet(
+                    "sign_in_supported", capabilities.supports_sign_in
+                ),
+                rasa_sdk.events.SlotSet(
+                    "input_supported", capabilities.input_supported
+                ),
                 rasa_sdk.events.SlotSet(
                     "highest_input_supported", capabilities.highest_input_supported
                 ),
@@ -340,17 +363,13 @@ class ActionSignIn(Action):
         return "sign_in"
 
     def run(
-            self,
-            dispatcher: CollectingDispatcher,
-            tracker: Tracker,
-            domain: Dict[Text, Any],
+        self,
+        dispatcher: CollectingDispatcher,
+        tracker: Tracker,
+        domain: Dict[Text, Any],
     ) -> List[Dict[Text, Any]]:
         dispatcher.utter_custom_json(
-            {
-                "type": "request",
-                "request": "sign_in",
-                "text": "Please sign in",
-            }
+            {"type": "request", "request": "sign_in", "text": "Please sign in",}
         )
 
         return []
@@ -361,17 +380,17 @@ class ActionMoveToWebForm(Action):
         return "move_to_web_form_device"
 
     async def run(
-            self,
-            dispatcher: CollectingDispatcher,
-            tracker: Tracker,
-            domain: Dict[Text, Any],
+        self,
+        dispatcher: CollectingDispatcher,
+        tracker: Tracker,
+        domain: Dict[Text, Any],
     ) -> List[Dict[Text, Any]]:
         conversation = await sync_to_async(sender_id_to_conversation)(tracker.sender_id)
 
         if conversation:
             if (
-                    conversation.platform
-                    == operator_interface.models.Conversation.GOOGLE_ACTIONS
+                conversation.platform
+                == operator_interface.models.Conversation.GOOGLE_ACTIONS
             ):
                 dispatcher.utter_custom_json(
                     {
@@ -389,17 +408,17 @@ class ActionCatPic(Action):
         return "cat_pic"
 
     async def run(
-            self,
-            dispatcher: CollectingDispatcher,
-            tracker: Tracker,
-            domain: Dict[Text, Any],
+        self,
+        dispatcher: CollectingDispatcher,
+        tracker: Tracker,
+        domain: Dict[Text, Any],
     ) -> List[Dict[Text, Any]]:
-        utterance: rasa_api.models.Utterance = await sync_to_async(rasa_api.models.Utterance.objects.get)(
-            name="utter_cheer_up"
-        )
-        utterance_choice: rasa_api.models.UtteranceResponse = await sync_to_async(lambda: random.choice(
-            utterance.utteranceresponse_set.all()
-        ))()
+        utterance: rasa_api.models.Utterance = await sync_to_async(
+            rasa_api.models.Utterance.objects.get
+        )(name="utter_cheer_up")
+        utterance_choice: rasa_api.models.UtteranceResponse = await sync_to_async(
+            lambda: random.choice(utterance.utteranceresponse_set.all())
+        )()
 
         dispatcher.utter_message(utterance_choice.text)
 
@@ -422,10 +441,10 @@ class ActionAskAffirmation(Action):
         return "action_default_ask_affirmation"
 
     def run(
-            self,
-            dispatcher: CollectingDispatcher,
-            tracker: Tracker,
-            domain: Dict[Text, Any],
+        self,
+        dispatcher: CollectingDispatcher,
+        tracker: Tracker,
+        domain: Dict[Text, Any],
     ) -> List[Dict[Text, Any]]:
         possible_intent = tracker.latest_message["intent"]["name"]
 
@@ -450,10 +469,10 @@ class ActionOpeningHours(Action):
         return "support_opening_hours"
 
     async def run(
-            self,
-            dispatcher: CollectingDispatcher,
-            tracker: Tracker,
-            domain: Dict[Text, Any],
+        self,
+        dispatcher: CollectingDispatcher,
+        tracker: Tracker,
+        domain: Dict[Text, Any],
     ) -> List[Dict[Text, Any]]:
         entities = tracker.latest_message.get("entities", [])
         time = next((x for x in entities if x.get("entity") == "time"), None)
@@ -477,10 +496,14 @@ class ActionOpeningHours(Action):
             ("Saturday", "Saturday", opening_hours_defs["saturday"]),
             ("Sunday", "Sunday", opening_hours_defs["sunday"]),
         ]
-        future_overrides = await sync_to_async(lambda: list(models.OpeningHoursOverride.objects.filter(
-            day__gt=datetime.date.today(),
-            day__lte=datetime.date.today() + datetime.timedelta(weeks=2),
-        )))()
+        future_overrides = await sync_to_async(
+            lambda: list(
+                models.OpeningHoursOverride.objects.filter(
+                    day__gt=datetime.date.today(),
+                    day__lte=datetime.date.today() + datetime.timedelta(weeks=2),
+                )
+            )
+        )()
 
         if time is not None:
             is_day = (
@@ -490,9 +513,11 @@ class ActionOpeningHours(Action):
             )
             if is_day:
                 want_date = dateutil.parser.parse(time["value"]).date()
-                date_overrides = await sync_to_async(lambda: list(models.OpeningHoursOverride.objects.filter(
-                    day=want_date
-                )))()
+                date_overrides = await sync_to_async(
+                    lambda: list(
+                        models.OpeningHoursOverride.objects.filter(day=want_date)
+                    )
+                )()
                 if len(date_overrides) == 0:
                     date_override = None
                 else:
@@ -510,9 +535,7 @@ class ActionOpeningHours(Action):
                     if hours is None:
                         dispatcher.utter_message("We are closed today.")
                     else:
-                        dispatcher.utter_message(
-                            f"Today we are {format_hours(hours)}."
-                        )
+                        dispatcher.utter_message(f"Today we are {format_hours(hours)}.")
                 else:
                     next_of_weekday = datetime.date.today() + dateutil.relativedelta.relativedelta(
                         weekday=weekday
@@ -579,7 +602,7 @@ class ActionOpeningHours(Action):
                 )
                 future_overrides_txt = map(
                     lambda d: f"\nOn {d.day.strftime('%A %B')} the {p.ordinal(d.day.day)} we will be "
-                              f"{format_hours(d)}.",
+                    f"{format_hours(d)}.",
                     future_overrides,
                 )
                 future_overrides_txt = "".join(future_overrides_txt)
@@ -593,7 +616,7 @@ class ActionOpeningHours(Action):
 
         future_overrides_txt = map(
             lambda d: f"\nOn {d.day.strftime('%A %B')} the {p.ordinal(d.day.day)} we will be "
-                      f"{format_hours(d)}.",
+            f"{format_hours(d)}.",
             future_overrides,
         )
         future_overrides_txt = "".join(future_overrides_txt)
@@ -606,10 +629,10 @@ class ActionContact(Action):
         return "support_contact"
 
     async def run(
-            self,
-            dispatcher: CollectingDispatcher,
-            tracker: Tracker,
-            domain: Dict[Text, Any],
+        self,
+        dispatcher: CollectingDispatcher,
+        tracker: Tracker,
+        domain: Dict[Text, Any],
     ) -> List[Dict[Text, Any]]:
         contact_details = await sync_to_async(models.ContactDetails.objects.get)()
         dispatcher.utter_message(
@@ -624,10 +647,10 @@ class ActionContactPhone(Action):
         return "support_contact_phone"
 
     async def run(
-            self,
-            dispatcher: CollectingDispatcher,
-            tracker: Tracker,
-            domain: Dict[Text, Any],
+        self,
+        dispatcher: CollectingDispatcher,
+        tracker: Tracker,
+        domain: Dict[Text, Any],
     ) -> List[Dict[Text, Any]]:
         contact_details = await sync_to_async(models.ContactDetails.objects.get)()
         dispatcher.utter_message(
@@ -641,10 +664,10 @@ class ActionContactEmail(Action):
         return "support_contact_email"
 
     async def run(
-            self,
-            dispatcher: CollectingDispatcher,
-            tracker: Tracker,
-            domain: Dict[Text, Any],
+        self,
+        dispatcher: CollectingDispatcher,
+        tracker: Tracker,
+        domain: Dict[Text, Any],
     ) -> List[Dict[Text, Any]]:
         contact_details = await sync_to_async(models.ContactDetails.objects.get)()
         dispatcher.utter_message(f"You can email us at {contact_details.email}.")
@@ -656,29 +679,30 @@ class ActionLocation(Action):
         return "support_location"
 
     async def run(
-            self,
-            dispatcher: CollectingDispatcher,
-            tracker: Tracker,
-            domain: Dict[Text, Any],
+        self,
+        dispatcher: CollectingDispatcher,
+        tracker: Tracker,
+        domain: Dict[Text, Any],
     ) -> List[Dict[Text, Any]]:
         contact_details = await sync_to_async(models.ContactDetails.objects.get)()
-        capabilities = await sync_to_async(get_conversation_capabilities)(tracker.sender_id)
+        capabilities = await sync_to_async(get_conversation_capabilities)(
+            tracker.sender_id
+        )
 
         if capabilities.input_supported != "voice":
             dispatcher.utter_message(
                 f"You can find us on Google Maps using the link below."
             )
-            dispatcher.utter_custom_json({
-                "type": "card",
-                "card": {
-                    "title": "Google maps",
-                    "text": "View us on google maps",
-                    "button": {
-                        "title": "Open",
-                        "link": contact_details.maps_link
+            dispatcher.utter_custom_json(
+                {
+                    "type": "card",
+                    "card": {
+                        "title": "Google maps",
+                        "text": "View us on google maps",
+                        "button": {"title": "Open", "link": contact_details.maps_link},
                     },
-                },
-            })
+                }
+            )
         else:
             dispatcher.utter_message(f"Our address is;\n{contact_details.address}")
         return []
@@ -689,10 +713,10 @@ class ActionRepair(Action):
         return "repair"
 
     async def run(
-            self,
-            dispatcher: CollectingDispatcher,
-            tracker: Tracker,
-            domain: Dict[Text, Any],
+        self,
+        dispatcher: CollectingDispatcher,
+        tracker: Tracker,
+        domain: Dict[Text, Any],
     ) -> List[Dict[Text, Any]]:
         device_model = tracker.get_slot("device_model")
         repair_name = tracker.get_slot("device_repair")
@@ -701,15 +725,23 @@ class ActionRepair(Action):
         repairable = rasa_sdk.events.SlotSet("repairable", True)
 
         device_models = (
-            await sync_to_async(lambda: list(models.Model.objects.filter(name__startswith=device_model.lower())))()
+            await sync_to_async(
+                lambda: list(
+                    models.Model.objects.filter(name__startswith=device_model.lower())
+                )
+            )()
             if device_model
             else []
         )
         repair = (
-            await sync_to_async(lambda: next(
-                models.RepairType.objects.filter(name=repair_name.lower()).iterator(),
-                None,
-            ))()
+            await sync_to_async(
+                lambda: next(
+                    models.RepairType.objects.filter(
+                        name=repair_name.lower()
+                    ).iterator(),
+                    None,
+                )
+            )()
             if repair_name
             else None
         )
@@ -718,10 +750,14 @@ class ActionRepair(Action):
             repair_strs = []
 
             for d in device_models:
-                repair_m = await sync_to_async(lambda: next(
-                    models.Repair.objects.filter(device=d, repair=repair).iterator(),
-                    None,
-                ))()
+                repair_m = await sync_to_async(
+                    lambda: next(
+                        models.Repair.objects.filter(
+                            device=d, repair=repair
+                        ).iterator(),
+                        None,
+                    )
+                )()
                 if repair_m:
                     repair_strs.append(
                         f"A{p.a(f'{d.display_name} {repair.display_name}')[1:]} will cost "
@@ -734,7 +770,7 @@ class ActionRepair(Action):
                 return [repairable]
             else:
                 dispatcher.utter_message(
-                    f"Sorry, that a {device_model} {repair_name} isn't on my price list but if you bring the device "
+                    f"Sorry, but a {device_model} {repair_name} isn't on my price list but if you bring the device "
                     f"in we'll be happy to help!"
                 )
             return [
@@ -744,7 +780,7 @@ class ActionRepair(Action):
             ]
 
         dispatcher.utter_message(
-            f"Sorry, that a {device_model} {repair_name} isn't on my price list but if you bring the device "
+            f"Sorry, but a {device_model} {repair_name} isn't on my price list but if you bring the device "
             f"in we'll be happy to help!"
         )
         return [
@@ -759,24 +795,32 @@ class ActionRepairBookCheck(Action):
         return "repair_book_check"
 
     async def run(
-            self,
-            dispatcher: CollectingDispatcher,
-            tracker: Tracker,
-            domain: Dict[Text, Any],
+        self,
+        dispatcher: CollectingDispatcher,
+        tracker: Tracker,
+        domain: Dict[Text, Any],
     ) -> List[Dict[Text, Any]]:
         device_model = tracker.get_slot("device_model")
         repair_name = tracker.get_slot("device_repair")
 
         device_models = (
-            await sync_to_async(lambda: list(models.Model.objects.filter(name__startswith=device_model.lower())))()
+            await sync_to_async(
+                lambda: list(
+                    models.Model.objects.filter(name__startswith=device_model.lower())
+                )
+            )()
             if device_model
             else []
         )
         repair = (
-            await sync_to_async(lambda: next(
-                models.RepairType.objects.filter(name=repair_name.lower()).iterator(),
-                None,
-            ))()
+            await sync_to_async(
+                lambda: next(
+                    models.RepairType.objects.filter(
+                        name=repair_name.lower()
+                    ).iterator(),
+                    None,
+                )
+            )()
             if repair_name
             else None
         )
@@ -784,10 +828,13 @@ class ActionRepairBookCheck(Action):
         if len(device_models) > 1 and repair is not None:
             dispatcher.utter_template("utter_clarify_model", tracker)
             dispatcher.utter_message(
-                ", or ".join([
-                    ", ".join([m.display_name for m in device_models[:-1]]),
-                    device_models[-1].display_name
-                ]) + "?"
+                ", or ".join(
+                    [
+                        ", ".join([m.display_name for m in device_models[:-1]]),
+                        device_models[-1].display_name,
+                    ]
+                )
+                + "?"
             )
             dispatcher.utter_custom_json(
                 {
@@ -820,10 +867,10 @@ class ActionRepairBookClarify(Action):
         return "repair_book_clarify"
 
     async def run(
-            self,
-            dispatcher: CollectingDispatcher,
-            tracker: Tracker,
-            domain: Dict[Text, Any],
+        self,
+        dispatcher: CollectingDispatcher,
+        tracker: Tracker,
+        domain: Dict[Text, Any],
     ) -> List[Dict[Text, Any]]:
         list_items = tracker.get_slot("list_items")
         device_model = next(
@@ -869,9 +916,14 @@ class ActionRepairBookClarify(Action):
             mention = None
 
         device_model = (
-            await sync_to_async(lambda: next(
-                models.Model.objects.filter(name__startswith=device_model.lower()).iterator(), None
-            ))()
+            await sync_to_async(
+                lambda: next(
+                    models.Model.objects.filter(
+                        name__startswith=device_model.lower()
+                    ).iterator(),
+                    None,
+                )
+            )()
             if device_model
             else None
         )
@@ -901,10 +953,13 @@ class ActionRepairBookClarify(Action):
 
         dispatcher.utter_template("utter_clarify_model", tracker)
         dispatcher.utter_message(
-            ", or".join([
-                ", ".join([m["display_name"] for m in list_items[:-1]]),
-                list_items[-1]["display_name"]
-            ]) + "?"
+            ", or".join(
+                [
+                    ", ".join([m["display_name"] for m in list_items[:-1]]),
+                    list_items[-1]["display_name"],
+                ]
+            )
+            + "?"
         )
         dispatcher.utter_custom_json(
             {
@@ -925,7 +980,13 @@ class BaseForm(abc.ABC, FormAction):
     def name(self):
         return None
 
-    async def validate_brand(self, value: Text, dispatcher: CollectingDispatcher, tracker: Tracker, domain: Dict[Text, Any]):
+    async def validate_brand(
+        self,
+        value: Text,
+        dispatcher: CollectingDispatcher,
+        tracker: Tracker,
+        domain: Dict[Text, Any],
+    ):
         asked_once = tracker.get_slot("asked_once")
         asked_once = True if asked_once else False
         brand = await sync_to_async(lambda: list(models.Brand.objects.all()))()
@@ -954,7 +1015,11 @@ class BaseForm(abc.ABC, FormAction):
                 return {"brand": value, "asked_once": False}
 
     async def validate_device_model(
-            self, value: Text, dispatcher: CollectingDispatcher, tracker: Tracker, domain: Dict[Text, Any],
+        self,
+        value: Text,
+        dispatcher: CollectingDispatcher,
+        tracker: Tracker,
+        domain: Dict[Text, Any],
     ):
         asked_once = tracker.get_slot("asked_once")
         asked_once = True if asked_once else False
@@ -989,11 +1054,11 @@ class BaseForm(abc.ABC, FormAction):
                 return {"device_model": value, "asked_once": False}
 
     async def validate_phone_number(
-            self,
-            value: Text,
-            dispatcher: CollectingDispatcher,
-            tracker: Tracker,
-            domain: Dict[Text, Any],
+        self,
+        value: Text,
+        dispatcher: CollectingDispatcher,
+        tracker: Tracker,
+        domain: Dict[Text, Any],
     ) -> Optional[Dict[Text, Any]]:
         try:
             phone = phonenumbers.parse(value, settings.PHONENUMBER_DEFAULT_REGION)
@@ -1012,19 +1077,23 @@ class BaseForm(abc.ABC, FormAction):
             phone = phonenumbers.format_number(
                 phone, phonenumbers.PhoneNumberFormat.E164
             )
-            conversation = await sync_to_async(sender_id_to_conversation)(tracker.sender_id)
+            conversation = await sync_to_async(sender_id_to_conversation)(
+                tracker.sender_id
+            )
 
             if conversation:
-                await sync_to_async(update_user_info)(conversation, phone=phone)
+                async_to_sync(sync_to_async(update_user_info))(
+                    conversation, phone=phone
+                )
 
             return {"phone_number": phone}
 
     async def validate_email(
-            self,
-            value: Text,
-            dispatcher: CollectingDispatcher,
-            tracker: Tracker,
-            domain: Dict[Text, Any],
+        self,
+        value: Text,
+        dispatcher: CollectingDispatcher,
+        tracker: Tracker,
+        domain: Dict[Text, Any],
     ) -> Optional[Dict[Text, Any]]:
         conversation = await sync_to_async(sender_id_to_conversation)(tracker.sender_id)
 
@@ -1034,18 +1103,60 @@ class BaseForm(abc.ABC, FormAction):
         return {"email": value}
 
     async def validate_name(
-            self,
-            value: Text,
-            dispatcher: CollectingDispatcher,
-            tracker: Tracker,
-            domain: Dict[Text, Any],
+        self,
+        value: Text,
+        dispatcher: CollectingDispatcher,
+        tracker: Tracker,
+        domain: Dict[Text, Any],
     ) -> Optional[Dict[Text, Any]]:
         conversation = await sync_to_async(sender_id_to_conversation)(tracker.sender_id)
 
         if conversation:
-            await sync_to_async(update_user_info)(conversation, first_name=value, force_update=False)
+            await sync_to_async(update_user_info)(
+                conversation, first_name=value, force_update=False
+            )
 
         return {"name": value}
+
+    async def validate_network(
+        self,
+        value: Text,
+        dispatcher: CollectingDispatcher,
+        tracker: Tracker,
+        domain: Dict[Text, Any],
+    ) -> Optional[Dict[Text, Any]]:
+        loop = asyncio.get_event_loop()
+
+        asked_once = tracker.get_slot("asked_once")
+        asked_once = True if asked_once else False
+        networks = await sync_to_async(lambda: list(models.Network.objects.all()))()
+        alt_networks = await sync_to_async(
+            lambda: list(models.NetworkAlternativeName.objects.all())
+        )()
+        networks = [(n.name, n) for n in networks]
+        networks.extend([(n.name, n) for n in alt_networks])
+
+        top_choice = fuzzywuzzy.process.extractOne(
+            (value.lower(), None), networks, lambda v: v[0]
+        )
+
+        if not top_choice:
+            if not asked_once:
+                dispatcher.utter_message("Hmmm 🤔, I don't recognise that network.")
+                return {"network": None, "asked_once": True}
+            else:
+                return {"network": value, "asked_once": False}
+        elif top_choice[1] > 70:
+            return {"network": top_choice[0][0]}
+        else:
+            if not asked_once:
+                dispatcher.utter_message(
+                    f"Hmmm 🤔, I don't recognise that network, did you mean "
+                    f"{top_choice[0][1].display_name}?."
+                )
+                return {"network": None, "asked_once": True}
+            else:
+                return {"network": value, "asked_once": False}
 
 
 class RepairForm(BaseForm):
@@ -1074,34 +1185,36 @@ class RepairForm(BaseForm):
         }
 
     def submit(
-            self,
-            dispatcher: CollectingDispatcher,
-            tracker: Tracker,
-            domain: Dict[Text, Any],
+        self,
+        dispatcher: CollectingDispatcher,
+        tracker: Tracker,
+        domain: Dict[Text, Any],
     ) -> List[Dict]:
         dispatcher.utter_template("utter_looking_up", tracker)
         return []
 
-    def validate_device_model(
-            self,
-            value: Text,
-            dispatcher: CollectingDispatcher,
-            tracker: Tracker,
-            domain: Dict[Text, Any],
+    async def validate_device_model(
+        self,
+        value: Text,
+        dispatcher: CollectingDispatcher,
+        tracker: Tracker,
+        domain: Dict[Text, Any],
     ) -> Optional[Dict[Text, Any]]:
         brand = tracker.get_slot("brand")
         brand = brand if brand else ""
         if brand.lower() in ["iphone", "ipad", ""]:
-            return super().validate_device_model(value, dispatcher, tracker, domain)
+            return await super().validate_device_model(
+                value, dispatcher, tracker, domain
+            )
         else:
             return {"device_model": None}
 
     async def validate_device_repair(
-            self,
-            value: Text,
-            dispatcher: CollectingDispatcher,
-            tracker: Tracker,
-            domain: Dict[Text, Any],
+        self,
+        value: Text,
+        dispatcher: CollectingDispatcher,
+        tracker: Tracker,
+        domain: Dict[Text, Any],
     ) -> Optional[Dict[Text, Any]]:
         asked_once = tracker.get_slot("asked_once")
         asked_once = True if asked_once else False
@@ -1140,10 +1253,13 @@ class RepairBookForm(BaseForm):
         conversation = await sync_to_async(sender_id_to_conversation)(tracker.sender_id)
         ask_phone = (
             (
-                False if conversation.platform == operator_interface.models.Conversation.GOOGLE_ACTIONS
+                False
+                if conversation.platform
+                == operator_interface.models.Conversation.GOOGLE_ACTIONS
                 else True
             )
-            if conversation else True
+            if conversation
+            else True
         )
 
         if not ask_phone:
@@ -1163,11 +1279,11 @@ class RepairBookForm(BaseForm):
         }
 
     async def validate_date(
-            self,
-            value: Text,
-            dispatcher: CollectingDispatcher,
-            tracker: Tracker,
-            domain: Dict[Text, Any],
+        self,
+        value: Text,
+        dispatcher: CollectingDispatcher,
+        tracker: Tracker,
+        domain: Dict[Text, Any],
     ) -> Optional[Dict[Text, Any]]:
         value_dt = datetime.datetime.fromisoformat(value)
 
@@ -1177,23 +1293,30 @@ class RepairBookForm(BaseForm):
 
         if not await sync_to_async(is_open_on)(value_dt.date()):
             dispatcher.utter_message(
-                f"Sorry, but we're closed on {value_dt.strftime('%A')} the {p.ordinal(value_dt.day)}.")
+                f"Sorry, but we're closed on {value_dt.strftime('%A')} the {p.ordinal(value_dt.day)}."
+            )
             return {"date": None}
 
         return {"date": value}
 
     async def validate_time(
-            self,
-            value: Text,
-            dispatcher: CollectingDispatcher,
-            tracker: Tracker,
-            domain: Dict[Text, Any],
+        self,
+        value: Text,
+        dispatcher: CollectingDispatcher,
+        tracker: Tracker,
+        domain: Dict[Text, Any],
     ) -> Optional[Dict[Text, Any]]:
         date = tracker.get_slot("date")
         if not date:
             return {"time": None}
         date = datetime.datetime.fromisoformat(date)
-        value = next(filter(lambda e: e.get("entity") == "time", tracker.latest_message.get("entities")), None)
+        value = next(
+            filter(
+                lambda e: e.get("entity") == "time",
+                tracker.latest_message.get("entities"),
+            ),
+            None,
+        )
 
         if value:
             value = value.get("additional_info", {})
@@ -1201,15 +1324,22 @@ class RepairBookForm(BaseForm):
                 value_dt = datetime.datetime.fromisoformat(value.get("value"))
                 if await sync_to_async(is_open_at)(date, value_dt.time()):
                     pass
-                elif await sync_to_async(is_open_at)(date, (value_dt + datetime.timedelta(hours=12)).time()):
-                    value_dt = (value_dt + datetime.timedelta(hours=12))
+                elif await sync_to_async(is_open_at)(
+                    date, (value_dt + datetime.timedelta(hours=12)).time()
+                ):
+                    value_dt = value_dt + datetime.timedelta(hours=12)
                     value_dh = value_dt.replace(date.year, date.month, date.day)
                 else:
-                    dispatcher.utter_message(f"Sorry, we're not open then. "
-                                             f"On that day we are {format_hours(await sync_to_async(is_open_on)(date))}")
+                    dispatcher.utter_message(
+                        f"Sorry, we're not open then. "
+                        f"On that day we are {format_hours(await sync_to_async(is_open_on)(date))}"
+                    )
                     return {"time": None}
 
-                if value_dt < timezone.now() and date.date() == datetime.datetime.today():
+                if (
+                    value_dt < timezone.now()
+                    and date.date() == datetime.datetime.today()
+                ):
                     dispatcher.utter_message("That time is in the past")
                     return {"time": None}
 
@@ -1218,40 +1348,58 @@ class RepairBookForm(BaseForm):
         return {"time": None}
 
     async def submit(
-            self,
-            dispatcher: CollectingDispatcher,
-            tracker: Tracker,
-            domain: Dict[Text, Any],
+        self,
+        dispatcher: CollectingDispatcher,
+        tracker: Tracker,
+        domain: Dict[Text, Any],
     ) -> List[Dict]:
         conversation = await sync_to_async(sender_id_to_conversation)(tracker.sender_id)
 
         date = datetime.datetime.fromisoformat(tracker.get_slot("date"))
         time = datetime.time.fromisoformat(tracker.get_slot("time"))
-        date = date.replace(hour=time.hour, minute=time.minute, second=time.second, microsecond=time.microsecond)
+        date = date.replace(
+            hour=time.hour,
+            minute=time.minute,
+            second=time.second,
+            microsecond=time.microsecond,
+        )
 
         device_model = tracker.get_slot("device_model")
         repair_name = tracker.get_slot("device_repair")
 
-        device_model = await sync_to_async(lambda: models.Model.objects.filter(name=device_model.lower()).first())()
-        repair = await sync_to_async(lambda: models.RepairType.objects.filter(name=repair_name.lower()).first())()
+        device_model = await sync_to_async(
+            lambda: models.Model.objects.filter(name=device_model.lower()).first()
+        )()
+        repair = await sync_to_async(
+            lambda: models.RepairType.objects.filter(name=repair_name.lower()).first()
+        )()
 
-        repair_m = await sync_to_async(lambda: models.Repair.objects.filter(device=device_model, repair=repair).first())()
-        booking_m = models.RepairBooking(repair=repair_m, customer_id=conversation.conversation_user_id, time=date)
+        repair_m = await sync_to_async(
+            lambda: models.Repair.objects.filter(
+                device=device_model, repair=repair
+            ).first()
+        )()
+        booking_m = models.RepairBooking(
+            repair=repair_m, customer_id=conversation.conversation_user_id, time=date
+        )
         await sync_to_async(booking_m.save)()
 
         dispatcher.utter_template("utter_booking", tracker)
-        return [rasa_sdk.events.SlotSet("date", None), rasa_sdk.events.SlotSet("time", None)]
+        return [
+            rasa_sdk.events.SlotSet("date", None),
+            rasa_sdk.events.SlotSet("time", None),
+        ]
 
 
 class ActionUnlockLookup(Action):
     def name(self) -> Text:
         return "unlock_lookup"
 
-    def run(
-            self,
-            dispatcher: CollectingDispatcher,
-            tracker: Tracker,
-            domain: Dict[Text, Any],
+    async def run(
+        self,
+        dispatcher: CollectingDispatcher,
+        tracker: Tracker,
+        domain: Dict[Text, Any],
     ) -> List[Dict[Text, Any]]:
         brand = tracker.get_slot("brand")  # type: Text
         device_model = tracker.get_slot("device_model")  # type: Text
@@ -1260,7 +1408,9 @@ class ActionUnlockLookup(Action):
         not_unlockable = rasa_sdk.events.SlotSet("unlockable", False)
         unlockable = rasa_sdk.events.SlotSet("unlockable", True)
 
-        network_o = models.Network.objects.filter(name=network.lower())
+        network_o = await sync_to_async(
+            lambda: list(models.Network.objects.filter(name=network.lower()))
+        )()
         if not len(network_o):
             network_alt_o = models.NetworkAlternativeName.objects.filter(
                 name=network.lower()
@@ -1318,10 +1468,10 @@ class ActionOrderUnlock(Action):
         return "unlock_order"
 
     async def run(
-            self,
-            dispatcher: CollectingDispatcher,
-            tracker: Tracker,
-            domain: Dict[Text, Any],
+        self,
+        dispatcher: CollectingDispatcher,
+        tracker: Tracker,
+        domain: Dict[Text, Any],
     ) -> List[Dict[Text, Any]]:
         brand: Text = tracker.get_slot("brand")
         device_model: Text = tracker.get_slot("device_model")
@@ -1361,7 +1511,7 @@ class ActionOrderUnlock(Action):
                     "network": network_o.name,
                     "make": brand_o.name,
                     "model": device_model_o.name if device_model_o else None,
-                    "days": unlock_o.ti
+                    "days": unlock_o.ti,
                 }
             )
             # payment_item_o = payment.models.PaymentItem(
@@ -1388,10 +1538,10 @@ class ActionUnlockClear(Action):
         return "unlock_clear"
 
     def run(
-            self,
-            dispatcher: CollectingDispatcher,
-            tracker: Tracker,
-            domain: Dict[Text, Any],
+        self,
+        dispatcher: CollectingDispatcher,
+        tracker: Tracker,
+        domain: Dict[Text, Any],
     ) -> List[Dict[Text, Any]]:
         return [
             rasa_sdk.events.SlotSet("brand", None),
@@ -1406,22 +1556,26 @@ class UnlockLookupForm(BaseForm):
         return "unlock_lookup_form"
 
     @staticmethod
-    def required_slots(tracker: Tracker) -> List[Text]:
+    async def required_slots(tracker: Tracker) -> List[Text]:
         required = ["brand"]
 
         model_needed = False
         brand = tracker.get_slot("brand")
         if brand is not None:
-            brand_o = next(
-                models.Brand.objects.filter(name=brand.lower()).iterator(), None
-            )
-            if brand_o:
-                phone_unlocks = next(
-                    models.PhoneUnlock.objects.filter(
-                        brand=brand_o, device=None
-                    ).iterator(),
-                    None,
+            brand_o = await sync_to_async(
+                lambda: next(
+                    models.Brand.objects.filter(name=brand.lower()).iterator(), None
                 )
+            )()
+            if brand_o:
+                phone_unlocks = await sync_to_async(
+                    lambda: next(
+                        models.PhoneUnlock.objects.filter(
+                            brand=brand_o, device=None
+                        ).iterator(),
+                        None,
+                    )
+                )()
                 model_needed = phone_unlocks is None
 
         if model_needed:
@@ -1438,47 +1592,11 @@ class UnlockLookupForm(BaseForm):
             "network": [self.from_entity(entity="network"), self.from_text()],
         }
 
-    def validate_network(
-            self,
-            value: Text,
-            dispatcher: CollectingDispatcher,
-            tracker: Tracker,
-            domain: Dict[Text, Any],
-    ) -> Optional[Dict[Text, Any]]:
-        asked_once = tracker.get_slot("asked_once")
-        asked_once = True if asked_once else False
-        networks = models.Network.objects.all()
-        alt_networks = models.NetworkAlternativeName.objects.all()
-        networks = [(n.name, n) for n in networks]
-        networks.extend([(n.name, n) for n in alt_networks])
-
-        top_choice = fuzzywuzzy.process.extractOne(
-            (value.lower(), None), networks, lambda v: v[0]
-        )
-
-        if not top_choice:
-            if not asked_once:
-                dispatcher.utter_message("Hmmm 🤔, I don't recognise that network.")
-                return {"network": None, "asked_once": True}
-            else:
-                return {"network": value, "asked_once": False}
-        elif top_choice[1] > 70:
-            return {"network": top_choice[0][0]}
-        else:
-            if not asked_once:
-                dispatcher.utter_message(
-                    f"Hmmm 🤔, I don't recognise that network, did you mean "
-                    f"{top_choice[0][1].display_name}?."
-                )
-                return {"network": None, "asked_once": True}
-            else:
-                return {"network": value, "asked_once": False}
-
     def submit(
-            self,
-            dispatcher: CollectingDispatcher,
-            tracker: Tracker,
-            domain: Dict[Text, Any],
+        self,
+        dispatcher: CollectingDispatcher,
+        tracker: Tracker,
+        domain: Dict[Text, Any],
     ) -> List[Dict]:
         dispatcher.utter_template("utter_looking_up", tracker)
         return []
@@ -1495,7 +1613,7 @@ class UnlockOrderForm(BaseForm):
             (
                 False
                 if conversation.platform
-                   == operator_interface.models.Conversation.GOOGLE_ACTIONS
+                == operator_interface.models.Conversation.GOOGLE_ACTIONS
                 else True
             )
             if conversation
@@ -1536,11 +1654,11 @@ class UnlockOrderForm(BaseForm):
         return checksum % 10
 
     def validate_imei(
-            self,
-            value: Text,
-            dispatcher: CollectingDispatcher,
-            tracker: Tracker,
-            domain: Dict[Text, Any],
+        self,
+        value: Text,
+        dispatcher: CollectingDispatcher,
+        tracker: Tracker,
+        domain: Dict[Text, Any],
     ) -> Optional[Dict[Text, Any]]:
         try:
             checksum = self.luhn_checksum(value)
@@ -1555,47 +1673,11 @@ class UnlockOrderForm(BaseForm):
 
         return {"imei": value}
 
-    def validate_network(
-            self,
-            value: Text,
-            dispatcher: CollectingDispatcher,
-            tracker: Tracker,
-            domain: Dict[Text, Any],
-    ) -> Optional[Dict[Text, Any]]:
-        asked_once = tracker.get_slot("asked_once")
-        asked_once = True if asked_once else False
-        networks = models.Network.objects.all()
-        alt_networks = models.NetworkAlternativeName.objects.all()
-        networks = [(n.name, n) for n in networks]
-        networks.extend([(n.name, n) for n in alt_networks])
-
-        top_choice = fuzzywuzzy.process.extractOne(
-            (value.lower(), None), networks, lambda v: v[0]
-        )
-
-        if not top_choice:
-            if not asked_once:
-                dispatcher.utter_message("Hmmm 🤔, I don't recognise that network.")
-                return {"network": None, "asked_once": True}
-            else:
-                return {"network": value, "asked_once": False}
-        elif top_choice[1] > 70:
-            return {"network": top_choice[0][0]}
-        else:
-            if not asked_once:
-                dispatcher.utter_message(
-                    f"Hmmm 🤔, I don't recognise that network, did you mean "
-                    f"{top_choice[0][1].display_name}?."
-                )
-                return {"network": None, "asked_once": True}
-            else:
-                return {"network": value, "asked_once": False}
-
     def submit(
-            self,
-            dispatcher: CollectingDispatcher,
-            tracker: Tracker,
-            domain: Dict[Text, Any],
+        self,
+        dispatcher: CollectingDispatcher,
+        tracker: Tracker,
+        domain: Dict[Text, Any],
     ) -> List[Dict]:
         return []
 
@@ -1605,10 +1687,10 @@ class UnlockOrderWebForm(Action):
         return "unlock_order_web_form"
 
     async def run(
-            self,
-            dispatcher: CollectingDispatcher,
-            tracker: Tracker,
-            domain: Dict[Text, Any],
+        self,
+        dispatcher: CollectingDispatcher,
+        tracker: Tracker,
+        domain: Dict[Text, Any],
     ) -> List[Dict[Text, Any]]:
         brand = tracker.get_slot("brand")  # type: Text
         device_model = tracker.get_slot("device_model")  # type: Text
@@ -1618,29 +1700,35 @@ class UnlockOrderWebForm(Action):
 
         if conversation:
             try:
-                network_o: models.Network = models.Network.objects.get(name=network.lower())
+                network_o: models.Network = await sync_to_async(
+                    models.Network.objects.get
+                )(name=network.lower())
                 network_name = network_o.display_name
             except models.Network.DoesNotExist:
-                network_alt_o = models.NetworkAlternativeName.objects.get(
-                    name=network.lower()
-                )
+                network_alt_o = await sync_to_async(
+                    models.NetworkAlternativeName.objects.get
+                )(name=network.lower())
                 network_o = network_alt_o.network
                 network_name = network_alt_o.display_name
-            brand_o: models.Brand = models.Brand.objects.get(name=brand.lower())
+            brand_o: models.Brand = await sync_to_async(models.Brand.objects.get)(
+                name=brand.lower()
+            )
             device_model_o = (
-                models.Model.objects.get(name=device_model.lower())
+                await sync_to_async(models.Model.objects.get)(name=device_model.lower())
                 if device_model
                 else None
             )
 
-            unlock_o: models.PhoneUnlock = models.PhoneUnlock.objects.get(
-                network=network_o, brand=brand_o, device=device_model_o
-            )
+            unlock_o: models.PhoneUnlock = await sync_to_async(
+                models.PhoneUnlock.objects.get
+            )(network=network_o, brand=brand_o, device=device_model_o)
 
             unlock_form = models.UnlockForm(
-                phone_unlock=unlock_o, network_name=network_name, customer_id=conversation.conversation_user_id
+                phone_unlock=unlock_o,
+                network_name=network_name,
+                customer_id=conversation.conversation_user_id,
             )
-            unlock_form.save()
+            await sync_to_async(unlock_form.save)()
 
             dispatcher.utter_message("Continue with your order here")
             dispatcher.utter_custom_json(
@@ -1651,8 +1739,7 @@ class UnlockOrderWebForm(Action):
                         "text": "Open this form to complete your order",
                         "button": {
                             "title": "Open",
-                            "link": settings.EXTERNAL_URL_BASE
-                                    + reverse(
+                            "link": settings.EXTERNAL_URL_BASE + reverse(
                                 "fulfillment:form",
                                 kwargs={
                                     "form_type": "unlocking",
@@ -1671,10 +1758,10 @@ class ActionRateSlot(Action):
         return "rate_slot"
 
     def run(
-            self,
-            dispatcher: CollectingDispatcher,
-            tracker: Tracker,
-            domain: Dict[Text, Any],
+        self,
+        dispatcher: CollectingDispatcher,
+        tracker: Tracker,
+        domain: Dict[Text, Any],
     ) -> List[Dict[Text, Any]]:
         val = next(tracker.get_latest_entity_values("number"), None)
         if val:
@@ -1694,11 +1781,11 @@ class RateForm(FormAction):
         return {"rating": [self.from_entity(entity="number")]}
 
     def validate_rating(
-            self,
-            value: Text,
-            dispatcher: CollectingDispatcher,
-            tracker: Tracker,
-            domain: Dict[Text, Any],
+        self,
+        value: Text,
+        dispatcher: CollectingDispatcher,
+        tracker: Tracker,
+        domain: Dict[Text, Any],
     ) -> Optional[Dict[Text, Any]]:
         try:
             value = int(value)
@@ -1712,14 +1799,14 @@ class RateForm(FormAction):
             dispatcher.utter_message("Please enter a number.")
             return {"rating": None}
 
-    def submit(
-            self,
-            dispatcher: CollectingDispatcher,
-            tracker: Tracker,
-            domain: Dict[Text, Any],
+    async def submit(
+        self,
+        dispatcher: CollectingDispatcher,
+        tracker: Tracker,
+        domain: Dict[Text, Any],
     ) -> List[Dict]:
         rating = operator_interface.models.ConversationRating(
             sender_id=tracker.sender_id, rating=tracker.get_slot("rating")
         )
-        rating.save()
+        await sync_to_async(rating.save)()
         return []

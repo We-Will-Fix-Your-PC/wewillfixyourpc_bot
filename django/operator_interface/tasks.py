@@ -68,9 +68,9 @@ def send_message_notifications(data):
 def extract_entities_from_message(mid):
     message = models.Message.objects.get(id=mid)
 
-    r = requests.post(settings.RASA_HTTP_URL + "/model/parse", json={
-        "text": message.text
-    })
+    r = requests.post(
+        settings.RASA_HTTP_URL + "/model/parse", json={"text": message.text}
+    )
     r.raise_for_status()
     data = r.json()
 
@@ -78,7 +78,9 @@ def extract_entities_from_message(mid):
     message.save()
 
     for match in data.get("entities", []):
-        match_o = models.MessageEntity(message=message, entity=match["entity"], value=json.dumps(match["value"]))
+        match_o = models.MessageEntity(
+            message=message, entity=match["entity"], value=json.dumps(match["value"])
+        )
         match_o.save()
 
 
@@ -94,13 +96,20 @@ def process_message(mid):
         if conversation.agent_responding:
             return rasa_api.tasks.handle_message(mid)
         else:
-            if conversation.messages.filter(timestamp__gte=timezone.now() - timezone.timedelta(hours=24)).count() == 1:
+            if (
+                conversation.messages.filter(
+                    timestamp__gte=timezone.now() - timezone.timedelta(hours=24)
+                ).count()
+                == 1
+            ):
                 send_welcome_message.delay(conversation.id)
 
             admin_client = django_keycloak_auth.clients.get_keycloak_admin_client()
             if message.conversation.conversation_user_id:
                 try:
-                    user = admin_client.users.by_id(message.conversation.conversation_user_id).user
+                    user = admin_client.users.by_id(
+                        message.conversation.conversation_user_id
+                    ).user
                     name = f'{user.get("firstName", "")} {user.get("lastName", "")}'
                 except keycloak.exceptions.KeycloakClientError:
                     name = message.conversation.conversation_name

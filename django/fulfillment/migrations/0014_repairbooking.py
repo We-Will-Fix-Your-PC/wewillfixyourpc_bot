@@ -7,17 +7,31 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('fulfillment', '0013_auto_20190927_2012'),
+        ("fulfillment", "0013_auto_20190927_2012"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='RepairBooking',
+            name="RepairBooking",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('customer_id', models.CharField(max_length=255)),
-                ('time', models.DateTimeField()),
-                ('repair', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='fulfillment.Repair')),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("customer_id", models.CharField(max_length=255)),
+                ("time", models.DateTimeField()),
+                (
+                    "repair",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="fulfillment.Repair",
+                    ),
+                ),
             ],
         ),
     ]

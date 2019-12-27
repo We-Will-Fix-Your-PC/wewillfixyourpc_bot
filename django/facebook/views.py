@@ -3,7 +3,7 @@ from django.http import (
     HttpResponseForbidden,
     HttpResponseBadRequest,
     HttpResponseNotFound,
-    HttpResponseRedirect
+    HttpResponseRedirect,
 )
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
@@ -72,7 +72,9 @@ def webhook(request):
                 except Conversation.DoesNotExist:
                     return HttpResponseBadRequest()
                 try:
-                    state = models.AccountLinkingState.objects.get(id=acccount_linking.get("authorization_code"))
+                    state = models.AccountLinkingState.objects.get(
+                        id=acccount_linking.get("authorization_code")
+                    )
                 except models.AccountLinkingState.DoesNotExist:
                     return HttpResponseBadRequest()
                 if state.timestamp + datetime.timedelta(minutes=5) < timezone.now():
@@ -90,6 +92,4 @@ def account_linking(request):
     state = models.AccountLinkingState(user_id=request.user.username)
     state.save()
 
-    return HttpResponseRedirect(
-        f"{redirect_uri}&authorization_code={state.id}"
-    )
+    return HttpResponseRedirect(f"{redirect_uri}&authorization_code={state.id}")

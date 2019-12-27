@@ -6,13 +6,13 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('operator_interface', '0044_messageentity'),
+        ("operator_interface", "0044_messageentity"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='message',
-            name='guessed_intent',
+            model_name="message",
+            name="guessed_intent",
             field=models.CharField(blank=True, max_length=255, null=True),
         ),
     ]

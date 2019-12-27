@@ -217,4 +217,6 @@ def account_linking(request):
     message.save()
     operator_interface.tasks.process_message.delay(message.id)
 
-    return HttpResponse('<script type="text/javascript">window.close();</script><h1>You can now close this window</h1>')
+    return HttpResponse(
+        '<script type="text/javascript">window.close();</script><h1>You can now close this window</h1>'
+    )

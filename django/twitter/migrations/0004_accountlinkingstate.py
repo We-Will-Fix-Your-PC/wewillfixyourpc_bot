@@ -8,17 +8,31 @@ import uuid
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('operator_interface', '0044_messageentity'),
-        ('twitter', '0003_config_bearer_token'),
+        ("operator_interface", "0044_messageentity"),
+        ("twitter", "0003_config_bearer_token"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='AccountLinkingState',
+            name="AccountLinkingState",
             fields=[
-                ('id', models.UUIDField(default=uuid.uuid4, primary_key=True, serialize=False, unique=True)),
-                ('timestamp', models.DateTimeField(auto_now_add=True)),
-                ('conversation', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='operator_interface.Conversation')),
+                (
+                    "id",
+                    models.UUIDField(
+                        default=uuid.uuid4,
+                        primary_key=True,
+                        serialize=False,
+                        unique=True,
+                    ),
+                ),
+                ("timestamp", models.DateTimeField(auto_now_add=True)),
+                (
+                    "conversation",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="operator_interface.Conversation",
+                    ),
+                ),
             ],
         ),
     ]

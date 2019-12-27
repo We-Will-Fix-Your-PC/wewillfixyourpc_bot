@@ -33,15 +33,28 @@ emoji_pattern = re.compile(
 def process_inputs(inputs, conversation):
     outputs_l = []
     for i in inputs:
-        if i.get("intent") == "actions.intent.MAIN":
+        intent = i.get("intent")
+        if intent == "actions.intent.MAIN":
             outputs_l.append(
                 operator_interface.tasks.process_event.delay(conversation.id, "WELCOME")
             )
-        elif i.get("intent") == "actions.intent.CANCEL":
+        elif intent == "actions.intent.CANCEL":
             outputs_l.append(
                 operator_interface.tasks.process_event.delay(conversation.id, "end")
             )
-        elif i.get("intent") == "actions.intent.TEXT":
+        elif intent == "actions.intent.OPTION":
+            arguments = i.get("arguments", {})
+            option = next(
+                a["textValue"] for a in arguments if a.get("name") == "OPTION"
+            )
+            if option.startswith("SELECTION_NUM_"):
+                num = option[len("SELECTION_NUM_") :]
+                outputs_l.append(
+                    operator_interface.tasks.process_event.delay(
+                        conversation.id, f'resolve_entity{{"number": "{num}"}}'
+                    )
+                )
+        elif intent == "actions.intent.TEXT":
             arguments = i.get("arguments", {})
             text = next(a["textValue"] for a in arguments if a.get("name") == "text")
             message_m = Message(
@@ -54,7 +67,7 @@ def process_inputs(inputs, conversation):
             outputs_l.append(
                 operator_interface.tasks.process_message.delay(message_m.id)
             )
-        elif i.get("intent") == "actions.intent.SIGN_IN":
+        elif intent == "actions.intent.SIGN_IN":
             arguments = i.get("arguments", {})
             status = next(
                 a["extension"] for a in arguments if a.get("name") == "SIGN_IN"
@@ -77,7 +90,7 @@ def process_inputs(inputs, conversation):
                         conversation.id, "sign_in"
                     )
                 )
-        elif i.get("intent") == "actions.intent.NEW_SURFACE":
+        elif intent == "actions.intent.NEW_SURFACE":
             arguments = i.get("arguments", {})
             status = next(
                 a["extension"] for a in arguments if a.get("name") == "NEW_SURFACE"
@@ -98,7 +111,7 @@ def process_inputs(inputs, conversation):
     return outputs_l
 
 
-def process_outputs(outputs_l, is_guest_user, user_id_token, conversation):
+def process_outputs(outputs_l, is_guest_user, conversation):
     outputs_l = [o.get() for o in outputs_l]
     outputs = []
     for o in outputs_l:
@@ -112,7 +125,7 @@ def process_outputs(outputs_l, is_guest_user, user_id_token, conversation):
 
     if last_output.request == "sign_in":
         if not is_guest_user:
-            if not user_id_token:
+            if not conversation.conversation_user_id:
                 possible_intents.append(
                     {
                         "intent": "actions.intent.SIGN_IN",
@@ -137,7 +150,6 @@ def process_outputs(outputs_l, is_guest_user, user_id_token, conversation):
                         )
                     ],
                     is_guest_user,
-                    user_id_token,
                     conversation,
                 )
         else:
@@ -170,6 +182,37 @@ def process_outputs(outputs_l, is_guest_user, user_id_token, conversation):
                     "capabilities": ["actions.capability.WEB_BROWSER"],
                     "context": emoji_pattern.sub(r"", messages),
                     "notificationTitle": "Continue with We Will Fix Your PC here!",
+                },
+            }
+        )
+    elif last_output.selection:
+        selection = json.loads(last_output.selection)
+        responses.append(
+            {
+                "simpleResponse": {
+                    "textToSpeech": emoji_pattern.sub(r"", messages),
+                    "displayText": messages,
+                }
+            }
+        )
+        possible_intents.append(
+            {
+                "intent": "actions.intent.OPTION",
+                "inputValueData": {
+                    "@type": "type.googleapis.com/google.actions.v2.OptionValueSpec",
+                    "listSelect": {
+                        "title": selection.get("title"),
+                        "items": [
+                            {
+                                "optionInfo": {
+                                    "key": f"SELECTION_NUM_{i + 1}",
+                                    "synonyms": [],
+                                },
+                                "title": item.get("title"),
+                            }
+                            for i, item in enumerate(selection.get("items", []))
+                        ],
+                    },
                 },
             }
         )
@@ -311,11 +354,15 @@ def webhook(request):
                 first_name=user_id_token.get("given_name"),
                 last_name=user_id_token.get("family_name"),
                 required_actions=["UPDATE_PROFILE"],
-                profile_picture=profile_pic
+                profile_picture=profile_pic,
             )
             if user:
-                django_keycloak_auth.users.user_required_actions(user.get("id"), ["UPDATE_PROFILE"])
-                django_keycloak_auth.users.link_roles_to_user(user.get("id"), ["customer"])
+                django_keycloak_auth.users.user_required_actions(
+                    user.get("id"), ["UPDATE_PROFILE"]
+                )
+                django_keycloak_auth.users.link_roles_to_user(
+                    user.get("id"), ["customer"]
+                )
                 conversation.conversation_user_id = user.get("id")
                 conversation.save()
 
@@ -333,7 +380,7 @@ def webhook(request):
                 last_name=user_id_token.get("family_name"),
                 email=user_id_token.get("email"),
                 email_verified=user_id_token.get("email_verified", True),
-                profile_picture=profile_pic
+                profile_picture=profile_pic,
             )
 
         if profile_pic:
@@ -351,7 +398,7 @@ def webhook(request):
         conversation.save()
 
     possible_intents, responses, last_output = process_outputs(
-        process_inputs(inputs, conversation), is_guest_user, user_id_token, conversation
+        process_inputs(inputs, conversation), is_guest_user, conversation
     )
 
     response = {

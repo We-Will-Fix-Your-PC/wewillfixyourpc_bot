@@ -77,8 +77,8 @@ def handle_facebook_message(psid: dict, message: dict) -> None:
                                     message_id=mid,
                                     direction=Message.FROM_CUSTOMER,
                                     text=f'<a href="{fs.base_url + file_name}" target="_blank">'
-                                         f"{orig_file_name}"
-                                         f"</a>",
+                                    f"{orig_file_name}"
+                                    f"</a>",
                                 )
                                 message_m.save()
                                 operator_interface.tasks.send_message_to_interface.delay(
@@ -214,8 +214,7 @@ def update_facebook_profile(psid: str, cid: int) -> None:
             return False
 
         user = django_keycloak_auth.users.get_or_create_user(
-            federated_provider="facebook",
-            check_federated_user=check_asid_with_psid,
+            federated_provider="facebook", check_federated_user=check_asid_with_psid,
         )
         if user:
             django_keycloak_auth.users.link_roles_to_user(user.get("id"), ["customer"])
@@ -226,14 +225,14 @@ def update_facebook_profile(psid: str, cid: int) -> None:
             str(conversation.conversation_user_id),
             first_name=first_name,
             last_name=last_name,
-            force_update=False
+            force_update=False,
         )
         django_keycloak_auth.users.update_user(
             str(conversation.conversation_user_id),
             gender=gender,
             locale=locale,
             timezone=user_timezone,
-            force_update=True
+            force_update=True,
         )
 
     conversation.save()
@@ -276,7 +275,7 @@ def send_facebook_message(mid: int) -> None:
                     json={
                         "name": message.user.first_name,
                         "profile_picture_url": settings.EXTERNAL_URL_BASE
-                                               + reverse("operator:profile_pic", args=[message.user.id]),
+                        + reverse("operator:profile_pic", args=[message.user.id]),
                     },
                 )
                 if persona_r.status_code == 200:
@@ -314,8 +313,9 @@ def send_facebook_message(mid: int) -> None:
 
     # TODO: Integrate with new system
     if message.payment_request:
-        magic_key = django_keycloak_auth.users.get_user_magic_key(message.conversation.conversation_user_id, 86400)\
-            .get('key')
+        magic_key = django_keycloak_auth.users.get_user_magic_key(
+            message.conversation.conversation_user_id, 86400
+        ).get("key")
         request_body["message"]["attachment"] = {
             "type": "template",
             "payload": {
@@ -324,8 +324,8 @@ def send_facebook_message(mid: int) -> None:
                 "buttons": [
                     {
                         "type": "web_url",
-                        "url": settings.PAYMENT_EXTERNAL_URL +
-                               f"/payment/fb/{message.payment_request}/?key={magic_key}",
+                        "url": settings.PAYMENT_EXTERNAL_URL
+                        + f"/payment/fb/{message.payment_request}/?key={magic_key}",
                         "title": "Pay",
                         "webview_height_ratio": "tall",
                         "messenger_extensions": True,
@@ -410,7 +410,8 @@ def send_facebook_message(mid: int) -> None:
                 "buttons": [
                     {
                         "type": "account_link",
-                        "url": settings.EXTERNAL_URL_BASE + reverse("facebook:account_linking"),
+                        "url": settings.EXTERNAL_URL_BASE
+                        + reverse("facebook:account_linking"),
                     }
                 ],
             },

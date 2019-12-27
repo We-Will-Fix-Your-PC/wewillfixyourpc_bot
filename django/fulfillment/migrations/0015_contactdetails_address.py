@@ -6,14 +6,14 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('fulfillment', '0014_repairbooking'),
+        ("fulfillment", "0014_repairbooking"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='contactdetails',
-            name='address',
-            field=models.TextField(default=''),
+            model_name="contactdetails",
+            name="address",
+            field=models.TextField(default=""),
             preserve_default=False,
         ),
     ]

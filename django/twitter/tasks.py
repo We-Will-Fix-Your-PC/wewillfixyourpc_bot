@@ -39,7 +39,9 @@ def handle_twitter_message(mid: str, psid, message, user):
                 first_name=user.get("name"),
             )
             if kc_user:
-                django_keycloak_auth.users.link_roles_to_user(kc_user.get("id"), ["customer"])
+                django_keycloak_auth.users.link_roles_to_user(
+                    kc_user.get("id"), ["customer"]
+                )
                 conversation.conversation_user_id = kc_user.get("id")
                 conversation.save()
 
@@ -52,8 +54,7 @@ def handle_twitter_message(mid: str, psid, message, user):
             )
 
             django_keycloak_auth.users.update_user(
-                conversation.conversation_user_id,
-                first_name=user.get("name"),
+                conversation.conversation_user_id, first_name=user.get("name"),
             )
 
         if not Message.message_exits(conversation, mid):
@@ -206,7 +207,9 @@ def send_twitter_message(mid: int):
             {
                 "type": "web_url",
                 "label": "Log in",
-                "url": settings.EXTERNAL_URL_BASE + reverse("twitter:account_linking") + f"?state={state.id}",
+                "url": settings.EXTERNAL_URL_BASE
+                + reverse("twitter:account_linking")
+                + f"?state={state.id}",
             }
         ]
     else:

@@ -61,7 +61,9 @@ def form(request, form_type, form_id):
                     "first_name": user.user.get("firstName"),
                     "last_name": user.user.get("lastName"),
                     "email": user.user.get("email"),
-                    "phone": next(iter(user.user.get("attributes", {}).get("phone", [])), ""),
+                    "phone": next(
+                        iter(user.user.get("attributes", {}).get("phone", [])), ""
+                    ),
                 }
             )
 

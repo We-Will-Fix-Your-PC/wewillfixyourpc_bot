@@ -3,6 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/../django-keycloak-auth/.idea/django-keycloak-auth.iml" filepath="$PROJECT_DIR$/../django-keycloak-auth/.idea/django-keycloak-auth.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../rasa-sdk/.idea/rasa-sdk.iml" filepath="$PROJECT_DIR$/../rasa-sdk/.idea/rasa-sdk.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/wewillfixyourpc_bot.iml" filepath="$PROJECT_DIR$/.idea/wewillfixyourpc_bot.iml" />
     </modules>
   </component>

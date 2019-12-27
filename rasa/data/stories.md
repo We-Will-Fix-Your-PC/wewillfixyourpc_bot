@@ -41,8 +41,6 @@
    - utter_anything_else
 * repair
     - repair_form
-    - form{"name": "repair_form"}
-    - form{"name": null}
     - repair
 > repairable
 
@@ -62,8 +60,6 @@
   - greet
 * repair
     - repair_form
-    - form{"name": "repair_form"}
-    - form{"name": null}
     - repair
 > repairable
 
@@ -206,14 +202,14 @@
 
 ## repairable
 > repairable
-    - slot{"repairable": false}
+    - slot{"repairable": true}
     - utter_ask_book
 * deny
 > anything_else
 
 ## repairable
 > repairable
-    - slot{"repairable": false}
+    - slot{"repairable": true}
     - utter_ask_book
 * affirm
 > repair_book

@@ -152,14 +152,12 @@ def get_repairs(request, model):
                     "repair": {
                         "id": u.repair.id,
                         "name": u.repair.name,
-                        "display_name": u.repair.display_name
+                        "display_name": u.repair.display_name,
                     },
                     "price": str(u.price),
                     "time": u.repair_time,
                 }
-                for u in fulfillment.models.Repair.objects.filter(
-                    device_id=model
-                )
+                for u in fulfillment.models.Repair.objects.filter(device_id=model)
             ]
         ),
         content_type="application/json",
@@ -172,8 +170,6 @@ def get_open(request):
     time = dateutil.parser.isoparse(time)
 
     return HttpResponse(
-        json.dumps({
-            "open": rasa_api.actions.is_open_at(time.date(), time.time())
-        }),
+        json.dumps({"open": rasa_api.actions.is_open_at(time.date(), time.time())}),
         content_type="application/json",
     )

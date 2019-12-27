@@ -24,24 +24,33 @@ channel_layer = get_channel_layer()
 
 
 @receiver(post_save, sender=operator_interface.models.Conversation)
-def conversation_saved(sender, instance: operator_interface.models.Conversation, **kwargs):
-    transaction.on_commit(lambda: async_to_sync(channel_layer.group_send)(
-        "operator_interface", {"type": "conversation_update", "cid": instance.id}
-    ))
+def conversation_saved(
+    sender, instance: operator_interface.models.Conversation, **kwargs
+):
+    transaction.on_commit(
+        lambda: async_to_sync(channel_layer.group_send)(
+            "operator_interface", {"type": "conversation_update", "cid": instance.id}
+        )
+    )
 
 
 @receiver(post_save, sender=operator_interface.models.Message)
 def message_saved(sender, instance: operator_interface.models.Message, **kwargs):
-    transaction.on_commit(lambda: async_to_sync(channel_layer.group_send)(
-        "operator_interface", {"type": "message_update", "mid": instance.id}
-    ))
+    transaction.on_commit(
+        lambda: async_to_sync(channel_layer.group_send)(
+            "operator_interface", {"type": "message_update", "mid": instance.id}
+        )
+    )
 
 
 @receiver(post_save, sender=fulfillment.models.RepairBooking)
 def repair_booking_saved(sender, instance: operator_interface.models.Message, **kwargs):
-    transaction.on_commit(lambda: async_to_sync(channel_layer.group_send)(
-        "operator_interface", {"type": "repair_booking_update", "bid": instance.id}
-    ))
+    transaction.on_commit(
+        lambda: async_to_sync(channel_layer.group_send)(
+            "operator_interface", {"type": "repair_booking_update", "bid": instance.id}
+        )
+    )
+
 
 # TODO: Integrate with new system
 # @receiver(post_save, sender=payment.models.Payment)
@@ -100,10 +109,14 @@ class OperatorConsumer(JsonWebsocketConsumer):
             return
 
         self.accept()
-        async_to_sync(self.channel_layer.group_add)("operator_interface", self.channel_name)
+        async_to_sync(self.channel_layer.group_add)(
+            "operator_interface", self.channel_name
+        )
 
     def disconnect(self, close_code):
-        async_to_sync(self.channel_layer.group_discard)("operator_interface", self.channel_name)
+        async_to_sync(self.channel_layer.group_discard)(
+            "operator_interface", self.channel_name
+        )
 
     def send_message(self, message: operator_interface.models.Message):
         self.send_json(
@@ -116,8 +129,12 @@ class OperatorConsumer(JsonWebsocketConsumer):
                 "image": message.image,
                 "read": message.read,
                 "delivered": message.delivered,
-                "payment_request": str(message.payment_request) if message.payment_request else None,
-                "payment_confirm": str(message.payment_confirm) if message.payment_confirm else None,
+                "payment_request": str(message.payment_request)
+                if message.payment_request
+                else None,
+                "payment_confirm": str(message.payment_confirm)
+                if message.payment_confirm
+                else None,
                 "conversation_id": message.conversation.id,
                 "request": message.request,
                 "sent_by": message.user.first_name if message.user else None,
@@ -130,36 +147,36 @@ class OperatorConsumer(JsonWebsocketConsumer):
                 "type": "message_entities",
                 "id": message.id,
                 "guessed_intent": message.guessed_intent,
-                "entities": [{
-                    "entity": e.entity,
-                    "value": e.value,
-                } for e in message.messageentity_set.all()]
+                "entities": [
+                    {"entity": e.entity, "value": e.value,}
+                    for e in message.messageentity_set.all()
+                ],
             }
         )
 
     def send_error(self, error: str):
-        self.send_json(
-            {
-                "type": "error",
-                "msg": error
-            }
-        )
+        self.send_json({"type": "error", "msg": error})
 
-    def send_conversation(
-            self, conversation: operator_interface.models.Conversation
-    ):
+    def send_conversation(self, conversation: operator_interface.models.Conversation):
         pic = settings.STATIC_URL + "operator_interface/img/default_profile_normal.png"
         if conversation.conversation_pic:
             pic = conversation.conversation_pic.url
 
         if conversation.conversation_user_id:
-            bookings = fulfillment.models.RepairBooking.objects.filter(customer_id=conversation.conversation_user_id)
+            bookings = fulfillment.models.RepairBooking.objects.filter(
+                customer_id=conversation.conversation_user_id
+            )
             try:
-                user = django_keycloak_auth.users.get_user_by_id(str(conversation.conversation_user_id)).user
+                user = django_keycloak_auth.users.get_user_by_id(
+                    str(conversation.conversation_user_id)
+                ).user
             except keycloak.exceptions.KeycloakClientError:
                 user = {}
         else:
-            user = {"name": conversation.conversation_name, "attributes": {"profile_picture": [pic]}}
+            user = {
+                "name": conversation.conversation_name,
+                "attributes": {"profile_picture": [pic]},
+            }
             bookings = []
 
         first_name = user.get("firstName", "")
@@ -185,7 +202,8 @@ class OperatorConsumer(JsonWebsocketConsumer):
                 "id": conversation.id,
                 "agent_responding": conversation.agent_responding,
                 "current_user_responding": conversation.current_agent.id == self.user.id
-                if conversation.current_agent else False,
+                if conversation.current_agent
+                else False,
                 "platform": conversation.platform,
                 "customer_name": user.get("name", f"{first_name} {last_name}"),
                 "customer_first_name": first_name,
@@ -212,13 +230,16 @@ class OperatorConsumer(JsonWebsocketConsumer):
                 "state": payment.state,
                 "payment_method": payment.payment_method,
                 "total": str(payment.total),
-                "items": [{
-                    "item_type": payment_item.item_type,
-                    "item_data": payment_item.item_data,
-                    "title": payment_item.title,
-                    "quantity": payment_item.quantity,
-                    "price": str(payment_item.price),
-                } for payment_item in payment.items],
+                "items": [
+                    {
+                        "item_type": payment_item.item_type,
+                        "item_data": payment_item.item_data,
+                        "title": payment_item.title,
+                        "quantity": payment_item.quantity,
+                        "price": str(payment_item.price),
+                    }
+                    for payment_item in payment.items
+                ],
             }
         )
 
@@ -235,7 +256,7 @@ class OperatorConsumer(JsonWebsocketConsumer):
                     "repair": {
                         "id": booking.repair.repair.id,
                         "name": booking.repair.repair.name,
-                        "display_name": booking.repair.repair.display_name
+                        "display_name": booking.repair.repair.display_name,
                     },
                     "device": {
                         "id": booking.repair.device.id,
@@ -245,9 +266,9 @@ class OperatorConsumer(JsonWebsocketConsumer):
                             "id": booking.repair.device.brand.id,
                             "name": booking.repair.device.brand.name,
                             "display_name": booking.repair.device.brand.display_name,
-                        }
-                    }
-                }
+                        },
+                    },
+                },
             }
         )
 
@@ -290,13 +311,16 @@ class OperatorConsumer(JsonWebsocketConsumer):
             payment_id = payment.create_payment(
                 settings.DEFAULT_PAYMENT_ENVIRONMENT,
                 conversation.conversation_user_id,
-                [payment.PaymentItem(
-                    item_type=item["item_type"],
-                    item_data=item["item_data"],
-                    title=item["title"],
-                    quantity=item["quantity"],
-                    price=item["price"],
-                ) for item in items]
+                [
+                    payment.PaymentItem(
+                        item_type=item["item_type"],
+                        item_data=item["item_data"],
+                        title=item["title"],
+                        quantity=item["quantity"],
+                        price=item["price"],
+                    )
+                    for item in items
+                ],
             )
         except payment.PaymentException:
             self.send_error("There was an error creating the payment")
@@ -319,9 +343,7 @@ class OperatorConsumer(JsonWebsocketConsumer):
         print(time)
 
         m = fulfillment.models.RepairBooking(
-            customer_id=conversation.conversation_user_id,
-            repair_id=rid,
-            time=time
+            customer_id=conversation.conversation_user_id, repair_id=rid, time=time
         )
         self.save_object(m)
 
@@ -338,7 +360,9 @@ class OperatorConsumer(JsonWebsocketConsumer):
                 self.send_error("Invalid phone number")
                 return None
             else:
-                phone = phonenumbers.format_number(phone, phonenumbers.PhoneNumberFormat.E164)
+                phone = phonenumbers.format_number(
+                    phone, phonenumbers.PhoneNumberFormat.E164
+                )
                 return {"phone": phone}
         elif attribute == "first-name":
             return {"first_name": value.get("value")}
@@ -347,22 +371,31 @@ class OperatorConsumer(JsonWebsocketConsumer):
         elif attribute == "email":
             return value.get("value")
 
-    def attribute_update(self, conversation: operator_interface.models.Conversation, attribute: str, value: str):
+    def attribute_update(
+        self,
+        conversation: operator_interface.models.Conversation,
+        attribute: str,
+        value: str,
+    ):
         value = json.loads(value)
         if conversation.conversation_user_id:
             attr = self.decode_attribute(attribute, value)
             if attr:
-                django_keycloak_auth.users.update_user(conversation.conversation_user_id, force_update=True, **attr)
+                django_keycloak_auth.users.update_user(
+                    conversation.conversation_user_id, force_update=True, **attr
+                )
                 self.send_conversation(conversation)
         elif attribute != "email":
-            self.send_error("No user account is currently associated with this conversation, "
-                                  "please set an email first")
+            self.send_error(
+                "No user account is currently associated with this conversation, "
+                "please set an email first"
+            )
         else:
             attr = self.decode_attribute(attribute, value)
             user = django_keycloak_auth.users.get_or_create_user(
                 email=attr,
                 first_name=conversation.conversation_name,
-                required_actions=["UPDATE_PASSWORD", "UPDATE_PROFILE", "VERIFY_EMAIL"]
+                required_actions=["UPDATE_PASSWORD", "UPDATE_PROFILE", "VERIFY_EMAIL"],
             )
 
             if user.get("new"):

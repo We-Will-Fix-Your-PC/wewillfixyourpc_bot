@@ -5,7 +5,9 @@ from django.contrib.auth.models import User
 
 
 class UserProfile(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='userprofile')
+    user = models.OneToOneField(
+        User, on_delete=models.CASCADE, related_name="userprofile"
+    )
     picture = models.ImageField()
     fb_persona_id = models.CharField(max_length=255, blank=True, null=True)
 
@@ -63,7 +65,12 @@ class Conversation(models.Model):
 
     @classmethod
     def get_or_create_conversation(
-        cls, platform, platform_id, conversation_name=None, conversation_pic=None, agent_responding=True
+        cls,
+        platform,
+        platform_id,
+        conversation_name=None,
+        conversation_pic=None,
+        agent_responding=True,
     ):
         try:
             conv = cls.objects.get(platform=platform, platform_id=platform_id)
@@ -79,7 +86,7 @@ class Conversation(models.Model):
                 platform_id=platform_id,
                 conversation_name=conversation_name,
                 conversation_pic=conversation_pic,
-                agent_responding=agent_responding
+                agent_responding=agent_responding,
             )
             conv.save()
             return conv
@@ -103,7 +110,9 @@ class Message(models.Model):
     FROM_CUSTOMER = "O"
     DIRECTION_CHOICES = ((TO_CUSTOMER, "To customer"), (FROM_CUSTOMER, "From customer"))
 
-    conversation = models.ForeignKey(Conversation, on_delete=models.CASCADE, related_name='messages')
+    conversation = models.ForeignKey(
+        Conversation, on_delete=models.CASCADE, related_name="messages"
+    )
     message_id = models.CharField(max_length=255)
     direction = models.CharField(max_length=1, choices=DIRECTION_CHOICES)
     text = models.TextField(blank=True, default="")
