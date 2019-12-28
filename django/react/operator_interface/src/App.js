@@ -177,6 +177,10 @@ class MessageData {
         return this.load() ? this.data.delivered : false;
     }
 
+    get end() {
+        return this.load() ? this.data.end : false;
+    }
+
     get request() {
         return this.load() ? this.data.request: null;
     }
@@ -194,11 +198,12 @@ class MessageData {
     }
 
     get entities() {
-        if (typeof this.app.state.message_entities[this.id] === "undefined") {
-            return new MessageEntitiesData(this.id, null, this.app);
-        } else {
-            return this.app.state.message_entities[this.id];
-        }
+        console.log(this.data);
+        return this.load() ? this.data.entities.map(e => new MessageEntityData(e)) : [];
+    }
+
+    get guessed_intent() {
+        return this.load() ? this.data.guessed_intent : null;
     }
 
     get_payment(p) {
@@ -207,40 +212,6 @@ class MessageData {
         } else {
             return this.app.state.payments[p];
         }
-    }
-}
-
-class MessageEntitiesData {
-    constructor(id, data, app) {
-        this.id = id;
-        this.data = data;
-        this.app = app;
-    }
-
-    isLoaded() {
-        return this.data !== null;
-    }
-
-    load() {
-        if (!this.isLoaded()) {
-            if (this.app.pending_message_entities.indexOf(this.id) === -1) {
-                this.app.sock.send(JSON.stringify({
-                    type: "getMessageEntities",
-                    id: this.id
-                }));
-                this.app.pending_message_entities.push(this.id);
-            }
-            return false;
-        }
-        return true;
-    }
-
-    get entities() {
-        return this.load() ? this.data.entities.map(e => new MessageEntityData(e)) : [];
-    }
-
-    get guessed_intent() {
-        return this.load() ? this.data.guessed_intent : null;
     }
 }
 
@@ -456,13 +427,11 @@ class App extends Component {
             selectedCid: null,
             conversations: {},
             messages: {},
-            message_entities: {},
             payments: {},
             bookings: {},
         };
 
         this.pending_messages = [];
-        this.pending_message_entities = [];
         this.pending_payments = [];
         this.pending_bookings = [];
 
@@ -505,16 +474,6 @@ class App extends Component {
             this.setState({
                 messages: messages,
                 lastMessage: data.timestamp
-            });
-        } else if (data.type === "message_entities") {
-            const message_entities = this.state.message_entities;
-            message_entities[data.id] = new MessageEntitiesData(data.id, data, this);
-            let p_index = this.pending_message_entities.indexOf(data.id);
-            if (p_index > -1) {
-                this.pending_message_entities.splice(p_index, 1);
-            }
-            this.setState({
-                message_entities: message_entities
             });
         } else if (data.type === "conversation") {
             const conversations = this.state.conversations;
@@ -559,12 +518,6 @@ class App extends Component {
             this.sock.send(JSON.stringify({
                 type: "getMessage",
                 id: m
-            }));
-        });
-        this.pending_message_entities.forEach(e => {
-            this.sock.send(JSON.stringify({
-                type: "getMessagEntity",
-                id: e
             }));
         });
         this.pending_payments.forEach(p => {

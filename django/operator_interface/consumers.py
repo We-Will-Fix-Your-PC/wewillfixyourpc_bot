@@ -138,19 +138,12 @@ class OperatorConsumer(JsonWebsocketConsumer):
                 "conversation_id": message.conversation.id,
                 "request": message.request,
                 "sent_by": message.user.first_name if message.user else None,
-            }
-        )
-
-    def send_message_entities(self, message: operator_interface.models.Message):
-        self.send_json(
-            {
-                "type": "message_entities",
-                "id": message.id,
+                "end": message.end,
                 "guessed_intent": message.guessed_intent,
                 "entities": [
                     {"entity": e.entity, "value": e.value,}
                     for e in message.messageentity_set.all()
-                ],
+                ]
             }
         )
 
@@ -428,13 +421,6 @@ class OperatorConsumer(JsonWebsocketConsumer):
             try:
                 msg = self.get_message(msg_id)
                 self.send_message(msg)
-            except operator_interface.models.Message.DoesNotExist:
-                pass
-        elif message["type"] == "getMessageEntities":
-            mid = message["id"]
-            try:
-                msg = self.get_message(mid)
-                self.send_message_entities(msg)
             except operator_interface.models.Message.DoesNotExist:
                 pass
         elif message["type"] == "getConversation":

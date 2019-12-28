@@ -262,6 +262,7 @@ class ActionRequestHuman(Action):
                     },
                 }
             )
+            dispatcher.utter_custom_json({"type": "restart"})
 
         return []
 
@@ -338,22 +339,23 @@ class ActionUpdateInfoSlots(Action):
                 if email:
                     out.append(rasa_sdk.events.SlotSet("email", email))
 
-        out.extend(
-            [
-                rasa_sdk.events.SlotSet(
-                    "instant_response_required", capabilities.instant_response_required
-                ),
-                rasa_sdk.events.SlotSet(
-                    "sign_in_supported", capabilities.supports_sign_in
-                ),
-                rasa_sdk.events.SlotSet(
-                    "input_supported", capabilities.input_supported
-                ),
-                rasa_sdk.events.SlotSet(
-                    "highest_input_supported", capabilities.highest_input_supported
-                ),
-            ]
-        )
+        if capabilities:
+            out.extend(
+                [
+                    rasa_sdk.events.SlotSet(
+                        "instant_response_required", capabilities.instant_response_required
+                    ),
+                    rasa_sdk.events.SlotSet(
+                        "sign_in_supported", capabilities.supports_sign_in
+                    ),
+                    rasa_sdk.events.SlotSet(
+                        "input_supported", capabilities.input_supported
+                    ),
+                    rasa_sdk.events.SlotSet(
+                        "highest_input_supported", capabilities.highest_input_supported
+                    ),
+                ]
+            )
 
         return out
 

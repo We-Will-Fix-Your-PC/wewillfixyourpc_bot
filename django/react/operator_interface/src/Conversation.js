@@ -160,7 +160,7 @@ export default class Conversation extends Component {
                                                 dangerouslySetInnerHTML={{__html: m.text.replace(/\n/g, "<br />")}}/> : (
                                                 m.image ? <img src={m.image} alt=""/> : null
                                             )}
-                                        {m.entities.entities
+                                        {m.entities
                                             .filter(e => typeof entity_map[e.entity] !== "undefined")
                                             .map((entity, i) => (
                                                 <span className="entity" key={i} onClick={() => this.openEntityDialog(entity)}>
