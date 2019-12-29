@@ -47,14 +47,14 @@ def handle_twitter_message(mid: str, psid, message, user):
 
         if conversation.conversation_user_id:
             django_keycloak_auth.users.link_federated_identity_if_not_exists(
-                conversation.conversation_user_id,
+                str(conversation.conversation_user_id),
                 federated_provider="twitter",
                 federated_user_id=user.get("id"),
                 federated_user_name=user.get("screen_name"),
             )
 
             django_keycloak_auth.users.update_user(
-                conversation.conversation_user_id, first_name=user.get("name"),
+                str(conversation.conversation_user_id), first_name=user.get("name"),
             )
 
         if not Message.message_exits(conversation, mid):
@@ -90,13 +90,16 @@ def handle_twitter_message(mid: str, psid, message, user):
         )
         r = requests.get(user["profile_image_url_https"])
         if r.status_code == 200:
-            conversation.conversation_pic = InMemoryUploadedFile(
+            conversation.conversation_pic.save(file_name, InMemoryUploadedFile(
                 file=BytesIO(r.content),
                 size=len(r.content),
                 charset=r.encoding,
                 content_type=r.headers.get("content-type"),
                 field_name=file_name,
                 name=file_name,
+            ))
+            django_keycloak_auth.users.update_user(
+                str(conversation.conversation_user_id), profile_picture=conversation.conversation_pic.url
             )
             conversation.save()
 

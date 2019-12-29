@@ -194,14 +194,14 @@ def update_facebook_profile(psid: str, cid: int) -> None:
 
     pic_r = requests.get(profile_pic)
     if pic_r.status_code == 200:
-        conversation.conversation_pic = InMemoryUploadedFile(
+        conversation.conversation_pic.save(psid, InMemoryUploadedFile(
             file=BytesIO(pic_r.content),
             size=len(pic_r.content),
             charset=pic_r.encoding,
             content_type=pic_r.headers.get("content-type"),
             field_name=psid,
             name=psid,
-        )
+        ))
     conversation.conversation_name = name
 
     if not conversation.conversation_user_id:
@@ -220,6 +220,8 @@ def update_facebook_profile(psid: str, cid: int) -> None:
             django_keycloak_auth.users.link_roles_to_user(user.get("id"), ["customer"])
             conversation.conversation_user_id = user.get("id")
 
+    conversation.save()
+
     if conversation.conversation_user_id:
         django_keycloak_auth.users.update_user(
             str(conversation.conversation_user_id),
@@ -227,6 +229,12 @@ def update_facebook_profile(psid: str, cid: int) -> None:
             last_name=last_name,
             force_update=False,
         )
+        if conversation.conversation_pic:
+            django_keycloak_auth.users.update_user(
+                str(conversation.conversation_user_id),
+                profile_pictrue=conversation.conversation_pic.url,
+                force_update=False,
+            )
         django_keycloak_auth.users.update_user(
             str(conversation.conversation_user_id),
             gender=gender,
@@ -234,8 +242,6 @@ def update_facebook_profile(psid: str, cid: int) -> None:
             timezone=user_timezone,
             force_update=True,
         )
-
-    conversation.save()
 
 
 @shared_task
