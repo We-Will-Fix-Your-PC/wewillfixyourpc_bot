@@ -181,6 +181,14 @@ class MessageData {
         return this.load() ? this.data.end : false;
     }
 
+    get selection() {
+        return this.load() ? (this.data.selection ? JSON.parse(this.data.selection) : null) : false;
+    }
+
+    get card() {
+        return this.load() ? (this.data.card ? JSON.parse(this.data.card) : null) : false;
+    }
+
     get request() {
         return this.load() ? this.data.request: null;
     }

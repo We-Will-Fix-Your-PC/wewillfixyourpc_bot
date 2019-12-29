@@ -16,6 +16,9 @@ export const entity_map = {
 
 export const request_map = {
     "sign_in": "login",
+    "confirmation": "confirmation",
+    "phone": "phone number",
+    "time": "date and time",
 };
 
 export const a_or_an = (word) => {
@@ -153,7 +156,11 @@ export default class Conversation extends Component {
                             }
 
                             out.push(<div key={i * 2} data-msg-id={m.id}>
-                                {m.isLoaded() ?
+                                {m.isLoaded() ? m.end ?
+                                    <span>
+                                        <span>Session end</span>
+                                    </span>
+                                    :
                                     <div className={"dir-" + m.direction}>
                                         {m.text ?
                                             <div
@@ -169,13 +176,24 @@ export default class Conversation extends Component {
                                             ))
                                         }
                                         {m.request ?
-                                            <span>{request_map[m.request]} request</span> : null
+                                            <span>Request for {request_map[m.request]}</span> : null
                                         }
                                         {m.payment_request ?
                                             <span>Payment request for: {m.payment_request.id}</span> : null
                                         }
                                         {m.payment_confirm ?
                                             <span>Payment receipt for: {m.payment_confirm.id}</span> : null
+                                        }
+                                        {m.selection ?
+                                            <div>
+                                                Selection:
+                                                <h3>{m.selection.title}</h3>
+                                                <ul>
+                                                    {m.selection.items.map((item, i) => (
+                                                        <li key={i}>{item.title}</li>
+                                                    ))}
+                                                </ul>
+                                            </div> : null
                                         }
                                         <span>{dateformat(d, "h:MM TT")}</span>
                                         {m.sent_by ?
