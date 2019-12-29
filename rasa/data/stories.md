@@ -41,6 +41,8 @@
    - utter_anything_else
 * repair
     - repair_form
+    - form{"name": "repair_form"}
+    - form{"name": null}
     - repair
 > repairable
 
@@ -60,6 +62,8 @@
   - greet
 * repair
     - repair_form
+    - form{"name": "repair_form"}
+    - form{"name": null}
     - repair
 > repairable
 
@@ -69,6 +73,13 @@
   - greet
 * end
 > end
+
+## greet human
+* greet
+  - update_info_slots
+  - greet
+* request_human
+> need_help
 
 ## end
 * end
@@ -257,6 +268,8 @@
 > repair_book_3
    - slot{"repairable": true}
    - repair_book_form
+   - form{"name": "repair_book_form"}
+   - form{"name": null}
 > anything_else
 
 ## not repairable
@@ -372,7 +385,6 @@
 
 ## interactive_story_3
 * greet
-    - action_deactivate_form
     - update_info_slots
     - greet
 * greet
@@ -406,7 +418,6 @@
 
 ## interactive_story_1
 * greet
-    - action_deactivate_form
     - update_info_slots
     - greet
 * support_opening_hours

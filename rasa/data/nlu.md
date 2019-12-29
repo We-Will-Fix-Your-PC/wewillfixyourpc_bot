@@ -48,14 +48,6 @@
 - confirm
 - absolutely
 - Yes
-- Yes
-- Yes
-- Yes
-- Yes
-- Yes
-- Yes
-- Yes
-- Yes
 
 ## intent:ask_history
 - can you share your boss with me?
@@ -105,6 +97,7 @@
 ## intent:ask_whatspossible
 - what can you do?
 - what can you help me with?
+- help
 
 ## intent:brand
 - [Samsung](brand)
@@ -158,21 +151,6 @@
 - I disagree
 - not this time
 - nothing else thanks
-- No
-- No
-- No
-- No
-- No
-- No
-- No
-- No
-- No
-- No
-- No
-- No
-- No
-- No
-- No
 - No
 
 ## intent:device_model
@@ -534,13 +512,13 @@
 - [iphone 8](device_model)
 - do you fix [iphone 7](device_model:iPhone 7) [screen](device_repair)
 - help, ive broken my [iphone 3](device_model) [screen](device_repair)
-- help, ive broken my [iphone 3](device_model:iPhone 3) [screen](device_repair)
 - ive dropped my [iphone](brand) [in water](device_repair:water damage) now it no longer turns on
 - [iphone 6](device_model:iPhone 6)
 - Do you fix [iPad Air 2](device_model:iPad air 2)?
 - Hi, I bought my [iPad](brand) in couple weeks ago for a new [screen](device_repair), while on holiday this happened can you help please?
 - Hi, how much do your charge for an [ipad mini](device_model:iPad mini) [screen](device_repair)? Thanks
 - Hi, how much for [iPhone 6](device_model) [screen](device_repair) please?
+- The [front](device_repair:screen) is all smashed
 
 ## intent:request_human
 - escalate
@@ -1075,7 +1053,7 @@
 - tesco
 - tesco mobile
 
-## lookup:device_repairs
+## lookup:device_repair
 - battery
 - charging port
 - screen
