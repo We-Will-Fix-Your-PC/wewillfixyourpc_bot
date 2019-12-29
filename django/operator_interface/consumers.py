@@ -143,7 +143,9 @@ class OperatorConsumer(JsonWebsocketConsumer):
                 "entities": [
                     {"entity": e.entity, "value": e.value,}
                     for e in message.messageentity_set.all()
-                ]
+                ],
+                "selection": message.selection,
+                "card": message.card
             }
         )
 
