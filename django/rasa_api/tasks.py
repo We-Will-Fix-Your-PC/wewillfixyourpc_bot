@@ -99,7 +99,7 @@ def handle_text(conversation, text):
                     )
                     continue
                 elif event_type == "request":
-                    message.text = custom.get("text")
+                    message.text = custom.get("text", "")
                     message.request = custom.get("request")
                 elif event_type == "card":
                     message.card = json.dumps(custom.get("card"))

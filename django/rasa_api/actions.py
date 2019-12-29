@@ -343,7 +343,8 @@ class ActionUpdateInfoSlots(Action):
             out.extend(
                 [
                     rasa_sdk.events.SlotSet(
-                        "instant_response_required", capabilities.instant_response_required
+                        "instant_response_required",
+                        capabilities.instant_response_required,
                     ),
                     rasa_sdk.events.SlotSet(
                         "sign_in_supported", capabilities.supports_sign_in
@@ -1252,22 +1253,13 @@ class RepairBookForm(BaseForm):
 
     @staticmethod
     async def required_slots(tracker: Tracker) -> List[Text]:
-        conversation = await sync_to_async(sender_id_to_conversation)(tracker.sender_id)
-        ask_phone = (
-            (
-                False
-                if conversation.platform
-                == operator_interface.models.Conversation.GOOGLE_ACTIONS
-                else True
-            )
-            if conversation
-            else True
-        )
+        capabilities = await sync_to_async(get_conversation_capabilities)(tracker.sender_id)
+        ask_phone = capabilities.input_supported != "voice" if capabilities else True
 
         if not ask_phone:
-            return ["name", "email", "date", "time"]
+            return ["name", "email", "time"]
         else:
-            return ["name", "phone_number", "email", "date", "time"]
+            return ["name", "phone_number", "email", "time"]
 
     def slot_mappings(self):
         return {
@@ -1276,30 +1268,8 @@ class RepairBookForm(BaseForm):
                 entity="phone-number", not_intent=["imei"]
             ),
             "email": self.from_entity(entity="email"),
-            "date": self.from_entity(entity="time"),
             "time": self.from_entity(entity="time"),
         }
-
-    async def validate_date(
-        self,
-        value: Text,
-        dispatcher: CollectingDispatcher,
-        tracker: Tracker,
-        domain: Dict[Text, Any],
-    ) -> Optional[Dict[Text, Any]]:
-        value_dt = datetime.datetime.fromisoformat(value)
-
-        if value_dt.date() < timezone.now().date():
-            dispatcher.utter_message("That date is in the past")
-            return {"date": None}
-
-        if not await sync_to_async(is_open_on)(value_dt.date()):
-            dispatcher.utter_message(
-                f"Sorry, but we're closed on {value_dt.strftime('%A')} the {p.ordinal(value_dt.day)}."
-            )
-            return {"date": None}
-
-        return {"date": value}
 
     async def validate_time(
         self,
@@ -1308,10 +1278,6 @@ class RepairBookForm(BaseForm):
         tracker: Tracker,
         domain: Dict[Text, Any],
     ) -> Optional[Dict[Text, Any]]:
-        date = tracker.get_slot("date")
-        if not date:
-            return {"time": None}
-        date = datetime.datetime.fromisoformat(date)
         value = next(
             filter(
                 lambda e: e.get("entity") == "time",
@@ -1322,30 +1288,38 @@ class RepairBookForm(BaseForm):
 
         if value:
             value = value.get("additional_info", {})
+            value_dt = datetime.datetime.fromisoformat(value.get("value"))
+            date = tracker.get_slot("date")
+            if not date:
+                date = value_dt.date()
+            else:
+                date = datetime.datetime.fromisoformat(date).date()
+
             if value.get("grain") in ["no-grain", "second", "minute", "hour"]:
-                value_dt = datetime.datetime.fromisoformat(value.get("value"))
                 if await sync_to_async(is_open_at)(date, value_dt.time()):
-                    pass
+                    value_dt = value_dt.replace(date.year, date.month, date.day)
                 elif await sync_to_async(is_open_at)(
                     date, (value_dt + datetime.timedelta(hours=12)).time()
                 ):
                     value_dt = value_dt + datetime.timedelta(hours=12)
-                    value_dh = value_dt.replace(date.year, date.month, date.day)
+                    value_dt = value_dt.replace(date.year, date.month, date.day)
                 else:
                     dispatcher.utter_message(
                         f"Sorry, we're not open then. "
-                        f"On that day we are {format_hours(await sync_to_async(is_open_on)(date))}"
+                        f"On {date.strftime('%A')} the {p.ordinal(date.day)} we are {format_hours(await sync_to_async(is_open_on)(date))}"
                     )
                     return {"time": None}
 
                 if (
                     value_dt < timezone.now()
-                    and date.date() == datetime.datetime.today()
                 ):
                     dispatcher.utter_message("That time is in the past")
                     return {"time": None}
 
-                return {"time": value_dt.time().isoformat()}
+                return {"time": value_dt.time().isoformat(), "date": date.isoformat()}
+            else:
+                dispatcher.utter_template("utter_ask_time_only", tracker)
+                return {"date": value_dt.date().isoformat(), "time": None}
 
         return {"time": None}
 
@@ -1741,7 +1715,8 @@ class UnlockOrderWebForm(Action):
                         "text": "Open this form to complete your order",
                         "button": {
                             "title": "Open",
-                            "link": settings.EXTERNAL_URL_BASE + reverse(
+                            "link": settings.EXTERNAL_URL_BASE
+                            + reverse(
                                 "fulfillment:form",
                                 kwargs={
                                     "form_type": "unlocking",

@@ -4,20 +4,21 @@ import os
 import re
 import urllib.parse
 import uuid
-import jwt
-import jose.exceptions
 from io import BytesIO
 
+import django_keycloak_auth.clients
+import django_keycloak_auth.users
 import google.auth.transport.requests
 import google.oauth2.id_token
+import jose.exceptions
+import jwt
 import requests
+from django.utils import timezone
 from django.conf import settings
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseForbidden
 from django.views.decorators.csrf import csrf_exempt
 
-import django_keycloak_auth.users
-import django_keycloak_auth.clients
 import operator_interface.consumers
 import operator_interface.tasks
 from operator_interface.models import Conversation, Message
@@ -48,12 +49,41 @@ def process_inputs(inputs, conversation):
                 a["textValue"] for a in arguments if a.get("name") == "OPTION"
             )
             if option.startswith("SELECTION_NUM_"):
-                num = option[len("SELECTION_NUM_") :]
+                num = option[len("SELECTION_NUM_"):]
                 outputs_l.append(
                     operator_interface.tasks.process_event.delay(
                         conversation.id, f'resolve_entity{{"number": "{num}"}}'
                     )
                 )
+        elif intent == "actions.intent.CONFIRMATION":
+            arguments = i.get("arguments", {})
+            option = next(
+                a["boolValue"] for a in arguments if a.get("name") == "CONFIRMATION"
+            )
+            outputs_l.append(
+                operator_interface.tasks.process_event.delay(
+                    conversation.id, 'affirm' if option else 'deny'
+                )
+            )
+        elif intent == "actions.intent.DATETIME":
+            arguments = i.get("arguments", {})
+            option = next(
+                a["datetimeValue"] for a in arguments if a.get("name") == "DATETIME"
+            )
+            time = timezone.datetime(
+                year=option["date"]["year"], month=option["date"]["month"], day=option["date"]["day"],
+                hour=option["time"]["hours"], minute=option["time"].get("minutes", 0), second=0
+            )
+            message_m = Message(
+                conversation=conversation,
+                message_id=uuid.uuid4(),
+                text=time.strftime("%c"),
+                direction=Message.FROM_CUSTOMER,
+            )
+            message_m.save()
+            outputs_l.append(
+                operator_interface.tasks.process_message.delay(message_m.id)
+            )
         elif intent == "actions.intent.TEXT":
             arguments = i.get("arguments", {})
             text = next(a["textValue"] for a in arguments if a.get("name") == "text")
@@ -184,6 +214,47 @@ def process_outputs(outputs_l, is_guest_user, conversation):
                     "notificationTitle": "Continue with We Will Fix Your PC here!",
                 },
             }
+        )
+    elif last_output.request == "confirmation":
+        responses.append(
+            {
+                "simpleResponse": {
+                    "textToSpeech": emoji_pattern.sub(r"", messages),
+                    "displayText": messages,
+                }
+            }
+        )
+        possible_intents.append(
+            {
+                "intent": "actions.intent.CONFIRMATION",
+                "inputValueData": {
+                    "@type": "type.googleapis.com/google.actions.v2.ConfirmationValueSpec",
+                    "dialogSpec": {
+                        "requestConfirmationText": messages
+                    },
+                },
+            }
+        )
+    elif last_output.request == "time":
+        responses.append(
+            {
+                "simpleResponse": {
+                    "textToSpeech": emoji_pattern.sub(r"", messages),
+                    "displayText": messages,
+                }
+            }
+        )
+        possible_intents.append({
+            "intent": "actions.intent.DATETIME",
+            "inputValueData": {
+                "@type": "type.googleapis.com/google.actions.v2.DateTimeValueSpec",
+                "dialogSpec": {
+                    "requestDatetimeText": "When would best for you?",
+                    "requestDateText": "What day was that?",
+                    "requestTimeText": "What time works for you?"
+                }
+            }
+        }
         )
     elif last_output.selection:
         selection = json.loads(last_output.selection)
