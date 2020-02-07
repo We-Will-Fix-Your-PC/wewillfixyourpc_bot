@@ -6,43 +6,42 @@ import json
 import logging
 import uuid
 import operator_interface.tasks
-from operator_interface.models import Message, MessageSuggestion, Conversation
+from operator_interface.models import Message, MessageSuggestion, ConversationPlatform
 import operator_interface.consumers
 
 logger = logging.getLogger(__name__)
 
 
 @shared_task
-def handle_message(mid):
+def handle_message(mid: int):
     message = Message.objects.get(id=mid)
-    conversation = message.conversation
+    platform = message.platform
     text = message.text
 
     if text:
         logging.info(f'Got message of "{text}" to process with rasa')
 
-        return handle_text(conversation, text)
+        return handle_text(platform, text)
 
 
 @shared_task
-def handle_event(cid, event):
-    conversation = Conversation.objects.get(id=cid)
+def handle_event(cid: int, event: str):
+    platform = ConversationPlatform.objects.get(id=cid)
 
     logging.info(f'Got event of "{event}" to process with rasa')
 
     if event == "WELCOME":
-        return handle_text(conversation, "/greet")
+        return handle_text(platform, "/greet")
     else:
-        return handle_text(conversation, f"/{event}")
+        return handle_text(platform, f"/{event}")
 
 
-def handle_text(conversation, text):
-    operator_interface.tasks.process_typing.delay(conversation.id)
+def handle_text(platform: ConversationPlatform, text: str):
+    operator_interface.tasks.process_typing.delay(platform.id)
 
-    sender = f"{conversation.platform}:{conversation.platform_id}"
     r = requests.post(
         f"{settings.RASA_HTTP_URL}/webhooks/rest/webhook?stream=true",
-        json={"sender": sender, "message": text},
+        json={"sender": f"CONV:{platform.id}", "message": text},
         stream=True,
     )
     r.raise_for_status()
@@ -62,7 +61,7 @@ def handle_text(conversation, text):
                 continue
 
             message = Message(
-                conversation=conversation,
+                conversation_platform=platform,
                 direction=Message.TO_CUSTOMER,
                 message_id=uuid.uuid4(),
             )
@@ -86,14 +85,14 @@ def handle_text(conversation, text):
                     # message.payment_request = payment_o
                     message.save()
                 elif event_type == "request_human":
-                    conversation.agent_responding = False
-                    conversation.save()
+                    platform.conversation.agent_responding = False
+                    platform.conversation.save()
 
                     operator_interface.tasks.send_message_notifications.delay(
                         {
                             "type": "alert",
-                            "cid": conversation.id,
-                            "name": conversation.conversation_name,
+                            "cid": platform.conversation.id,
+                            "name": platform.conversation.conversation_name,
                             "text": "Human needed!",
                         }
                     )

@@ -519,6 +519,7 @@
 - Hi, how much do your charge for an [ipad mini](device_model:iPad mini) [screen](device_repair)? Thanks
 - Hi, how much for [iPhone 6](device_model) [screen](device_repair) please?
 - The [front](device_repair:screen) is all smashed
+- repair prices
 
 ## intent:request_human
 - escalate

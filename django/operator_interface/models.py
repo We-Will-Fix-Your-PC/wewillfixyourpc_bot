@@ -1,6 +1,7 @@
 from django.db import models
 from django.utils import timezone
 import json
+import uuid
 from django.contrib.auth.models import User
 
 
@@ -33,22 +34,7 @@ class NotificationSubscription(models.Model):
 
 
 class Conversation(models.Model):
-    FACEBOOK = "FB"
-    TWITTER = "TW"
-    TELEGRAM = "TG"
-    AZURE = "AZ"
-    GOOGLE_ACTIONS = "GA"
-    PLATFORM_CHOICES = (
-        (FACEBOOK, "Facebook"),
-        (TWITTER, "Twitter"),
-        (TELEGRAM, "Telegram"),
-        (AZURE, "Azure"),
-        (GOOGLE_ACTIONS, "Actions on Google"),
-    )
-
-    platform = models.CharField(max_length=2, choices=PLATFORM_CHOICES)
-    platform_id = models.CharField(max_length=255)
-    agent_responding = models.BooleanField(default=True)
+    agent_responding = models.BooleanField(default=False)
     current_agent = models.ForeignKey(
         User, blank=True, null=True, default=None, on_delete=models.SET_DEFAULT
     )
@@ -56,44 +42,67 @@ class Conversation(models.Model):
     conversation_name = models.CharField(max_length=255, blank=True, null=True)
     conversation_pic = models.ImageField(blank=True, null=True)
 
-    additional_conversation_data = models.TextField(blank=True, null=True)
+    def __str__(self):
+        return f"{self.conversation_name}"
+
+    def last_platform(self):
+        messages = Message.objects.filter(platform__conversation=self)
+        last_message = messages.order_by("-timestamp").first()
+        if last_message is None:
+            return None
+        return last_message.platform
+
+
+class ConversationPlatform(models.Model):
+    FACEBOOK = "FB"
+    TWITTER = "TW"
+    TELEGRAM = "TG"
+    AZURE = "AZ"
+    GOOGLE_ACTIONS = "GA"
+    SMS = "TX"
+    PLATFORM_CHOICES = (
+        (FACEBOOK, "Facebook"),
+        (TWITTER, "Twitter"),
+        (TELEGRAM, "Telegram"),
+        (AZURE, "Azure"),
+        (GOOGLE_ACTIONS, "Actions on Google"),
+        (SMS, "SMS")
+    )
+
+    conversation = models.ForeignKey(Conversation, on_delete=models.CASCADE)
+    platform = models.CharField(max_length=2, choices=PLATFORM_CHOICES)
+    platform_id = models.CharField(max_length=255)
+    additional_platform_data = models.TextField(blank=True, null=True)
 
     def __str__(self):
         platform = list(filter(lambda p: p[0] == self.platform, self.PLATFORM_CHOICES))
         platform = platform[0][1] if len(platform) else "UNKNOWN"
-        return f"{platform} - {self.conversation_name}"
+        return f"{platform} - {self.platform_id}"
 
     @classmethod
-    def get_or_create_conversation(
-        cls,
-        platform,
-        platform_id,
-        conversation_name=None,
-        conversation_pic=None,
-        agent_responding=True,
-    ):
+    def exists(cls, platform, platform_id):
         try:
-            conv = cls.objects.get(platform=platform, platform_id=platform_id)
-            if conversation_name is not None:
-                conv.conversation_name = conversation_name
-            if conversation_pic is not None:
-                conv.conversation_pic = conversation_pic
-            conv.save()
-            return conv
+            return cls.objects.get(platform=platform, platform_id=platform_id)
         except cls.DoesNotExist:
-            conv = cls(
-                platform=platform,
-                platform_id=platform_id,
-                conversation_name=conversation_name,
-                conversation_pic=conversation_pic,
-                agent_responding=agent_responding,
+            return None
+
+    @classmethod
+    def create(cls, platform, platform_id, customer_user_id=None):
+        conv = None
+        if customer_user_id is not None:
+            try:
+                conv = Conversation.objects.get(customer_user_id=customer_user_id)
+            except Conversation.DoesNotExist:
+                pass
+        if conv is None:
+            conv = Conversation(
+                customer_user_id=customer_user_id,
             )
             conv.save()
-            return conv
 
-    def reset(self):
-        self.agent_responding = True
-        self.save()
+        plat = cls(platform=platform, platform_id=platform_id, conversation=conv)
+        plat.save()
+        return plat
 
 
 class ConversationRating(models.Model):
@@ -110,16 +119,25 @@ class Message(models.Model):
     FROM_CUSTOMER = "O"
     DIRECTION_CHOICES = ((TO_CUSTOMER, "To customer"), (FROM_CUSTOMER, "From customer"))
 
-    conversation = models.ForeignKey(
-        Conversation, on_delete=models.CASCADE, related_name="messages"
+    DELIVERED = "D"
+    READ = "R"
+    FAILED = "F"
+    STATES = (
+        (DELIVERED, "Delivered"),
+        (READ, "Read"),
+        (FAILED, "Failed")
     )
-    message_id = models.CharField(max_length=255)
+
+    platform = models.ForeignKey(
+        ConversationPlatform, on_delete=models.CASCADE, related_name="messages"
+    )
+    message_id = models.UUIDField(default=uuid.uuid4)
+    platform_message_id = models.CharField(max_length=255)
     direction = models.CharField(max_length=1, choices=DIRECTION_CHOICES)
     text = models.TextField(blank=True, default="")
     timestamp = models.DateTimeField(default=timezone.now)
     user = models.ForeignKey(User, blank=True, null=True, on_delete=models.SET_NULL)
-    read = models.BooleanField(default=False)
-    delivered = models.BooleanField(default=False)
+    state = models.CharField(max_length=1, choices=STATES)
     image = models.URLField(blank=True, null=True)
     payment_request = models.UUIDField(blank=True, null=True)
     payment_confirm = models.UUIDField(blank=True, null=True)
@@ -133,12 +151,12 @@ class Message(models.Model):
         ordering = ("timestamp",)
 
     def __str__(self):
-        return f"{str(self.conversation)} - {self.timestamp.isoformat()}"
+        return f"{str(self.platform)} - {self.timestamp.isoformat()}"
 
     @classmethod
-    def message_exits(cls, conversation, message_id):
+    def message_exits(cls, platform, message_id):
         try:
-            cls.objects.get(conversation=conversation, message_id=message_id)
+            cls.objects.get(platform=platform, platform_message_id=message_id)
             return True
         except cls.DoesNotExist:
             return False

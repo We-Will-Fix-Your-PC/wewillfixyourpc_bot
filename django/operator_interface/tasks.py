@@ -85,9 +85,10 @@ def extract_entities_from_message(mid):
 
 
 @shared_task
-def process_message(mid):
-    message = models.Message.objects.get(id=mid)
-    conversation = message.conversation
+def process_message(mid: int):
+    message: models.Message = models.Message.objects.get(id=mid)
+    platform = message.platform
+    conversation = platform.conversation
 
     send_message_to_interface.delay(mid)
 
@@ -97,58 +98,57 @@ def process_message(mid):
             return rasa_api.tasks.handle_message(mid)
         else:
             if (
-                conversation.messages.filter(
+                platform.messages.filter(
                     timestamp__gte=timezone.now() - timezone.timedelta(hours=24)
                 ).count()
                 == 1
             ):
-                send_welcome_message.delay(conversation.id)
+                send_welcome_message.delay(platform.id)
 
             admin_client = django_keycloak_auth.clients.get_keycloak_admin_client()
-            if message.conversation.conversation_user_id:
+            if conversation.conversation_user_id:
                 try:
-                    user = admin_client.users.by_id(
-                        message.conversation.conversation_user_id
-                    ).user
+                    user = admin_client.users.by_id(conversation.conversation_user_id).user
                     name = f'{user.get("firstName", "")} {user.get("lastName", "")}'
                 except keycloak.exceptions.KeycloakClientError:
-                    name = message.conversation.conversation_name
+                    name = conversation.conversation_name
             else:
-                name = message.conversation.conversation_name
+                name = conversation.conversation_name
 
             send_message_notifications(
                 {
                     "type": "message",
-                    "cid": message.conversation.id,
+                    "cid": conversation.id,
                     "name": name,
                     "text": message.text,
                 }
             )
 
     elif message.direction == models.Message.TO_CUSTOMER:
-        if conversation.platform == models.Conversation.FACEBOOK:
+        platform = message.platform.platform
+        if platform == models.ConversationPlatform.FACEBOOK:
             facebook.tasks.send_facebook_message(mid)
-        elif conversation.platform == models.Conversation.TWITTER:
+        elif platform == models.ConversationPlatform.TWITTER:
             twitter.tasks.send_twitter_message(mid)
-        elif conversation.platform == models.Conversation.TELEGRAM:
+        elif platform == models.ConversationPlatform.TELEGRAM:
             telegram_bot.tasks.send_telegram_message(mid)
-        elif conversation.platform == models.Conversation.AZURE:
+        elif platform == models.ConversationPlatform.AZURE:
             azure_bot.tasks.send_azure_message(mid)
-        elif conversation.platform == models.Conversation.GOOGLE_ACTIONS:
+        elif platform == models.ConversationPlatform.GOOGLE_ACTIONS:
             return mid
 
     return None
 
 
 @shared_task
-def process_event(cid, event):
+def process_event(pid, event):
     if event == "WELCOME":
-        conversation = models.Conversation.objects.get(id=cid)
-        conversation.agent_responding = True
-        conversation.current_agent = None
-        conversation.save()
+        platform = models.ConversationPlatform.objects.get(id=pid)
+        # conversation.agent_responding = True
+        platform.conversation.current_agent = None
+        platform.conversation.save()
 
-    return rasa_api.tasks.handle_event(cid, event)
+    return rasa_api.tasks.handle_event(pid, event)
 
 
 @shared_task
@@ -159,7 +159,7 @@ def hand_back(cid):
     conversation.save()
     message = models.Message(
         message_id=uuid.uuid4(),
-        conversation=conversation,
+        platform=conversation.last_platform(),
         direction=models.Message.TO_CUSTOMER,
         text=f"You've been handed back to the automated assistant.\n"
         f"You can always request an agent at any time by saying 'request an agent'.",
@@ -169,16 +169,16 @@ def hand_back(cid):
 
 
 @shared_task
-def send_welcome_message(cid):
+def send_welcome_message(pid):
     if rasa_api.actions.is_open():
         text = "We're currently open and someone will be with you shortly."
     else:
         text = "We're currently closed, but someone will get back to you as soon as we're open again."
 
-    conversation = models.Conversation.objects.get(id=cid)
+    platform = models.ConversationPlatform.objects.get(id=pid)
     message = models.Message(
         message_id=uuid.uuid4(),
-        conversation=conversation,
+        platform=platform,
         direction=models.Message.TO_CUSTOMER,
         text=f"Welcome to We Will Fix Your PC.\n{text}",
     )
@@ -196,9 +196,10 @@ def end_conversation(cid):
     #     process_event(cid, "end")
     message = models.Message(
         message_id=uuid.uuid4(),
-        conversation=conversation,
+        platform=conversation.last_platform(),
         direction=models.Message.TO_CUSTOMER,
-        text=f"Thanks for contacting We Will Fix Your PC. On a scale of 1 to 10 how would you rate your experience with us?",
+        text=f"Thanks for contacting We Will Fix Your PC."
+        f" On a scale of 1 to 10 how would you rate your experience with us?",
     )
     message.save()
     process_message(message.id)
@@ -213,7 +214,7 @@ def take_over(cid, uid):
     conversation.save()
     message = models.Message(
         message_id=uuid.uuid4(),
-        conversation=conversation,
+        platform=conversation.last_platform(),
         direction=models.Message.TO_CUSTOMER,
         user=user,
         text=f"Hello I'm {user.first_name} and I'll be taking over from here",
@@ -223,11 +224,11 @@ def take_over(cid, uid):
 
 
 @shared_task
-def process_typing(cid):
-    conversation = models.Conversation.objects.get(id=cid)
-    if conversation.platform == models.Conversation.FACEBOOK:
-        facebook.tasks.handle_facebook_message_typing_on(cid)
-    elif conversation.platform == models.Conversation.TWITTER:
-        twitter.tasks.handle_twitter_message_typing_on(cid)
-    elif conversation.platform == models.Conversation.TELEGRAM:
-        telegram_bot.tasks.handle_telegram_message_typing_on(cid)
+def process_typing(pid):
+    platform = models.ConversationPlatform.objects.get(id=pid)
+    if platform.platform == models.ConversationPlatform.FACEBOOK:
+        facebook.tasks.handle_facebook_message_typing_on(pid)
+    elif platform.platform == models.ConversationPlatform.TWITTER:
+        twitter.tasks.handle_twitter_message_typing_on(pid)
+    elif platform.platform == models.ConversationPlatform.TELEGRAM:
+        telegram_bot.tasks.handle_telegram_message_typing_on(pid)

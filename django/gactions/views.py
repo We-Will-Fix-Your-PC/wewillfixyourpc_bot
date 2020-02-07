@@ -370,7 +370,7 @@ def webhook(request):
 
     user_id = user.get("userStorage", None) if not is_guest_user else None
     conversation: Conversation = Conversation.get_or_create_conversation(
-        Conversation.GOOGLE_ACTIONS, conversation_id
+        Conversation.GOOGLE_ACTIONS, conversation_id, agent_responding=True
     )
 
     additional_conversation_data = {

@@ -143,27 +143,25 @@ def reduce_days(days: List[Tuple[str, str, models.OpeningHours]]):
     return days
 
 
-def sender_id_to_conversation(sender_id):
+def sender_id_to_conversation(sender_id: str) -> operator_interface.models.ConversationPlatform:
     sender_id = sender_id.split(":")
-    if len(sender_id) >= 2:
-        platform = sender_id[0]
-        platform_id = sender_id[1]
+    if len(sender_id) >= 2 and sender_id[0] == "CONV":
         try:
-            conversation = operator_interface.models.Conversation.objects.get(
-                platform=platform, platform_id=platform_id
-            )
+            conversation: operator_interface.models.ConversationPlatform = \
+                operator_interface.models.ConversationPlatform.objects.get(id=sender_id[1])
 
             return conversation
-        except operator_interface.models.Conversation.DoesNotExist:
+        except operator_interface.models.ConversationPlatform.DoesNotExist:
             return None
 
 
 def update_user_info(
-    conversation: operator_interface.models.Conversation,
+    platform: operator_interface.models.ConversationPlatform,
     email=None,
     force_update=True,
     **kwargs,
 ):
+    conversation = platform.conversation
     if not conversation.conversation_user_id and email:
         user = django_keycloak_auth.users.get_or_create_user(
             email=email,
@@ -178,14 +176,14 @@ def update_user_info(
 
     if conversation.conversation_user_id:
         django_keycloak_auth.users.update_user(
-            conversation.conversation_user_id, force_update=force_update, **kwargs
+            str(conversation.conversation_user_id), force_update=force_update, **kwargs
         )
 
 
 def get_conversation_capabilities(sender_id) -> SurfaceCapabilities:
-    conversation = sender_id_to_conversation(sender_id)
+    platform = sender_id_to_conversation(sender_id)
 
-    if conversation is None:
+    if platform is None:
         return None
 
     instant_response_required = False
@@ -193,15 +191,14 @@ def get_conversation_capabilities(sender_id) -> SurfaceCapabilities:
     input_supported = "text"
     highest_input_supported = None
 
-    if conversation:
+    if platform:
         if (
-            conversation.platform
-            == operator_interface.models.Conversation.GOOGLE_ACTIONS
+            platform.platform == operator_interface.models.ConversationPlatform.GOOGLE_ACTIONS
         ):
             instant_response_required = True
             supports_sign_in = True
             input_supported = "voice"
-            platform_from_id = json.loads(conversation.additional_conversation_data)
+            platform_from_id = json.loads(platform.additional_platform_data)
             for c in platform_from_id["surfaceCapabilities"]:
                 if c.get("name") == "actions.capability.WEB_BROWSER":
                     input_supported = "web_form"
@@ -299,7 +296,7 @@ class ActionUpdateInfoSlots(Action):
         tracker: Tracker,
         domain: Dict[Text, Any],
     ) -> List[Dict[Text, Any]]:
-        conversation = await sync_to_async(sender_id_to_conversation)(tracker.sender_id)
+        conversation = await sync_to_async(sender_id_to_conversation)(tracker.sender_id).conversation
         capabilities = await sync_to_async(get_conversation_capabilities)(
             tracker.sender_id
         )
@@ -388,12 +385,12 @@ class ActionMoveToWebForm(Action):
         tracker: Tracker,
         domain: Dict[Text, Any],
     ) -> List[Dict[Text, Any]]:
-        conversation = await sync_to_async(sender_id_to_conversation)(tracker.sender_id)
+        platform = await sync_to_async(sender_id_to_conversation)(tracker.sender_id)
 
-        if conversation:
+        if platform:
             if (
-                conversation.platform
-                == operator_interface.models.Conversation.GOOGLE_ACTIONS
+                platform.platform
+                == operator_interface.models.ConversationPlatform.GOOGLE_ACTIONS
             ):
                 dispatcher.utter_custom_json(
                     {
