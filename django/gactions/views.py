@@ -385,8 +385,7 @@ def webhook(request):
     user_access_token = user.get("accessToken")
 
     if user_id:
-        conversation.conversation_user_id = user_id
-        conversation.save()
+        conversation = conversation.update_user_id(user_id)
 
     if user_access_token:
         oidc_client = django_keycloak_auth.clients.get_openid_connect_client()
@@ -403,8 +402,7 @@ def webhook(request):
         except jose.exceptions.JWTError:
             return HttpResponseForbidden()
 
-        conversation.conversation_user_id = user_token.get("sub")
-        conversation.save()
+        conversation = conversation.update_user_id(user_token.get("sub"))
 
     if user_id_token:
         try:
@@ -434,8 +432,7 @@ def webhook(request):
                 django_keycloak_auth.users.link_roles_to_user(
                     user.get("id"), ["customer"]
                 )
-                conversation.conversation_user_id = user.get("id")
-                conversation.save()
+                conversation = conversation.update_user_id(user.get("id"))
 
         if conversation.conversation_user_id:
             django_keycloak_auth.users.link_federated_identity_if_not_exists(

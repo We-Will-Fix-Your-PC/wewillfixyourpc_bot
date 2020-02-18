@@ -17,7 +17,7 @@ from django.shortcuts import reverse
 import operator_interface.tasks
 import django_keycloak_auth.users
 from operator_interface.consumers import conversation_saved
-from operator_interface.models import Conversation, Message
+from operator_interface.models import Conversation, ConversationPlatform, Message
 from . import views
 from . import models
 
@@ -27,8 +27,8 @@ def handle_twitter_message(mid: str, psid, message, user):
     text: str = message.get("text")
     attachment: dict = message.get("attachment")
     if text is not None:
-        conversation: Conversation = Conversation.get_or_create_conversation(
-            Conversation.TWITTER, psid, agent_responding=False
+        platform: ConversationPlatform = ConversationPlatform.exists(
+            ConversationPlatform.TWITTER, psid
         )
 
         if not conversation.conversation_user_id:
@@ -42,8 +42,7 @@ def handle_twitter_message(mid: str, psid, message, user):
                 django_keycloak_auth.users.link_roles_to_user(
                     kc_user.get("id"), ["customer"]
                 )
-                conversation.conversation_user_id = kc_user.get("id")
-                conversation.save()
+                conversation.update_user_id(kc_user.get("id"))
 
         if conversation.conversation_user_id:
             django_keycloak_auth.users.link_federated_identity_if_not_exists(
@@ -107,16 +106,16 @@ def handle_twitter_message(mid: str, psid, message, user):
 @shared_task
 def handle_twitter_read(psid: str, last_read: str):
     last_read: int = int(last_read)
-    conversation: Conversation = Conversation.get_or_create_conversation(
-        Conversation.TWITTER, psid
+    platform: ConversationPlatform = ConversationPlatform.exists(
+        ConversationPlatform.TWITTER, psid
     )
     messages: typing.List[Message] = Message.objects.filter(
-        conversation=conversation, direction=Message.TO_CUSTOMER, read=False
+        platform=platform, direction=Message.TO_CUSTOMER, state=Message.DELIVERED
     )
     message_ids = []
     for m in messages:
         try:
-            m_id = int(m.message_id)
+            m_id = int(m.platform_message_id)
         except ValueError:
             continue
         if m_id <= last_read:
@@ -299,24 +298,10 @@ def send_twitter_message(mid: int):
     )
     if r.status_code != 200:
         logging.error(f"Error sending twitter message: {r.status_code} {r.text}")
-        request_body = {
-            "event": {
-                "type": "message_create",
-                "message_create": {
-                    "target": {"recipient_id": psid},
-                    "message_data": {
-                        "text": "Sorry, I'm having some difficulty processing your request. Please try again later"
-                    },
-                },
-            }
-        }
-        requests.post(
-            "https://api.twitter.com/1.1/direct_messages/events/new.json",
-            auth=creds,
-            json=request_body,
-        ).raise_for_status()
+        message.state = Message.FAILED
+        message.save()
     else:
         r = r.json()
-        message.message_id = r["event"]["id"]
-        message.delivered = True
+        message.platform_message_id = r["event"]["id"]
+        message.state = Message.DELIVERED
         message.save()

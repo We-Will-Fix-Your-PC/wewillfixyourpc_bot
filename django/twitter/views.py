@@ -204,13 +204,11 @@ def account_linking(request):
 
     if state.timestamp + datetime.timedelta(minutes=5) < timezone.now():
         return HttpResponseBadRequest()
-    state.conversation.conversation_user_id = request.user.username
-    state.conversation.save()
+    state.conversation.update_user_id(request.user.username)
     state.delete()
 
     message = Message(
-        conversation=state.conversation,
-        message_id=uuid.uuid4(),
+        platform=state.conversation.last_usable_platform(),
         text="Login complete, thanks!",
         direction=Message.TO_CUSTOMER,
     )

@@ -169,12 +169,8 @@ class MessageData {
         return this.load() ? this.data.image : null;
     }
 
-    get read() {
-        return this.load() ? this.data.read : false;
-    }
-
-    get delivered() {
-        return this.load() ? this.data.delivered : false;
+    get state() {
+        return this.load() ? this.data.state : null;
     }
 
     get end() {
@@ -203,6 +199,25 @@ class MessageData {
 
     get payment_confirm() {
         return this.load() ? (this.data.payment_confirm ? this.get_payment(this.data.payment_confirm) : null) : null;
+    }
+
+    get platform() {
+        return this.data.platform;
+    }
+
+    get platform_name() {
+        if (this.data.platform === "GA") {
+            return "Actions on Google";
+        } else if (this.data.platform === "AZ") {
+            return "Microsoft Bot Framework";
+        } else if (this.data.platform === "TW") {
+            return "Twitter";
+        } else if (this.data.platform === "FB") {
+            return "Facebook";
+        } else if (this.data.platform === "TG") {
+            return "Telegram";
+        }
+        return "Unknown platform"
     }
 
     get entities() {
@@ -303,25 +318,6 @@ class ConversationData {
         return this.data.current_user_responding
     }
 
-    get platform() {
-        return this.data.platform;
-    }
-
-    get platform_name() {
-        if (this.data.platform === "GA") {
-            return "Actions on Google";
-        } else if (this.data.platform === "AZ") {
-            return "Microsoft Bot Framework";
-        } else if (this.data.platform === "TW") {
-            return "Twitter";
-        } else if (this.data.platform === "FB") {
-            return "Facebook";
-        } else if (this.data.platform === "TG") {
-            return "Telegram";
-        }
-        return "Unknown platform"
-    }
-
     get customer_username() {
         return this.data.customer_username;
     }
@@ -355,53 +351,7 @@ class ConversationData {
     }
 
     can_interact() {
-        if (this.platform === "GA") {
-            return false;
-        } else if (this.platform === "FB") {
-            let d = new Date(0);
-            let now = new Date();
-
-            let last_o = null;
-            let last_i = null;
-
-            for(let i = this.messages.length; i--;) {
-                const message = this.messages[i];
-
-                if (!message.isLoaded()) {
-                    message.load();
-                    return false;
-                }
-
-                if (message.direction === "O") {
-                    last_o = message;
-                } else if (message.direction === "I") {
-                    last_i = message;
-                }
-
-                if (last_o !== null && last_i !== null) {
-                    break
-                }
-            }
-
-            if (last_o == null) {
-                return false;
-            }
-
-            d.setUTCSeconds(last_o.timestamp);
-            let difference = (now - d) / 1000 / 60 / 60;
-
-            if (difference < 24) {
-                return true;
-            }
-
-            if (last_i == null) {
-                return true;
-            }
-
-            return last_i.timestamp < last_o.timestamp;
-        } else {
-            return true;
-        }
+        return this.data.can_message;
     }
 
     send(text) {
@@ -488,6 +438,17 @@ class App extends Component {
             conversations[data.id] = new ConversationData(data.id, data, this);
             this.setState({
                 conversations: conversations
+            });
+        } else if (data.type === "conversation_delete") {
+            const conversations = this.state.conversations;
+            let new_cid = this.state.selectedCid;
+            if (new_cid === data.id) {
+                new_cid = null
+            }
+            delete conversations[data.id];
+            this.setState({
+                conversations: conversations,
+                selectedCid: new_cid
             });
         } else if (data.type === "payment") {
             const payments = this.state.payments;
@@ -618,9 +579,9 @@ class App extends Component {
                                 return <ListItem key={c.c.id} onClick={() => this.selectConversation(c.c.id)}>
                                     <ListItemGraphic graphic={<img src={c.c.customer_pic} alt=""/>}/>
                                     <ListItemText
-                                        primaryText={`${c.c.customer_name} - ${c.c.platform_name}`}
+                                        primaryText={c.c.customer_name}
                                         secondaryText={(c.lastMsg.direction === "O" ? "Them: " : "You: ") + c.lastMsg.text}/>
-                                    {!c.c.agent_responding ?
+                                    {!(c.c.agent_responding || c.c.current_user_responding) ?
                                         <ListItemMeta meta={<MaterialIcon icon='notification_important'/>}/> : null}
                                 </ListItem>
                             })}
@@ -647,8 +608,7 @@ class App extends Component {
                                     <MaterialIcon icon='menu' onClick={() => this.setState({open: !this.state.open})}/>
                                 </TopAppBarIcon>
                                 <TopAppBarTitle>{this.state.selectedCid === null ? "Loading..." :
-                                    `${this.state.conversations[this.state.selectedCid].customer_name} - 
-                                    ${this.state.conversations[this.state.selectedCid].platform_name}`}</TopAppBarTitle>
+                                    this.state.conversations[this.state.selectedCid].customer_name}</TopAppBarTitle>
                             </TopAppBarSection>
                             <TopAppBarSection role='toolbar'>
                                 {this.state.selectedCid === null ||

@@ -2,6 +2,7 @@ from django.db import models
 from django.utils import timezone
 import json
 import uuid
+import datetime
 from django.contrib.auth.models import User
 
 
@@ -52,6 +53,31 @@ class Conversation(models.Model):
             return None
         return last_message.platform
 
+    def last_usable_platform(self, tag=None):
+        platforms = self.conversationplatform_set.order_by('-messages__timestamp')
+        for platform in platforms:
+            if platform.can_message(tag):
+                return platform
+        return None
+
+    def update_user_id(self, user_id):
+        if user_id == self.conversation_user_id:
+            return self
+        other_conversation = self.objects.filter(conversation_user_id=user_id)
+        if len(other_conversation) > 0:
+            for platform in self.conversationplatform_set.all():
+                platform.conversation = other_conversation[0]
+                platform.save()
+            self.delete()
+            return other_conversation[0]
+        else:
+            self.conversation_user_id = user_id
+            self.save()
+            return self
+
+    def can_message(self, tag=None):
+        return any([p.can_message(tag) for p in self.conversationplatform_set.all()])
+
 
 class ConversationPlatform(models.Model):
     FACEBOOK = "FB"
@@ -91,7 +117,7 @@ class ConversationPlatform(models.Model):
         conv = None
         if customer_user_id is not None:
             try:
-                conv = Conversation.objects.get(customer_user_id=customer_user_id)
+                conv = Conversation.objects.get(conversation_user_id=customer_user_id)
             except Conversation.DoesNotExist:
                 pass
         if conv is None:
@@ -103,6 +129,24 @@ class ConversationPlatform(models.Model):
         plat = cls(platform=platform, platform_id=platform_id, conversation=conv)
         plat.save()
         return plat
+
+    def can_message(self, tag=None):
+        if self.platform == self.FACEBOOK:
+            if tag in ["CONFIRMED_EVENT_UPDATE", "POST_PURCHASE_UPDATE", "ACCOUNT_UPDATE"]:
+                return True
+            elif tag == "HUMAN_AGENT":
+                last_message = self.messages.order_by('-timestamp').filter(direction=Message.FROM_CUSTOMER).first()
+                if last_message and last_message.timestamp > timezone.now() - datetime.timedelta(days=7):
+                    return True
+            else:
+                last_message = self.messages.order_by('-timestamp').filter(direction=Message.FROM_CUSTOMER).first()
+                if last_message and last_message.timestamp > timezone.now() - datetime.timedelta(hours=24):
+                    return True
+            return False
+        elif self.platform == self.GOOGLE_ACTIONS:
+            return False
+        else:
+            return True
 
 
 class ConversationRating(models.Model):
@@ -119,10 +163,12 @@ class Message(models.Model):
     FROM_CUSTOMER = "O"
     DIRECTION_CHOICES = ((TO_CUSTOMER, "To customer"), (FROM_CUSTOMER, "From customer"))
 
+    SENDING = "S"
     DELIVERED = "D"
     READ = "R"
     FAILED = "F"
     STATES = (
+        (SENDING, "Sending"),
         (DELIVERED, "Delivered"),
         (READ, "Read"),
         (FAILED, "Failed")
@@ -132,12 +178,12 @@ class Message(models.Model):
         ConversationPlatform, on_delete=models.CASCADE, related_name="messages"
     )
     message_id = models.UUIDField(default=uuid.uuid4)
-    platform_message_id = models.CharField(max_length=255)
+    platform_message_id = models.CharField(max_length=255, blank=True, null=True)
     direction = models.CharField(max_length=1, choices=DIRECTION_CHOICES)
     text = models.TextField(blank=True, default="")
     timestamp = models.DateTimeField(default=timezone.now)
     user = models.ForeignKey(User, blank=True, null=True, on_delete=models.SET_NULL)
-    state = models.CharField(max_length=1, choices=STATES)
+    state = models.CharField(max_length=1, choices=STATES, default=SENDING)
     image = models.URLField(blank=True, null=True)
     payment_request = models.UUIDField(blank=True, null=True)
     payment_confirm = models.UUIDField(blank=True, null=True)

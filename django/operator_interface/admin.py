@@ -22,5 +22,6 @@ class ConversationRatingAdmin(admin.ModelAdmin):
 admin.site.unregister(User)
 admin.site.register(User, UserAdmin)
 admin.site.register(models.Conversation)
+admin.site.register(models.ConversationPlatform)
 admin.site.register(models.Message)
 admin.site.register(models.MessageEntity)

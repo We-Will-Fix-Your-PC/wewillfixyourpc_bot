@@ -10,7 +10,6 @@ redis
 celery
 requests
 requests_oauthlib
-redis
 pytz
 pywebpush
 sentry-sdk

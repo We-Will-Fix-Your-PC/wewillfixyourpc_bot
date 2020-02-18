@@ -16,7 +16,6 @@ from django.contrib.auth.models import User
 from django.core.files.storage import DefaultStorage
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.shortcuts import reverse
-from django.utils import timezone
 
 import operator_interface.consumers
 import operator_interface.tasks
@@ -24,7 +23,7 @@ from operator_interface.models import Conversation, ConversationPlatform, Messag
 
 
 @shared_task
-def handle_facebook_message(psid: dict, message: dict) -> None:
+def handle_facebook_message(psid: dict, message: dict, timestamp: int) -> None:
     text: typing.Text = message.get("text")
     attachments: typing.List[typing.Dict] = message.get("attachments")
     mid: typing.Text = message["mid"]
@@ -48,6 +47,7 @@ def handle_facebook_message(psid: dict, message: dict) -> None:
                     platform_message_id=mid,
                     text=text,
                     direction=Message.FROM_CUSTOMER,
+                    timestamp=datetime.datetime.utcfromtimestamp(timestamp)
                 )
                 message_m.save()
                 operator_interface.tasks.process_message.delay(message_m.id)
@@ -71,6 +71,7 @@ def handle_facebook_message(psid: dict, message: dict) -> None:
                                     platform_message_id=mid,
                                     image=fs.base_url + file_name,
                                     direction=Message.FROM_CUSTOMER,
+                                    timestamp=datetime.datetime.utcfromtimestamp(timestamp),
                                 )
                                 message_m.save()
                                 operator_interface.tasks.process_message.delay(
@@ -81,6 +82,7 @@ def handle_facebook_message(psid: dict, message: dict) -> None:
                                     platform=platform,
                                     platform_message_id=mid,
                                     direction=Message.FROM_CUSTOMER,
+                                    timestamp=datetime.datetime.utcfromtimestamp(timestamp),
                                     text=f'<a href="{fs.base_url + file_name}" target="_blank">'
                                     f"{orig_file_name}"
                                     f"</a>",
@@ -94,6 +96,7 @@ def handle_facebook_message(psid: dict, message: dict) -> None:
                             platform=platform,
                             platform_message_id=mid,
                             direction=Message.FROM_CUSTOMER,
+                                timestamp=datetime.datetime.utcfromtimestamp(timestamp),
                             text=f"<a href=\"{attachment.get('url')}\" target=\"_blank\">Location</a>",
                         )
                         message_m.save()
@@ -114,7 +117,7 @@ def handle_facebook_message(psid: dict, message: dict) -> None:
 
 
 @shared_task
-def handle_facebook_postback(psid: dict, postback: dict) -> None:
+def handle_facebook_postback(psid: dict, postback: dict, timestamp: int) -> None:
     psid: str = psid["sender"]
     payload: str = postback.get("payload")
     title: str = postback.get("title")
@@ -139,6 +142,7 @@ def handle_facebook_postback(psid: dict, postback: dict) -> None:
             message_id=uuid.uuid4(),
             text=title,
             direction=Message.FROM_CUSTOMER,
+            timestamp=datetime.datetime.utcfromtimestamp(timestamp),
         )
         message_m.save()
         handle_mark_facebook_message_read.delay(psid)
@@ -162,11 +166,35 @@ def handle_facebook_read(psid: dict, read: dict) -> None:
                 timestamp__lte=datetime.datetime.fromtimestamp(watermark / 1000),
             )
             message_ids = [m.id for m in messages]
-            messages.update(read=True)
+            messages.update(state=Message.READ)
             for message in message_ids:
                 operator_interface.tasks.send_message_to_interface.delay(message)
 
             update_facebook_profile.delay(psid, platform.conversation.id)
+
+
+@shared_task
+def handle_facebook_optin(psid: dict, optin: dict) -> None:
+    psid: str = psid["sender"]
+    platform: ConversationPlatform = ConversationPlatform.exists(
+        ConversationPlatform.FACEBOOK, psid
+    )
+    if not platform:
+        user_id = attempt_get_user_id(psid)
+        platform = ConversationPlatform.create(
+            ConversationPlatform.FACEBOOK, psid, customer_user_id=user_id
+        )
+
+    update_facebook_profile.delay(psid, platform.conversation.id)
+    message_m: Message = Message(
+        platform=platform,
+        message_id=uuid.uuid4(),
+        text="Thanks for opting to receive messages from us over Facebook Messenger."
+             " We'll be sure to keep you updated.",
+        direction=Message.TO_CUSTOMER,
+    )
+    message_m.save()
+    operator_interface.tasks.process_message(message_m.id)
 
 
 def attempt_get_user_id(psid: str) -> str:
@@ -177,7 +205,9 @@ def attempt_get_user_id(psid: str) -> str:
             "access_token": settings.FACEBOOK_ACCESS_TOKEN,
         },
     )
-    profile_r.raise_for_status()
+    if profile_r.status_code != 200:
+        logging.debug(profile_r.text)
+        return None
     profile = profile_r.json()
     app_ids = profile.get("ids_for_apps", {}).get("data", [])
 
@@ -194,6 +224,7 @@ def attempt_get_user_id(psid: str) -> str:
         django_keycloak_auth.users.link_roles_to_user(user.get("id"), ["customer"])
         return user.get("id")
 
+    return None
 
 @shared_task
 def update_facebook_profile(psid: str, cid) -> None:
@@ -324,6 +355,10 @@ def send_facebook_message(mid: int) -> None:
         request_body["persona_id"] = persona_id
     if len(quick_replies) > 0:
         request_body["message"]["quick_replies"] = quick_replies
+
+    if message.user is not None:
+        request_body["messaging_type"] = "MESSAGE_TAG"
+        request_body["tag"] = "HUMAN_AGENT"
 
     # TODO: Integrate with new system
     if message.payment_request:
@@ -468,17 +503,8 @@ def send_facebook_message(mid: int) -> None:
         logging.error(
             f"Error sending facebook message: {message_r.status_code} {message_r.text}"
         )
-        request_body = {
-            "recipient": {"id": psid},
-            "message": {
-                "text": "Sorry, I'm having some difficulty processing your request. Please try again later"
-            },
-        }
-        requests.post(
-            "https://graph.facebook.com/me/messages",
-            params={"access_token": settings.FACEBOOK_ACCESS_TOKEN},
-            json=request_body,
-        ).raise_for_status()
+        message.sate = Message.FAILED
+        message.save()
     else:
         message_json = message_r.json()
         mid = message_json["message_id"]

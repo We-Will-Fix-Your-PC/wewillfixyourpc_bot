@@ -21,6 +21,13 @@ export const request_map = {
     "time": "date and time",
 };
 
+const status_map = {
+    "D": "Delivered",
+    "R": "Read",
+    "F": "Failed to send",
+    "S": "Sending..."
+};
+
 export const a_or_an = (word) => {
     const vowelRegex = '^[aieouAIEOU].*';
     if (word.match(vowelRegex)) {
@@ -132,22 +139,36 @@ export default class Conversation extends Component {
 
                             if (m.isLoaded()) {
                                 d.setUTCSeconds(m.timestamp);
-
+                                let cur_platform = m.platform;
+                                let last_platform = null;
 
                                 if (i !== 0) {
                                     if (a[i - 1].isLoaded()) {
                                         prevDate.setUTCSeconds(a[i - 1].timestamp);
+                                        last_platform = a[i - 1].platform;
                                     }
                                     if (!(prevDate.getDay() === d.getDay() && prevDate.getMonth() === d.getMonth() &&
                                         prevDate.getFullYear() === d.getFullYear())) {
-                                        out.push(<div key={(i * 2) + 1}>
+                                        out.push(<div key={(i * 3) + 1}>
                                             <span>
                                                 <span>{dateformat(d, "ddd mmm dS yyyy")}</span>
                                             </span>
                                         </div>)
                                     }
+                                    if (cur_platform !== last_platform) {
+                                        out.push(<div key={(i * 3) + 2}>
+                                            <span>
+                                                <span>{m.platform_name}</span>
+                                            </span>
+                                        </div>)
+                                    }
                                 } else {
-                                    out.push(<div key={(i * 2) + 1}>
+                                    out.push(<div key={(i * 3) + 2}>
+                                        <span>
+                                            <span>{m.platform_name}</span>
+                                        </span>
+                                    </div>);
+                                    out.push(<div key={(i * 3) + 1}>
                                         <span>
                                             <span>{dateformat(d, "ddd mmm dS yyyy")}</span>
                                         </span>
@@ -155,7 +176,7 @@ export default class Conversation extends Component {
                                 }
                             }
 
-                            out.push(<div key={i * 2} data-msg-id={m.id}>
+                            out.push(<div key={i * 3} data-msg-id={m.id}>
                                 {m.isLoaded() ? m.end ?
                                     <span>
                                         <span>Session end</span>
@@ -199,8 +220,8 @@ export default class Conversation extends Component {
                                         {m.sent_by ?
                                             <span>Sent by {m.sent_by}</span> : null
                                         }
-                                        {m.direction === "I" && m.delivered ?
-                                            <span>{m.read ? "Read" : "Delivered"}</span> : null
+                                        {m.direction === "I" && m.state ?
+                                            <span>{status_map[m.state]}</span> : null
                                         }
                                     </div> : <div className="dir-O">
                                         <div>Loading...</div>

@@ -159,7 +159,7 @@ def hand_back(cid):
     conversation.save()
     message = models.Message(
         message_id=uuid.uuid4(),
-        platform=conversation.last_platform(),
+        platform=conversation.last_usable_platform("HUMAN_AGENT"),
         direction=models.Message.TO_CUSTOMER,
         text=f"You've been handed back to the automated assistant.\n"
         f"You can always request an agent at any time by saying 'request an agent'.",
@@ -196,7 +196,7 @@ def end_conversation(cid):
     #     process_event(cid, "end")
     message = models.Message(
         message_id=uuid.uuid4(),
-        platform=conversation.last_platform(),
+        platform=conversation.last_usable_platform("HUMAN_AGENT"),
         direction=models.Message.TO_CUSTOMER,
         text=f"Thanks for contacting We Will Fix Your PC."
         f" On a scale of 1 to 10 how would you rate your experience with us?",
@@ -214,7 +214,7 @@ def take_over(cid, uid):
     conversation.save()
     message = models.Message(
         message_id=uuid.uuid4(),
-        platform=conversation.last_platform(),
+        platform=conversation.last_usable_platform("HUMAN_AGENT"),
         direction=models.Message.TO_CUSTOMER,
         user=user,
         text=f"Hello I'm {user.first_name} and I'll be taking over from here",
