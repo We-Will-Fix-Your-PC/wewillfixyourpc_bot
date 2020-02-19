@@ -87,7 +87,6 @@ class PaymentData {
     load() {
         if (!this.isLoaded()) {
             if (this.app.pending_payments.indexOf(this.id) === -1) {
-                console.log(this.id);
                 this.app.sock.send(JSON.stringify({
                     type: "getPayment",
                     id: this.id
@@ -186,11 +185,11 @@ class MessageData {
     }
 
     get request() {
-        return this.load() ? this.data.request: null;
+        return this.load() ? this.data.request : null;
     }
 
     get sent_by() {
-        return this.load() ? this.data.sent_by: null;
+        return this.load() ? this.data.sent_by : null;
     }
 
     get payment_request() {
@@ -216,12 +215,15 @@ class MessageData {
             return "Facebook";
         } else if (this.data.platform === "TG") {
             return "Telegram";
+        } else if (this.data.platform === "TX") {
+            return "SMS";
+        } else if (this.data.platform === "CH") {
+            return "Customer chat";
         }
         return "Unknown platform"
     }
 
     get entities() {
-        console.log(this.data);
         return this.load() ? this.data.entities.map(e => new MessageEntityData(e)) : [];
     }
 
@@ -242,6 +244,7 @@ class MessageEntityData {
     constructor(data) {
         this.data = data;
     }
+
     get entity() {
         return this.data.entity
     }
@@ -346,6 +349,10 @@ class ConversationData {
         return this.data.customer_gender;
     }
 
+    get customer_id() {
+        return this.data.customer_id;
+    }
+
     can_message() {
         return this.can_interact() && this.current_user_responding && !this.agent_responding
     }
@@ -397,6 +404,7 @@ class App extends Component {
         this.handleOpen = this.handleOpen.bind(this);
         this.handleReceiveMessage = this.handleReceiveMessage.bind(this);
         this.onEnd = this.onEnd.bind(this);
+        this.onRequestSignIn = this.onRequestSignIn.bind(this);
         this.onTakeOver = this.onTakeOver.bind(this);
         this.onHandBack = this.onHandBack.bind(this);
     }
@@ -448,6 +456,14 @@ class App extends Component {
             delete conversations[data.id];
             this.setState({
                 conversations: conversations,
+                selectedCid: new_cid
+            });
+        } else if (data.type === "conversation_merge") {
+            let new_cid = this.state.selectedCid;
+            if (new_cid === data.id) {
+                new_cid = data.nid;
+            }
+            this.setState({
                 selectedCid: new_cid
             });
         } else if (data.type === "payment") {
@@ -506,6 +522,13 @@ class App extends Component {
     onEnd() {
         this.sock.send(JSON.stringify({
             type: "endConv",
+            cid: this.state.selectedCid
+        }));
+    }
+
+    onRequestSignIn() {
+        this.sock.send(JSON.stringify({
+            type: "request_sign_in",
             cid: this.state.selectedCid
         }));
     }
@@ -591,15 +614,15 @@ class App extends Component {
 
                 <DrawerAppContent className='drawer-app-content'>
                     <Dialog
-                        onClose={() => this.setState({ error: null })}
+                        onClose={() => this.setState({error: null})}
                         open={!!this.state.error}>
-                            <DialogTitle>An error occurred</DialogTitle>
-                            <DialogContent>
-                                {this.state.error}
-                            </DialogContent>
-                            <DialogFooter>
-                                <DialogButton action='dismiss' isDefault>Ok</DialogButton>
-                            </DialogFooter>
+                        <DialogTitle>An error occurred</DialogTitle>
+                        <DialogContent>
+                            {this.state.error}
+                        </DialogContent>
+                        <DialogFooter>
+                            <DialogButton action='dismiss' isDefault>Ok</DialogButton>
+                        </DialogFooter>
                     </Dialog>
                     <TopAppBar>
                         <TopAppBarRow>
@@ -614,9 +637,6 @@ class App extends Component {
                                 {this.state.selectedCid === null ||
                                 !this.state.conversations[this.state.selectedCid].can_interact() ? null :
                                     <React.Fragment>
-                                        {/*<Button raised onClick={this.onEnd}>*/}
-                                        {/*    End conversation*/}
-                                        {/*</Button>*/}
                                         {!this.state.conversations[this.state.selectedCid].agent_responding ?
                                             <React.Fragment>
                                                 {/*<Button raised onClick={this.onHandBack}>*/}
@@ -626,7 +646,15 @@ class App extends Component {
                                                     .current_user_responding ?
                                                     <Button raised onClick={this.onTakeOver}>
                                                         Take over
-                                                    </Button> : null
+                                                    </Button> : <React.Fragment>
+                                                        <Button raised onClick={this.onEnd}>
+                                                            End conversation
+                                                        </Button>
+                                                        {!this.state.conversations[this.state.selectedCid].customer_id ?
+                                                            <Button raised onClick={this.onRequestSignIn}>
+                                                                Request sign in
+                                                            </Button> : null}
+                                                    </React.Fragment>
                                                 }
                                             </React.Fragment> :
                                             <Button raised onClick={this.onTakeOver}>

@@ -34,6 +34,17 @@ def conversation_saved(
     )
 
 
+@receiver(post_save, sender=operator_interface.models.ConversationPlatform)
+def conversation_saved(
+    sender, instance: operator_interface.models.ConversationPlatform, **kwargs
+):
+    transaction.on_commit(
+        lambda: async_to_sync(channel_layer.group_send)(
+            "operator_interface", {"type": "conversation_update", "cid": instance.conversation.id}
+        )
+    )
+
+
 @receiver(post_delete, sender=operator_interface.models.Conversation)
 def conversation_deleted(
     sender, instance: operator_interface.models.Conversation, **kwargs
@@ -102,6 +113,15 @@ class OperatorConsumer(JsonWebsocketConsumer):
     def conversation_delete(self, event):
         self.send_json({
             "type": "conversation_delete",
+            "id": event["cid"]
+        })
+
+    def conversation_merge(self, event):
+        conversation = self.get_conversation(event["ncid"])
+        self.send_conversation(conversation)
+        self.send_json({
+            "type": "conversation_merge",
+            "nid": event["ncid"],
             "id": event["cid"]
         })
 
@@ -218,6 +238,7 @@ class OperatorConsumer(JsonWebsocketConsumer):
                 "current_user_responding": conversation.current_agent.id == self.user.id
                 if conversation.current_agent
                 else False,
+                "customer_id": str(conversation.conversation_user_id) if conversation.conversation_user_id else None,
                 "customer_name": user.get("name", f"{first_name} {last_name}"),
                 "customer_first_name": first_name,
                 "customer_last_name": last_name,
@@ -425,6 +446,18 @@ class OperatorConsumer(JsonWebsocketConsumer):
                 self.save_object(message)
                 operator_interface.tasks.process_message.delay(message.id)
 
+    def request_sign_in(self, conversation: operator_interface.models.Conversation):
+        if not conversation.conversation_user_id:
+            message = operator_interface.models.Message(
+                platform=conversation.last_usable_platform("HUMAN_AGENT"),
+                text="Please sign in to continue",
+                direction=operator_interface.models.Message.TO_CUSTOMER,
+                user=self.user,
+                request="sign_in",
+            )
+            self.save_object(message)
+            operator_interface.tasks.process_message.delay(message.id)
+
     def receive_json(self, message, **kwargs):
         if message["type"] == "resyncReq":
             last_message = message["lastMessage"]
@@ -488,6 +521,13 @@ class OperatorConsumer(JsonWebsocketConsumer):
             try:
                 conv = self.get_conversation(cid)
                 self.attribute_update(conv, message["attribute"], message["value"])
+            except operator_interface.models.Conversation.DoesNotExist:
+                pass
+        elif message["type"] == "request_sign_in":
+            cid = message["cid"]
+            try:
+                conv = self.get_conversation(cid)
+                self.request_sign_in(conv)
             except operator_interface.models.Conversation.DoesNotExist:
                 pass
         elif message["type"] == "requestPayment":

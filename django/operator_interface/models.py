@@ -63,7 +63,7 @@ class Conversation(models.Model):
     def update_user_id(self, user_id):
         if user_id == self.conversation_user_id:
             return self
-        other_conversation = self.objects.filter(conversation_user_id=user_id)
+        other_conversation = Conversation.objects.filter(conversation_user_id=user_id)
         if len(other_conversation) > 0:
             for platform in self.conversationplatform_set.all():
                 platform.conversation = other_conversation[0]
@@ -86,13 +86,15 @@ class ConversationPlatform(models.Model):
     AZURE = "AZ"
     GOOGLE_ACTIONS = "GA"
     SMS = "TX"
+    CHAT = "CH"
     PLATFORM_CHOICES = (
         (FACEBOOK, "Facebook"),
         (TWITTER, "Twitter"),
         (TELEGRAM, "Telegram"),
         (AZURE, "Azure"),
         (GOOGLE_ACTIONS, "Actions on Google"),
-        (SMS, "SMS")
+        (SMS, "SMS"),
+        (CHAT, "Customer chat")
     )
 
     conversation = models.ForeignKey(Conversation, on_delete=models.CASCADE)

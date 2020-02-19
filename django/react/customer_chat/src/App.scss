@@ -1,0 +1,208 @@
+body {
+  margin: 0;
+}
+
+a {
+  color: #fff;
+}
+
+button, .btn {
+  background: #ff790f;
+  padding: 7px;
+  border: none;
+  border-radius: 5px;
+  margin: 5px 0;
+  font-size: 15px;
+  color: #fff;
+  display: block;
+  text-align: center;
+  text-decoration: none;
+
+  &:hover {
+    box-shadow: #555 0 0 2px inset;
+  }
+
+  &:disabled {
+    background: #aaa;
+  }
+}
+
+button {
+  width: 100%;
+}
+
+input, textarea {
+  display: block;
+  border: none;
+  border-bottom: 1px solid gray;
+  font-size: 18px;
+  padding: 5px;
+  border-top-left-radius: 3px;
+  border-top-right-radius: 3px;
+  background: #eee;
+}
+
+label {
+  margin-bottom: 7px;
+}
+
+#root {
+  display: flex;
+  justify-content: center;
+  background: #ddd;
+}
+
+.App {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  max-width: 800px;
+  flex: 100% 0 1;
+  background: #fff;
+  overflow-y: hidden;
+
+  header {
+    flex: auto 0 1;
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    background: #333;
+
+    img {
+      height: 65px;
+      border-radius: 50%;
+    }
+
+    div.name {
+      margin-left: 10px;
+      color: #fff;
+
+      h3 {
+        margin: 0;
+      }
+
+      span {
+        font-size: 14px;
+      }
+    }
+  }
+
+  .messages {
+    flex: auto;
+    overflow-x: hidden;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    padding: 0 7px;
+
+    > div {
+      > div {
+        align-self: flex-end;
+        display: flex;
+        max-width: 100%;
+
+        > img {
+          margin-left: 5px;
+          align-self: flex-end;
+          flex: 32px;
+          flex-shrink: 0;
+          flex-grow: 0;
+          border-radius: 50%;
+        }
+
+        > div {
+          background: #ff790f;
+          padding: 7px;
+          border-radius: 5px;
+          text-align: right;
+        }
+      }
+      margin: 3px 0;
+      align-self: flex-end;
+      max-width: 70%;
+      display: flex;
+      flex-direction: column;
+
+      > span {
+        color: gray;
+        font-size: 14px;
+      }
+
+      &.dir-I {
+        align-self: flex-start;
+
+        > div  {
+          > div {
+            background: #ddd;
+            text-align: left;
+          }
+          >img {
+            margin-left: 0;
+            margin-right: 5px;
+          }
+          align-self: flex-start;
+        }
+      }
+    }
+  }
+
+  .message-input {
+    flex: 50px;
+    flex-grow: 0;
+    flex-shrink: 0;
+    display: flex;
+
+    textarea {
+      flex: auto 1 0;
+      border: none;
+      border-radius: 0;
+      font-family: sans-serif;
+    }
+
+    i {
+      flex: auto 0 1;
+      align-self: center;
+      color: gray;
+      margin: 0 5px;
+    }
+  }
+
+  .dialog {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    background: rgba(0, 0, 0, .5);
+    align-items: center;
+    justify-content: center;
+
+    .dialog-content {
+      max-width: 500px;
+      margin: 15px;
+      padding: 10px;
+      background: #fff;
+      border-radius: 5px;
+      box-shadow: #444 0 0 5px;
+
+      > h1 {
+        margin: 0;
+        font-size: 26px;
+        width: 100%;
+        padding-bottom: 5px;
+        border-bottom: 1px solid lightgray;
+      }
+
+      h1, h2, h3, h4 {
+        text-align: center;
+      }
+
+      > div {
+        margin-top: 10px;
+        display: flex;
+        flex-direction: column;
+      }
+    }
+  }
+}

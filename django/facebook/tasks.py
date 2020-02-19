@@ -110,7 +110,7 @@ def handle_facebook_message(psid: dict, message: dict, timestamp: int) -> None:
                 platform_message_id=mid,
                 text=text if text else "",
                 direction=Message.TO_CUSTOMER,
-                delivered=True,
+                state=operator_interface.models.Message.DELIVERED
             )
             message_m.save()
             operator_interface.tasks.send_message_to_interface.delay(message_m.id)

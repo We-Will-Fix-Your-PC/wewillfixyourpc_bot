@@ -15,6 +15,7 @@ import rasa_api.actions
 import telegram_bot.tasks
 import twitter.tasks
 import azure_bot.tasks
+import customer_chat.tasks
 import keycloak.exceptions
 import django_keycloak_auth.clients
 from django.utils import timezone
@@ -134,6 +135,8 @@ def process_message(mid: int):
             telegram_bot.tasks.send_telegram_message(mid)
         elif platform == models.ConversationPlatform.AZURE:
             azure_bot.tasks.send_azure_message(mid)
+        elif platform == models.ConversationPlatform.CHAT:
+            customer_chat.tasks.send_message(mid)
         elif platform == models.ConversationPlatform.GOOGLE_ACTIONS:
             return mid
 
