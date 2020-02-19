@@ -7,6 +7,8 @@ VERSION=$(sentry-cli releases propose-version || exit)
 
 cd react/operator_interface || exit
 yarn build || exit
+cd ../customer_chat || exit
+yarn build || exit
 cd ../..
 
 cp ../../django-keycloak-auth/dist/django-keycloak-auth-1.0.tar.gz .

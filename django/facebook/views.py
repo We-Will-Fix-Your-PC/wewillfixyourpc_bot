@@ -15,6 +15,7 @@ from . import models
 import json
 import datetime
 import logging
+import hmac
 
 logger = logging.getLogger(__name__)
 
@@ -29,6 +30,13 @@ def webhook(request):
         if mode is not None and token is not None:
             if mode == "subscribe" and token == settings.FACEBOOK_VERIFY_TOKEN:
                 return HttpResponse(challenge)
+        return HttpResponseForbidden()
+
+    sig = request.META.get("HTTP_X_HUB_SIGNATURE")
+    if not sig.startswith("sha1="):
+        return HttpResponseBadRequest()
+    own_sig = hmac.new(settings.FACEBOOK_APP_SECRET.encode(), request.body, 'sha1').hexdigest()
+    if not hmac.compare_digest(own_sig, sig[5:]):
         return HttpResponseForbidden()
 
     try:

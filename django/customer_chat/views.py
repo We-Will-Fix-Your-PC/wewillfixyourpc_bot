@@ -1,5 +1,6 @@
 from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseNotAllowed
 from django.urls import reverse
+from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
@@ -9,6 +10,10 @@ import secrets
 
 
 channel_layer = get_channel_layer()
+
+
+def index(request):
+    return render(request, "customer_chat/index.html")
 
 
 @csrf_exempt

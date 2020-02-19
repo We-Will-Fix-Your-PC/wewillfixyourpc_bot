@@ -220,6 +220,7 @@ fabric.properties
 node_modules
 
 django/secrets/
+django/static/
 gactions/creds.data
 
 .sass-cache

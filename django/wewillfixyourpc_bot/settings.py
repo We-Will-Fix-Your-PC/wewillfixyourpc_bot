@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     "telegram_bot",
     "azure_bot",
     "operator_interface",
+    "customer_chat",
     "rasa_api",
     "gactions",
     "corsheaders",

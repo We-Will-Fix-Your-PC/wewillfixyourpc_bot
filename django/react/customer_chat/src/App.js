@@ -4,7 +4,7 @@ import uuid from 'uuid/v4';
 import logo from './wwfypc512.png';
 import ReconnectingWebSocket from 'reconnecting-websocket';
 
-const BASE_URL = process.env.NODE_ENV === 'production' ? "https://" + window.location.host + "/" : "http://localhost:8000/";
+const BASE_URL = process.env.NODE_ENV === 'production' ? "https://" + window.location.host : "http://localhost:8000";
 
 class MessageData {
     constructor(id, data, app) {

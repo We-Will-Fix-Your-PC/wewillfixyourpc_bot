@@ -35,11 +35,5 @@ urlpatterns = [
 ]
 
 if settings.DEBUG:
-    urlpatterns += static(
-        "static/operator_interface",
-        document_root=os.path.join(
-            settings.BASE_DIR, "operator_interface/templates/operator_interface/build"
-        ),
-    )
     urlpatterns += static("static/", document_root=settings.STATIC_ROOT)
     urlpatterns += static("media/", document_root=settings.MEDIA_ROOT)
