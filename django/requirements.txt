@@ -34,3 +34,4 @@ aiohttp
 flask
 git+https://github.com/Peter-Slump/python-keycloak-client.git@master
 git+https://github.com/TheEnbyperor/rasa-sdk.git@master
+git+https://github.com/TheEnbyperor/django-keycloak-auth.git@master
