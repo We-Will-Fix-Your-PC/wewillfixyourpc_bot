@@ -6,6 +6,23 @@ import ReconnectingWebSocket from 'reconnecting-websocket';
 
 const BASE_URL = process.env.NODE_ENV === 'production' ? "https://" + window.location.host : "http://localhost:8000";
 
+const applicationServerPublicKey = 'BD9YFnVo9uQ1QQNcAV__0luLgROO_4cGRCNh4KRZaxeVwW4m21ApNxUuQFIwiNFk4XBYF7r0i9LOxHbxoP1U4zI';
+
+function urlB64ToUint8Array(base64String) {
+    const padding = '='.repeat((4 - base64String.length % 4) % 4);
+    const base64 = (base64String + padding)
+        .replace(/-/g, '+')
+        .replace(/_/g, '/');
+
+    const rawData = window.atob(base64);
+    const outputArray = new Uint8Array(rawData.length);
+
+    for (let i = 0; i < rawData.length; ++i) {
+        outputArray[i] = rawData.charCodeAt(i);
+    }
+    return outputArray;
+}
+
 class MessageData {
     constructor(id, data, app) {
         this.id = id;
@@ -64,19 +81,19 @@ class MessageData {
     }
 
     get request() {
-        return this.load() ? this.data.request: null;
+        return this.load() ? this.data.request : null;
     }
 
     get sent_by() {
-        return this.load() ? this.data.sent_by: null;
+        return this.load() ? this.data.sent_by : null;
     }
 
     get profile_picture() {
-        return this.load() ? this.data.profile_picture_url: null;
+        return this.load() ? this.data.profile_picture_url : null;
     }
 
     get buttons() {
-        return this.load() ? this.data.buttons: null;
+        return this.load() ? this.data.buttons : null;
     }
 }
 
@@ -94,8 +111,10 @@ class App extends Component {
         this.messages = React.createRef();
         this.nameField = React.createRef();
         this.msgRef = React.createRef();
-        this.ws = new ReconnectingWebSocket( process.env.NODE_ENV === 'production' ? "wss://" + window.location.host + "/ws/chat/" : "ws://localhost:8000/ws/chat/");
+        this.ws = new ReconnectingWebSocket(process.env.NODE_ENV === 'production' ? "wss://" + window.location.host + "/ws/chat/" : "ws://localhost:8000/ws/chat/");
         this.pending_messages = [];
+        this.sw_registration = null;
+        this.push_subscription = null;
 
         this.state = {
             token: null,
@@ -106,6 +125,7 @@ class App extends Component {
             loading: true,
             ready: false,
             conversation: null,
+            ask_notification: false,
             messages: {},
             pending_messages: {}
         };
@@ -116,6 +136,8 @@ class App extends Component {
         this.resyncWs = this.resyncWs.bind(this);
         this.wsRecv = this.wsRecv.bind(this);
         this.messageObserverCallback = this.messageObserverCallback.bind(this);
+        this.subscribeNotif = this.subscribeNotif.bind(this);
+        this.setupPush = this.setupPush.bind(this);
 
         this.ws.addEventListener('open', this.resyncWs);
         this.ws.addEventListener('close', () => this.setState({}));
@@ -126,6 +148,24 @@ class App extends Component {
             rootMargin: '0px',
             threshold: 1
         });
+    }
+
+    get ask_notify() {
+        if (!this.state.ask_notification) {
+            return false;
+        } else if (!("Notification" in window) || !('PushManager' in window) || !('serviceWorker' in navigator)) {
+            return false;
+        } else {
+            return Notification.permission === "default";
+        }
+    }
+
+    get can_notify() {
+        if (!("Notification" in window)) {
+            return false;
+        } else {
+            return Notification.permission === "granted";
+        }
     }
 
     get loading() {
@@ -140,11 +180,17 @@ class App extends Component {
                 token: this.state.token
             }));
             this.pending_messages.forEach(m => {
-                this.sock.send(JSON.stringify({
+                this.ws.send(JSON.stringify({
                     type: "getMessage",
                     id: m
                 }));
             });
+            if (this.push_subscription) {
+                this.ws.send(JSON.stringify({
+                    type: "pushSubscription",
+                    data: this.push_subscription
+                }));
+            }
         }
     }
 
@@ -217,7 +263,21 @@ class App extends Component {
         messages.scrollTo(0, messages.scrollHeight - messages.offsetHeight);
         messages.childNodes.forEach(child => {
             this.observer.observe(child);
-        })
+        });
+
+        const self = this;
+        navigator.serviceWorker.register('/static/customer_chat/build/sw.js')
+            .then((registration) => {
+                console.log('Service worker successfully registered.');
+                self.setState({
+                    ask_notification: true
+                });
+                self.sw_registration = registration;
+                self.setupPush();
+            })
+            .catch(function (err) {
+                console.error('Unable to register service worker.', err);
+            });
     }
 
     getSnapshotBeforeUpdate(prevProps, prevState) {
@@ -319,6 +379,44 @@ class App extends Component {
         }
     }
 
+    setupPush() {
+        if (this.sw_registration) {
+            if (this.can_notify) {
+                const applicationServerKey = urlB64ToUint8Array(applicationServerPublicKey);
+                this.sw_registration.pushManager.subscribe({
+                    userVisibleOnly: true,
+                    applicationServerKey: applicationServerKey
+                })
+                    .then(r => {
+                        this.push_subscription = r.toJSON();
+                        this.resyncWs();
+                    })
+                    .catch(e => console.error(e))
+            }
+        }
+    }
+
+    subscribeNotif() {
+        const self = this;
+        new Promise((resolve, reject) => {
+            const permissionResult = Notification.requestPermission((result) => {
+                resolve(result);
+            });
+
+            if (permissionResult) {
+                permissionResult.then(resolve, reject);
+            }
+        })
+            .then((permissionResult) => {
+                self.setState({
+                    ask_notification: false
+                });
+                if (permissionResult === 'granted') {
+                    self.setupPush();
+                }
+            });
+    }
+
     render() {
         return (
             <div className="App">
@@ -334,51 +432,56 @@ class App extends Component {
                             }
                             {this.state.conversation ? this.state.conversation.current_agent ? <div>
                                 You're speaking to {this.state.conversation.current_agent}
-                            </div> : null : null }
+                            </div> : null : null}
                         </div>
                     ) : null}
                 </header>
+                {this.ask_notify ? <div className="alert">
+                    <div>Receive notifications from this chat?</div>
+                    <button onClick={this.subscribeNotif}>Allow</button>
+                    <button onClick={() => this.setState({ask_notification: false})}>Dismiss</button>
+                </div> : null}
                 <div className="messages" ref={this.messages}>
                     {this.state.conversation ? this.state.conversation.messages.map((id, i) => {
-                            let msg = this.getMsg(id);
-                            const next_mid = this.state.conversation.messages[i+1];
-                            let next_msg = (typeof next_mid !== 'undefined') ? this.getMsg(next_mid) : null;
+                        let msg = this.getMsg(id);
+                        const next_mid = this.state.conversation.messages[i + 1];
+                        let next_msg = (typeof next_mid !== 'undefined') ? this.getMsg(next_mid) : null;
 
-                            if (msg.isLoaded()) {
-                                return <div className={`dir-${msg.direction}`} data-msg-id={msg.id} key={msg.id}>
+                        if (msg.isLoaded()) {
+                            return <div className={`dir-${msg.direction}`} data-msg-id={msg.id} key={msg.id}>
+                                <div>
+                                    {msg.profile_picture ? <img src={msg.profile_picture} alt=""/> : (
+                                        msg.direction === "I" ? <img src={logo} alt=""/> : null
+                                    )}
                                     <div>
-                                        {msg.profile_picture ? <img src={msg.profile_picture} alt=""/> : (
-                                            msg.direction === "I" ? <img src={logo} alt=""/> : null
-                                        )}
-                                        <div>
-                                            {msg.text ? <span
-                                                dangerouslySetInnerHTML={{__html: msg.text.replace(/\n/g, "<br />")}}/> : null}
-                                            {msg.request === "sign_in" ? (
-                                                !this.state.user_profile.is_authenticated ?
-                                                    <a href={this.state.login_url} className="btn">Sign in</a> :
-                                                    <button disabled={true}>Sign in complete</button>
-                                            ) : null}
-                                            {msg.buttons.map(b => {
-                                                if (b.type === "url") {
-                                                    return <a href={b.url}>{b.text}</a>
-                                                }
-                                            })}
-                                        </div>
-                                    </div>
-                                    {msg.sent_by && !(next_msg && next_msg.isLoaded() && next_msg.sent_by === msg.sent_by) ?
-                                        <span>Sent by {msg.sent_by}</span> : null}
-                                    {msg.direction === "O" && msg.state && !(next_msg && next_msg.isLoaded() && next_msg.state === msg.state) ?
-                                        <span>{status_map[msg.state]}</span> : null
-                                    }
-                                </div>
-                            } else {
-                                return <div data-msg-id={msg.id} key={msg.id}>
-                                    <div>
-                                        <div>Loading...</div>
+                                        {msg.text ? <span
+                                            dangerouslySetInnerHTML={{__html: msg.text.replace(/\n/g, "<br />")}}/> : null}
+                                        {msg.request === "sign_in" ? (
+                                            !this.state.user_profile.is_authenticated ?
+                                                <a href={this.state.login_url} className="btn">Sign in</a> :
+                                                <button disabled={true}>Sign in complete</button>
+                                        ) : null}
+                                        {msg.buttons.map(b => {
+                                            if (b.type === "url") {
+                                                return <a href={b.url}>{b.text}</a>
+                                            }
+                                        })}
                                     </div>
                                 </div>
-                            }
-                        }) : null }
+                                {msg.sent_by && !(next_msg && next_msg.isLoaded() && next_msg.sent_by === msg.sent_by) ?
+                                    <span>Sent by {msg.sent_by}</span> : null}
+                                {msg.direction === "O" && msg.state && !(next_msg && next_msg.isLoaded() && next_msg.state === msg.state) ?
+                                    <span>{status_map[msg.state]}</span> : null
+                                }
+                            </div>
+                        } else {
+                            return <div data-msg-id={msg.id} key={msg.id}>
+                                <div>
+                                    <div>Loading...</div>
+                                </div>
+                            </div>
+                        }
+                    }) : null}
                     {Object.values(this.state.pending_messages).map((m, i) => {
                         return <div key={i} className="dir-O">
                             <div>

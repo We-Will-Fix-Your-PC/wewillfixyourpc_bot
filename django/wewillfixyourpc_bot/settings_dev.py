@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     "operator_interface",
     "customer_chat",
     "rasa_api",
+    "api",
     "gactions",
     "corsheaders",
 ]
@@ -171,6 +172,7 @@ AZURE_APP_PASSWORD = azure_conf["app-password"]
 FACEBOOK_VERIFY_TOKEN = facebook_conf["verify_token"]
 FACEBOOK_ACCESS_TOKEN = facebook_conf["access_token"]
 FACEBOOK_APP_SECRET = facebook_conf["app_secret"]
+FACEBOOK_OPTIN_SECRET = facebook_conf["optin_secret"]
 
 TWITTER_CONSUMER_KEY = twitter_conf["consumer_key"]
 TWITTER_CONSUMER_SECRET = twitter_conf["consumer_secret"]

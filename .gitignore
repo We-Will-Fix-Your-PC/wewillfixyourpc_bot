@@ -221,6 +221,8 @@ node_modules
 
 django/secrets/
 django/static/
+django/customer_chat/templates/customer_chat/index.html
+django/operator_interface/templates/operator_interface/index.html
 gactions/creds.data
 
 .sass-cache

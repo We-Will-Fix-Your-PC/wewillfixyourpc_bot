@@ -1,17 +1,32 @@
-from django.http import HttpResponse, HttpResponseNotAllowed, HttpResponseBadRequest, Http404
+from django.http import HttpResponse, HttpResponseNotAllowed, HttpResponseBadRequest, Http404, HttpResponseForbidden
 import json
 import phonenumbers
 import django_keycloak_auth.users
+import django_keycloak_auth.clients
 import keycloak.exceptions
 import uuid
 import operator_interface.tasks
 from django.conf import settings
+from django.views.decorators.csrf import csrf_exempt
 from operator_interface.models import Message, Conversation, ConversationPlatform
 
 
+@csrf_exempt
 def send_message(request, customer_id):
     if request.method != "POST":
         return HttpResponseNotAllowed(permitted_methods=["POST"])
+
+    auth = request.META.get("HTTP_AUTHORIZATION")
+    if not auth or not auth.startswith("Bearer "):
+        return HttpResponseForbidden()
+
+    try:
+        claims = django_keycloak_auth.clients.verify_token(auth[len('Bearer '):].strip())
+    except keycloak.exceptions.KeycloakClientError:
+        return HttpResponseForbidden()
+
+    if "send-messages" not in claims.get("resource_access", {}).get("bot-server", {}).get("roles", []):
+        return HttpResponseForbidden()
 
     try:
         customer = django_keycloak_auth.users.get_user_by_id(customer_id).user
@@ -32,7 +47,7 @@ def send_message(request, customer_id):
     platform = None
     try:
         conv = Conversation.objects.get(conversation_user_id=customer_id)
-        platform = conv.last_usable_platform(tag)
+        platform = conv.last_usable_platform(tag, True)
     except Conversation.DoesNotExist:
         mobile_numbers = []
         other_numbers = []
@@ -47,15 +62,39 @@ def send_message(request, customer_id):
                 else:
                     other_numbers.append(n)
         if len(mobile_numbers) or len(other_numbers):
-            conv = Conversation(customer_user_id=customer_id)
-            conv.save()
+            for n in mobile_numbers:
+                try:
+                    platform = ConversationPlatform.objects.get(
+                        platform=ConversationPlatform.SMS,
+                        platform_id=n
+                    )
+                    break
+                except ConversationPlatform.DoesNotExist:
+                    pass
 
-            platform = ConversationPlatform(
-                conversation=conv,
-                platform=ConversationPlatform.SMS,
-                platform_id=mobile_numbers[0] if len(mobile_numbers) else other_numbers[0]
-            )
-            platform.save()
+            if not platform:
+                for n in other_numbers:
+                    try:
+                        platform = ConversationPlatform.objects.get(
+                            platform=ConversationPlatform.SMS,
+                            platform_id=n
+                        )
+                        break
+                    except ConversationPlatform.DoesNotExist:
+                        pass
+
+            if not platform:
+                conv = Conversation(customer_user_id=customer_id)
+                conv.save()
+
+                platform = ConversationPlatform(
+                    conversation=conv,
+                    platform=ConversationPlatform.SMS,
+                    platform_id=mobile_numbers[0] if len(mobile_numbers) else other_numbers[0]
+                )
+                platform.save()
+            else:
+                platform.conversation.update_user_id(customer_id)
 
     if platform is None:
         return HttpResponse(

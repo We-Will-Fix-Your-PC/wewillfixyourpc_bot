@@ -6,6 +6,7 @@ import re
 import typing
 import urllib.parse
 import uuid
+import jwt.exceptions
 from io import BytesIO
 
 import django_keycloak_auth.users
@@ -175,17 +176,27 @@ def handle_facebook_read(psid: dict, read: dict) -> None:
 
 @shared_task
 def handle_facebook_optin(psid: dict, optin: dict) -> None:
+    user_id = None
+    if optin.get("ref"):
+        try:
+            ref = jwt.decode(optin.get("ref"), settings.FACEBOOK_OPTIN_SECRET, algorithms=['HS256'])
+            user_id = ref.get("cust_id")
+        except jwt.exceptions.InvalidTokenError:
+            return
     psid: str = psid["sender"]
     platform: ConversationPlatform = ConversationPlatform.exists(
         ConversationPlatform.FACEBOOK, psid
     )
     if not platform:
-        user_id = attempt_get_user_id(psid)
+        if not user_id:
+            user_id = attempt_get_user_id(psid)
         platform = ConversationPlatform.create(
             ConversationPlatform.FACEBOOK, psid, customer_user_id=user_id
         )
 
     update_facebook_profile.delay(psid, platform.conversation.id)
+    if user_id:
+        platform.conversation.update_user_id(user_id)
     message_m: Message = Message(
         platform=platform,
         message_id=uuid.uuid4(),

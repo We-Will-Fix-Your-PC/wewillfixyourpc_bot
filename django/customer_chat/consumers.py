@@ -4,6 +4,7 @@ from channels.layers import get_channel_layer
 from django.conf import settings
 from django.shortcuts import reverse
 import typing
+import json
 import re
 import operator_interface.models
 import operator_interface.tasks
@@ -93,6 +94,28 @@ class ChatConsumer(JsonWebsocketConsumer):
         self.send_message(message)
         self.send_conversation(message.platform)
 
+    def register_push(self, msg):
+        if not (msg.get("endpoint") and msg.get("keys")):
+            return
+
+        try:
+            data = json.loads(self.platform.additional_platform_data) if self.platform.additional_platform_data else {}
+        except json.JSONDecodeError:
+            data = {}
+        push = data.get("push", [])
+
+        new_push = True
+        for i, p in enumerate(push):
+            if p.get("endpoint") == msg.get("endpoint"):
+                push[i] = msg
+                new_push = False
+        if new_push:
+            push.append(msg)
+
+        data["push"] = push
+        self.platform.additional_platform_data = json.dumps(data)
+        self.platform.save()
+
     def receive_json(self, message, **kwargs):
         msg_type = message.get("type")
         if self.platform is None and msg_type != "resyncReq":
@@ -136,3 +159,5 @@ class ChatConsumer(JsonWebsocketConsumer):
                     self.send_message(msg)
             except operator_interface.models.Message.DoesNotExist:
                 pass
+        elif msg_type == "pushSubscription":
+            self.register_push(message["data"])

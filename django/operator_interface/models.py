@@ -53,10 +53,10 @@ class Conversation(models.Model):
             return None
         return last_message.platform
 
-    def last_usable_platform(self, tag=None):
+    def last_usable_platform(self, tag=None, alert=False):
         platforms = self.conversationplatform_set.order_by('-messages__timestamp')
         for platform in platforms:
-            if platform.can_message(tag):
+            if platform.can_message(tag, alert):
                 return platform
         return None
 
@@ -124,7 +124,7 @@ class ConversationPlatform(models.Model):
                 pass
         if conv is None:
             conv = Conversation(
-                customer_user_id=customer_user_id,
+                conversation_user_id=customer_user_id,
             )
             conv.save()
 
@@ -132,7 +132,7 @@ class ConversationPlatform(models.Model):
         plat.save()
         return plat
 
-    def can_message(self, tag=None):
+    def can_message(self, tag=None, alert=False):
         if self.platform == self.FACEBOOK:
             if tag in ["CONFIRMED_EVENT_UPDATE", "POST_PURCHASE_UPDATE", "ACCOUNT_UPDATE"]:
                 return True
@@ -146,6 +146,17 @@ class ConversationPlatform(models.Model):
                     return True
             return False
         elif self.platform == self.GOOGLE_ACTIONS:
+            return False
+        elif self.platform == self.CHAT and alert:
+            # Not really sure about the best way to guarantee the notification got through, so lets just not for now
+            # try:
+            #     data = json.loads(self.additional_platform_data) \
+            #         if self.additional_platform_data else {}
+            # except json.JSONDecodeError:
+            #     data = {}
+            #
+            # push = data.get("push", [])
+            # return len(push) > 0
             return False
         else:
             return True
