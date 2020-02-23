@@ -42,7 +42,6 @@ def send_push_notification(sid, data):
             vapid_private_key=settings.PUSH_PRIV_KEY,
             vapid_claims={
                 "sub": "mailto:q@misell.cymru",
-                "aud": "https://cardifftec.uk",
             },
         )
     except WebPushException as e:
