@@ -208,7 +208,7 @@ def handle_facebook_optin(psid: dict, optin: dict) -> None:
     operator_interface.tasks.process_message(message_m.id)
 
 
-def attempt_get_user_id(psid: str) -> str:
+def attempt_get_user_id(psid: str) -> typing.Optional[str]:
     profile_r = requests.get(
         f"https://graph.facebook.com/{psid}",
         params={
@@ -228,7 +228,7 @@ def attempt_get_user_id(psid: str) -> str:
                 return True
         return False
 
-    user = django_keycloak_auth.users.get_or_create_user(
+    user = django_keycloak_auth.users.get_user_by_federated_identity(
         federated_provider="facebook", check_federated_user=check_asid_with_psid,
     )
     if user:
@@ -236,6 +236,7 @@ def attempt_get_user_id(psid: str) -> str:
         return user.get("id")
 
     return None
+
 
 @shared_task
 def update_facebook_profile(psid: str, cid) -> None:
