@@ -48,7 +48,7 @@ def handle_facebook_message(psid: dict, message: dict, timestamp: int) -> None:
                     platform_message_id=mid,
                     text=text,
                     direction=Message.FROM_CUSTOMER,
-                    timestamp=datetime.datetime.utcfromtimestamp(timestamp)
+                    timestamp=datetime.datetime.fromtimestamp(timestamp / 1000)
                 )
                 message_m.save()
                 operator_interface.tasks.process_message.delay(message_m.id)
@@ -72,7 +72,7 @@ def handle_facebook_message(psid: dict, message: dict, timestamp: int) -> None:
                                     platform_message_id=mid,
                                     image=fs.base_url + file_name,
                                     direction=Message.FROM_CUSTOMER,
-                                    timestamp=datetime.datetime.utcfromtimestamp(timestamp),
+                                    timestamp=datetime.datetime.fromtimestamp(timestamp / 1000),
                                 )
                                 message_m.save()
                                 operator_interface.tasks.process_message.delay(
@@ -83,7 +83,7 @@ def handle_facebook_message(psid: dict, message: dict, timestamp: int) -> None:
                                     platform=platform,
                                     platform_message_id=mid,
                                     direction=Message.FROM_CUSTOMER,
-                                    timestamp=datetime.datetime.utcfromtimestamp(timestamp),
+                                    timestamp=datetime.datetime.fromtimestamp(timestamp / 1000),
                                     text=f'<a href="{fs.base_url + file_name}" target="_blank">'
                                     f"{orig_file_name}"
                                     f"</a>",
@@ -97,7 +97,7 @@ def handle_facebook_message(psid: dict, message: dict, timestamp: int) -> None:
                             platform=platform,
                             platform_message_id=mid,
                             direction=Message.FROM_CUSTOMER,
-                                timestamp=datetime.datetime.utcfromtimestamp(timestamp),
+                                timestamp=datetime.datetime.fromtimestamp(timestamp / 1000),
                             text=f"<a href=\"{attachment.get('url')}\" target=\"_blank\">Location</a>",
                         )
                         message_m.save()
@@ -143,7 +143,7 @@ def handle_facebook_postback(psid: dict, postback: dict, timestamp: int) -> None
             message_id=uuid.uuid4(),
             text=title,
             direction=Message.FROM_CUSTOMER,
-            timestamp=datetime.datetime.utcfromtimestamp(timestamp),
+            timestamp=datetime.datetime.fromtimestamp(timestamp / 1000),
         )
         message_m.save()
         handle_mark_facebook_message_read.delay(psid)
