@@ -45,9 +45,10 @@ def send_push_notification(sid, data):
             },
         )
     except WebPushException as e:
-        sentry_sdk.capture_exception(e)
         if e.response.status_code in [404, 410]:
             subscription.delete()
+        else:
+            sentry_sdk.capture_exception(e)
 
 
 @shared_task
