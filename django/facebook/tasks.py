@@ -368,9 +368,9 @@ def send_facebook_message(mid: int) -> None:
     if len(quick_replies) > 0:
         request_body["message"]["quick_replies"] = quick_replies
 
-    if message.user is not None:
-        request_body["messaging_type"] = "MESSAGE_TAG"
-        request_body["tag"] = "HUMAN_AGENT"
+    # if message.user is not None:
+    #     request_body["messaging_type"] = "MESSAGE_TAG"
+    #     request_body["tag"] = "HUMAN_AGENT"
 
     # TODO: Integrate with new system
     if message.payment_request:
