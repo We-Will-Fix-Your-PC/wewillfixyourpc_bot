@@ -1,7 +1,7 @@
 from django.shortcuts import render, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import csrf_exempt
-from django.http import HttpResponse, HttpResponseBadRequest
+from django.http import HttpResponse, HttpResponseBadRequest, Http404
 from django.contrib.auth.models import User
 from PIL import Image
 import json
@@ -61,7 +61,10 @@ def push_subscription(request):
 
 def profile_picture(request, user_id):
     user = get_object_or_404(User, id=user_id)
-    image = user.userprofile.picture
+    try:
+        image = user.userprofile.picture
+    except User.userprofile.RelatedObjectDoesNotExist:
+        raise Http404()
     i = Image.open(image)
     i.thumbnail((64, 64))
     i = i.convert("RGB")
