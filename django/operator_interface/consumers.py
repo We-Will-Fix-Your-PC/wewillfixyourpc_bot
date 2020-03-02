@@ -252,7 +252,7 @@ class OperatorConsumer(JsonWebsocketConsumer):
                 "messages": [m.id for m in messages],
                 "repair_bookings": [b.id for b in bookings],
                 "payments": payments,
-                "can_message": conversation.can_message("HUMAN_AGENT")
+                "can_message": conversation.can_message()
             }
         )
 

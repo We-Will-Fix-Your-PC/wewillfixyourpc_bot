@@ -160,6 +160,11 @@ class ConversationPlatform(models.Model):
             # push = data.get("push", [])
             # return len(push) > 0
             return False
+        elif self.platform == self.ABC:
+            last_message: Message = self.messages.order_by('-timestamp').filter(direction=Message.FROM_CUSTOMER).first()
+            if last_message:
+                return not last_message.end
+            return True
         else:
             return True
 

@@ -58,9 +58,12 @@ def send_message_notifications(data):
         subscriptions = models.NotificationSubscription.objects.all()
     else:
         conversation = models.Conversation.objects.get(id=data["cid"])
-        subscriptions = models.NotificationSubscription.objects.filter(
-            user=conversation.current_agent
-        )
+        if conversation.current_agent:
+            subscriptions = models.NotificationSubscription.objects.filter(
+                user=conversation.current_agent
+            )
+        else:
+            subscriptions = models.NotificationSubscription.objects.all()
 
     for subscription in subscriptions:
         send_push_notification.delay(subscription.id, data)
