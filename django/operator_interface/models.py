@@ -3,6 +3,7 @@ from django.utils import timezone
 import json
 import uuid
 import datetime
+from django.db.models import Count
 from django.contrib.auth.models import User
 
 
@@ -54,7 +55,8 @@ class Conversation(models.Model):
         return last_message.platform
 
     def last_usable_platform(self, tag=None, alert=False):
-        platforms = self.conversationplatform_set.order_by('-messages__timestamp')
+        platforms = self.conversationplatform_set.annotate(page_count=Count('messages')).filter(page_count__gte=1)\
+            .order_by('-messages__timestamp')
         for platform in platforms:
             if platform.can_message(tag, alert):
                 return platform
@@ -68,6 +70,9 @@ class Conversation(models.Model):
             for platform in self.conversationplatform_set.all():
                 platform.conversation = other_conversation[0]
                 platform.save()
+            other_conversation[0].current_agent = self.current_agent
+            other_conversation[0].agent_responding = self.agent_responding
+            other_conversation[0].save()
             self.delete()
             return other_conversation[0]
         else:

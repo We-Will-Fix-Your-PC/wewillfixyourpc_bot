@@ -208,8 +208,12 @@ LOGGING = {
         "twitter": {"handlers": ["console"], "level": "INFO"},
         "facebook": {"handlers": ["console"], "level": "INFO"},
         "telegram_bot": {"handlers": ["console"], "level": "INFO"},
-        "gactions": {"handlers": ["console"], "level": "DEBUG"},
+        "gactions": {"handlers": ["console"], "level": "INFO"},
         "rasa_api": {"handlers": ["console"], "level": "INFO"},
         "fulfillment": {"handlers": ["console"], "level": "INFO"},
+        "django_keycloak_auth": {"handlers": ["console"], "level": "INFO"},
+        "keycloak": {"handlers": ["console"], "level": "INFO"},
+        "apple_business_chat": {"handlers": ["console"], "level": "INFO"},
+        "customer_chat": {"handlers": ["console"], "level": "INFO"},
     },
 }
