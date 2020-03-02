@@ -11,13 +11,9 @@ from operator_interface.models import ConversationPlatform, Message
 
 
 def send_abc_request(mid, to, data):
-    data = {
-        "to": to,
-        "type": "application/json",
-        "content": data
-    }
+    data = dict(to=to, **data)
     if mid:
-        data["id"] = mid
+        data["id"] = str(mid)
     return requests.post(
         "https://msging.net/messages",
         headers={
@@ -74,3 +70,22 @@ def handle_abc_typing_on(pid: int):
     })
     if r.status_code != 200:
         logging.error(f"Error sending ABC typing on: {r.status_code} {r.text}")
+
+
+@shared_task
+def send_message(mid: int):
+    message = Message.objects.get(id=mid)
+
+    if message.text:
+        msg_data = {
+            "type": "text/plain",
+            "content": message.text
+        }
+    else:
+        return
+
+    r = send_abc_request(message.message_id, message.platform.platform_id, msg_data)
+    if r.status_code != 202:
+        message.state = Message.FAILED
+        message.save()
+

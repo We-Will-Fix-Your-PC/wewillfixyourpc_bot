@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     "azure_bot",
     "operator_interface",
     "customer_chat",
+    "apple_business_chat",
     "rasa_api",
     "api",
     "gactions",
@@ -231,6 +232,8 @@ LOGGING = {
         "fulfillment": {"handlers": ["console"], "level": "DEBUG"},
         "django_keycloak_auth": {"handlers": ["console"], "level": "DEBUG"},
         "keycloak": {"handlers": ["console"], "level": "DEBUG"},
+        "apple_business_chat": {"handlers": ["console"], "level": "DEBUG"},
+        "customer_chat": {"handlers": ["console"], "level": "DEBUG"},
     },
 }
 

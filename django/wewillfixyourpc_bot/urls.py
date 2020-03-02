@@ -32,6 +32,7 @@ urlpatterns = [
     path("azure/", include("azure_bot.urls", namespace="azure")),
     path("gactions/", include("gactions.urls", namespace="gactions")),
     path("chat/", include("customer_chat.urls", namespace="customer_chat")),
+    path("abc/", include("apple_business_chat.urls", namespace="apple_business_chat")),
     path("", include("operator_interface.urls", namespace="operator")),
 ]
 
