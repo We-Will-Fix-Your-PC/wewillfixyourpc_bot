@@ -174,6 +174,8 @@ GOOGLE_PROJECT_ID = "we-will-fix-your-pc-c0198"
 
 PUSH_PRIV_KEY = os.getenv("PUSH_PRIV_KEY")
 
+BLIP_KEY = os.getenv("BLIP_KEY")
+
 RASA_HTTP_URL = os.getenv("RASA_HTTP_URL", "http://localhost:5005")
 
 EMAIL_HOST = os.getenv("EMAIL_HOST")

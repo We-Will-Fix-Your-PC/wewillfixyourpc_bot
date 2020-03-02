@@ -219,6 +219,8 @@ class MessageData {
             return "SMS";
         } else if (this.data.platform === "CH") {
             return "Customer chat";
+        } else if (this.data.platform === "AB") {
+            return "Apple Business chat";
         }
         return "Unknown platform"
     }
