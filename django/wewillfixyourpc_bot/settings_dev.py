@@ -165,6 +165,8 @@ with open(os.path.join(BASE_DIR, "secrets/azure.json")) as f:
     azure_conf = json.load(f)
 with open(os.path.join(BASE_DIR, "secrets/keycloak.json")) as f:
     keycloak_conf = json.load(f)
+with open(os.path.join(BASE_DIR, "secrets/blip.json")) as f:
+    blip_conf = json.load(f)
 
 AZURE_APP_ID = azure_conf["app-id"]
 AZURE_APP_PASSWORD = azure_conf["app-password"]
@@ -183,6 +185,8 @@ TWITTER_ENVNAME = "main"
 
 TELEGRAM_TOKEN = telegram_conf["token"]
 TELEGRAM_PAYMENT_TOKEN = telegram_conf["payment_token"]
+
+BLIP_KEY = blip_conf["key"]
 
 GOOGLE_PROJECT_ID = "we-will-fix-your-pc-dev"
 

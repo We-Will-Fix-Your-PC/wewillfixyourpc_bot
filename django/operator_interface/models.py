@@ -87,6 +87,7 @@ class ConversationPlatform(models.Model):
     GOOGLE_ACTIONS = "GA"
     SMS = "TX"
     CHAT = "CH"
+    ABC = "AB"
     PLATFORM_CHOICES = (
         (FACEBOOK, "Facebook"),
         (TWITTER, "Twitter"),
@@ -94,7 +95,8 @@ class ConversationPlatform(models.Model):
         (AZURE, "Azure"),
         (GOOGLE_ACTIONS, "Actions on Google"),
         (SMS, "SMS"),
-        (CHAT, "Customer chat")
+        (CHAT, "Customer chat"),
+        (ABC, "Apple Business chat"),
     )
 
     conversation = models.ForeignKey(Conversation, on_delete=models.CASCADE)
