@@ -151,13 +151,20 @@ def process_message(mid: int):
 
 @shared_task
 def process_event(pid, event):
+    platform = models.ConversationPlatform.objects.get(id=pid)
+    conversation = platform.conversation
+
     if event == "WELCOME":
-        platform = models.ConversationPlatform.objects.get(id=pid)
-        # conversation.agent_responding = True
         platform.conversation.current_agent = None
         platform.conversation.save()
 
-    return rasa_api.tasks.handle_event(pid, event)
+        if not conversation.agent_responding:
+            send_welcome_message(pid)
+
+    if conversation.agent_responding:
+        return rasa_api.tasks.handle_event(pid, event)
+
+    return None
 
 
 @shared_task
