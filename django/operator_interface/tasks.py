@@ -124,7 +124,7 @@ def process_message(mid: int):
                 {
                     "type": "message",
                     "cid": conversation.id,
-                    "name": name,
+                    "name": name if name else "Unknown",
                     "text": message.text,
                 }
             )
