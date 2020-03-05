@@ -102,8 +102,8 @@
 ## intent:brand
 - [Samsung](brand)
 - [ipad](brand)
-- [SOny](brand:sony)
-- [ipad](brand:iPad)
+- [SOny](brand)
+- [ipad](brand)
 
 ## intent:deny
 - No
@@ -159,28 +159,28 @@
 - [4s](device_model)
 - it's a [iphone 6s](device_model)
 - [4S](device_model)
-- [4S](device_model:iPhone 4S)
-- [ipad air](device_model:iPad air)
-- [air](device_model:iPad air)
-- [pro](device_model:iPad pro)
-- [air](device_model:iPad air)
+- [4S](device_model)
+- [ipad air](device_model)
+- [air](device_model)
+- [pro](device_model)
+- [air](device_model)
 
 ## intent:resolve_entity
 - [1](number)
 - The [first](mention) one
 - Take the [last](mention) one
-- Number [two](number:2)
+- Number [two](number)
 
 ## intent:device_repair
 - [charging port](device_repair)
-- [charge](device_repair:charging port)
-- [charger](device_repair:charging port)
-- [charger port](device_repair:charging port)
-- [charging dock](device_repair:charging port)
-- [dock](device_repair:charging port)
+- [charge](device_repair)
+- [charger](device_repair)
+- [charger port](device_repair)
+- [charging dock](device_repair)
+- [dock](device_repair)
 - [battery](device_repair)
-- [not charging](device_repair:battery)
-- [not holding charge](device_repair:battery)
+- [not charging](device_repair)
+- [not holding charge](device_repair)
 
 ## intent:easteregg_fox_sounds
 - can you answer me what does the fox say
@@ -326,7 +326,7 @@
 - [354403064522046](imei)
 - [358545080134606](imei)
 - [358545080134606](imei)
-- 352632082920491[](imei:352632082920491)
+- [352632082920491](imei)
 - [111111111111119](imei)
 
 ## intent:insult
@@ -420,8 +420,8 @@
 - ten
 
 ## intent:repair
-- [iphone se](device_model:iPhone SE) [screen](device_repair)
-- [iphone 6s](device_model:iPhone 6S) [screen](device_repair)
+- [iphone se](device_model) [screen](device_repair)
+- [iphone 6s](device_model) [screen](device_repair)
 - [ipad 5](device_model) [battery](device_repair)
 - [ipad 6](device_model) [battery](device_repair)
 - and how much to fix an [iPhone 7](device_model) [screen](device_repair) that's smashed and non responsive
@@ -453,16 +453,16 @@
 - can you fit a [battery](device_repair)
 - [iphone](brand)
 - [screen](device_repair)
-- [iphone 6](device_model:iPhone 6)
+- [iphone 6](device_model)
 - can you fix a [screen](device_repair)?
 - can you fix my [iphone](brand) [screen](device_repair)?
-- hello how much is an [iphone 7](device_model:iPhone 7) [screen](device_repair) please
-- [iphone 7+](device_model:iPhone 7 plus) [screen](device_repair)
-- [iphone 4s](device_model:iPhone 4s) [screen](device_repair)
+- hello how much is an [iphone 7](device_model) [screen](device_repair) please
+- [iphone 7+](device_model) [screen](device_repair)
+- [iphone 4s](device_model) [screen](device_repair)
 - can you tell me what the cost of an [iphone](brand) repair is
-- i have an [iphone 7](device_model:iPhone 7)
+- i have an [iphone 7](device_model)
 - [screen](device_repair) cost
-- what is the cost of a [iphone 7](device_model:iPhone 7) [screen](device_repair)
+- what is the cost of a [iphone 7](device_model) [screen](device_repair)
 - do you have in stock?
 - how much to fix an [iphone 5](device_model) [screen](device_repair)?
 - How much to fix an [iphone 5s](device_model) [screen](device_repair)?
@@ -489,36 +489,37 @@
 - [iPhone](brand)
 - [screen](device_repair)
 - can you fix my [iphone 5S](device_model)
-- can you fix my [iphone](brand:iPhone)
+- can you fix my [iphone](brand)
 - [battery](device_repair)
 - can you fix my [iphone 5s](device_model)
 - and what about the [screen](device_repair)?
 - how much for an [iphone 6](device_model)?
 - [screen](device_repair)
-- Do you have a [iPhone 7plus](device_model:iPhone 7 plus) [battery](device_repair) in stock??
-- what is the cost of an [ipad](brand:iPad) repair?
+- Do you have a [iPhone 7plus](device_model) [battery](device_repair) in stock??
+- what is the cost of an [ipad](brand) repair?
 - [battery](device_repair)
-- do you fix [samsungs](brand:Samsung)?
+- do you fix [samsungs](brand)?
 - [iphone 6](device_model) [battery](device_repair)
 - [iphone 6](device_model) [battery](device_repair)
 - [iphone 6](device_model) [battery](device_repair)
-- [iphone 6s](device_model:iPhone 6S) [battery](device_repair)
-- Hi, im looking for a price for an [iPad air](device_model:ipad air) [screen](device_repair) replacement and a complete rebuild/upgrade for a HP Compaq laptop with latest windows programme. Thanks
+- [iphone 6s](device_model) [battery](device_repair)
+- Hi, im looking for a price for an [iPad air](device_model) [screen](device_repair) replacement and a complete rebuild/upgrade for a HP Compaq laptop with latest windows programme. Thanks
 - Can you fix [home buttons](device_repair) for an [iPhone 7](device_model)?
-- Hi are you able to replace [iphone](brand) [microphones](device_repair:charging port)?
+- Hi are you able to replace [iphone](brand) [microphones](device_repair)?
 - Hi. I have an [iPhone 8plus](device_model). Need a new front [screen](device_repair) in white. How much please?
 - Hi there, wanted a quote for a laptop [screen](device_repair) replacement. It’s a [Lenovo](brand) [Yoga 510-14ISK](device_model). Thank you.
-- Hi how much are new [batteries](device_repair:battery) for [iPhone 6](device_model) please ?
+- Hi how much are new [batteries](device_repair) for [iPhone 6](device_model) please ?
 - [iphone 8](device_model)
-- do you fix [iphone 7](device_model:iPhone 7) [screen](device_repair)
+- do you fix [iphone 7](device_model) [screen](device_repair)
 - help, ive broken my [iphone 3](device_model) [screen](device_repair)
-- ive dropped my [iphone](brand) [in water](device_repair:water damage) now it no longer turns on
-- [iphone 6](device_model:iPhone 6)
-- Do you fix [iPad Air 2](device_model:iPad air 2)?
+- ive dropped my [iphone](brand) [in water](device_repair) now it no longer turns on
+- [iphone 6](device_model)
+- Do you fix [iPad Air 2](device_model)?
 - Hi, I bought my [iPad](brand) in couple weeks ago for a new [screen](device_repair), while on holiday this happened can you help please?
-- Hi, how much do your charge for an [ipad mini](device_model:iPad mini) [screen](device_repair)? Thanks
+- Hi, how much do your charge for an [ipad mini](device_model) [screen](device_repair)? Thanks
+- Hi, I have an [iPad mini 2](device_model) and it's struggling to [charge](device_repair) with our chargers now. Is this something that could be fixed?
 - Hi, how much for [iPhone 6](device_model) [screen](device_repair) please?
-- The [front](device_repair:screen) is all smashed
+- The [front](device_repair) is all smashed
 - repair prices
 
 ## intent:request_human
@@ -628,7 +629,7 @@
 - can you unlock my phone from [VOXI](network)?
 - unlock my [iphone xr](device_model) from [ee](network)
 - unlock my phone
-- unlock my [nokia](brand:Nokia) from [ee](network)
+- unlock my [nokia](brand) from [ee](network)
 - unlock
 - do you do sim unlock?
 - can you sim unlock my phone?

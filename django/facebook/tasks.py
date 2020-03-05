@@ -318,6 +318,19 @@ def handle_facebook_message_typing_on(pid: int) -> None:
 
 
 @shared_task
+def handle_facebook_message_typing_off(pid: int) -> None:
+    platform: ConversationPlatform = ConversationPlatform.objects.get(id=pid)
+    requests.post(
+        "https://graph.facebook.com/me/messages",
+        params={"access_token": settings.FACEBOOK_ACCESS_TOKEN},
+        json={
+            "recipient": {"id": platform.platform_id},
+            "sender_action": "typing_off",
+        },
+    ).raise_for_status()
+
+
+@shared_task
 def send_facebook_message(mid: int) -> None:
     message: Message = Message.objects.get(id=mid)
     psid: str = message.platform.platform_id

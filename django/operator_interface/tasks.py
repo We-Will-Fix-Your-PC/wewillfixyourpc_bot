@@ -212,7 +212,7 @@ def end_conversation(cid):
     #     process_event(cid, "end")
     message = models.Message(
         message_id=uuid.uuid4(),
-        platform=conversation.last_usable_platform("HUMAN_AGENT"),
+        platform=conversation.last_usable_platform(),
         direction=models.Message.TO_CUSTOMER,
         text=f"Thanks for contacting We Will Fix Your PC."
         f" On a scale of 1 to 10 how would you rate your experience with us?",
@@ -230,7 +230,7 @@ def take_over(cid, uid):
     conversation.save()
     message = models.Message(
         message_id=uuid.uuid4(),
-        platform=conversation.last_usable_platform("HUMAN_AGENT"),
+        platform=conversation.last_usable_platform(),
         direction=models.Message.TO_CUSTOMER,
         user=user,
         text=f"Hello I'm {user.first_name} and I'll be taking over from here",
@@ -240,7 +240,7 @@ def take_over(cid, uid):
 
 
 @shared_task
-def process_typing(pid):
+def process_typing_on(pid):
     platform = models.ConversationPlatform.objects.get(id=pid)
     if platform.platform == models.ConversationPlatform.FACEBOOK:
         facebook.tasks.handle_facebook_message_typing_on(pid)
@@ -248,3 +248,14 @@ def process_typing(pid):
         twitter.tasks.handle_twitter_message_typing_on(pid)
     elif platform.platform == models.ConversationPlatform.TELEGRAM:
         telegram_bot.tasks.handle_telegram_message_typing_on(pid)
+    elif platform.platform == models.ConversationPlatform.ABC:
+        apple_business_chat.tasks.handle_abc_typing_on(pid)
+
+
+@shared_task
+def process_typing_off(pid):
+    platform = models.ConversationPlatform.objects.get(id=pid)
+    if platform.platform == models.ConversationPlatform.FACEBOOK:
+        facebook.tasks.handle_facebook_message_typing_off(pid)
+    elif platform.platform == models.ConversationPlatform.ABC:
+        apple_business_chat.tasks.handle_abc_typing_off(pid)

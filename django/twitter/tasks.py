@@ -16,7 +16,6 @@ from django.shortcuts import reverse
 
 import operator_interface.tasks
 import django_keycloak_auth.users
-from operator_interface.consumers import conversation_saved
 from operator_interface.models import Conversation, ConversationPlatform, Message
 from . import views
 from . import models
@@ -30,6 +29,18 @@ def handle_twitter_message(mid: str, psid, message, user):
         platform: ConversationPlatform = ConversationPlatform.exists(
             ConversationPlatform.TWITTER, psid
         )
+        if not platform:
+            user_id = None
+            user = django_keycloak_auth.users.get_user_by_federated_identity(
+                federated_provider="twitter", federated_user_id=user.get("id"),
+            )
+            if user:
+                django_keycloak_auth.users.link_roles_to_user(user.get("id"), ["customer"])
+                user_id = user.get("id")
+            platform = ConversationPlatform.create(
+                ConversationPlatform.TWITTER, psid, customer_user_id=user_id
+            )
+        conversation = platform.conversation
 
         if not conversation.conversation_user_id:
             kc_user = django_keycloak_auth.users.get_or_create_user(
@@ -56,13 +67,15 @@ def handle_twitter_message(mid: str, psid, message, user):
                 str(conversation.conversation_user_id), first_name=user.get("name"),
             )
 
-        if not Message.message_exits(conversation, mid):
+        if not Message.message_exits(platform, mid):
             message_m: Message = Message(
-                conversation=conversation,
-                message_id=mid,
+                platform=platform,
+                platform_message_id=mid,
                 text=text.strip(),
                 direction=Message.FROM_CUSTOMER,
             )
+            platform.is_typing = False
+            platform.save()
 
             if attachment:
                 if attachment["type"] == "media":
@@ -89,14 +102,15 @@ def handle_twitter_message(mid: str, psid, message, user):
         )
         r = requests.get(user["profile_image_url_https"])
         if r.status_code == 200:
-            conversation.conversation_pic.save(file_name, InMemoryUploadedFile(
-                file=BytesIO(r.content),
-                size=len(r.content),
-                charset=r.encoding,
-                content_type=r.headers.get("content-type"),
-                field_name=file_name,
-                name=file_name,
-            ))
+            if not conversation.conversation_pic:
+                conversation.conversation_pic.save(file_name, InMemoryUploadedFile(
+                    file=BytesIO(r.content),
+                    size=len(r.content),
+                    charset=r.encoding,
+                    content_type=r.headers.get("content-type"),
+                    field_name=file_name,
+                    name=file_name,
+                ))
             django_keycloak_auth.users.update_user(
                 str(conversation.conversation_user_id), profile_picture=conversation.conversation_pic.url
             )
@@ -119,11 +133,20 @@ def handle_twitter_read(psid: str, last_read: str):
         except ValueError:
             continue
         if m_id <= last_read:
-            m.read = True
+            m.state = Message.READ
             m.save()
             message_ids.append(m.id)
     for message in message_ids:
         operator_interface.tasks.send_message_to_interface.delay(message)
+
+
+@shared_task
+def handle_twitter_typing(psid: str):
+    platform: ConversationPlatform = ConversationPlatform.exists(
+        ConversationPlatform.TWITTER, psid
+    )
+    platform.is_typing = True
+    platform.save()
 
 
 @shared_task
@@ -139,10 +162,10 @@ def handle_mark_twitter_message_read(psid: str, mid: str):
 @shared_task
 def handle_twitter_message_typing_on(cid: int):
     creds = views.get_creds()
-    conversation = Conversation.objects.get(id=cid)
+    platform = ConversationPlatform.objects.get(id=cid)
     requests.post(
         "https://api.twitter.com/1.1/direct_messages/indicate_typing.json",
-        data={"recipient_id": conversation.platform_id},
+        data={"recipient_id": platform.platform_id},
         auth=creds,
     )
 
@@ -150,7 +173,7 @@ def handle_twitter_message_typing_on(cid: int):
 @shared_task
 def send_twitter_message(mid: int):
     message = Message.objects.get(id=mid)
-    psid: str = message.conversation.platform_id
+    psid: str = message.platform.platform_id
     creds = views.get_creds()
 
     quick_replies = []

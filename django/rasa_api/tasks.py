@@ -37,7 +37,7 @@ def handle_event(cid: int, event: str):
 
 
 def handle_text(platform: ConversationPlatform, text: str):
-    operator_interface.tasks.process_typing.delay(platform.id)
+    operator_interface.tasks.process_typing_on.delay(platform.id)
 
     r = requests.post(
         f"{settings.RASA_HTTP_URL}/webhooks/rest/webhook?stream=true",

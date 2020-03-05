@@ -83,6 +83,9 @@ class Conversation(models.Model):
     def can_message(self, tag=None):
         return any([p.can_message(tag) for p in self.conversationplatform_set.all()])
 
+    def is_typing(self):
+        return any([p.is_typing for p in self.conversationplatform_set.all()])
+
 
 class ConversationPlatform(models.Model):
     FACEBOOK = "FB"
@@ -108,6 +111,7 @@ class ConversationPlatform(models.Model):
     platform = models.CharField(max_length=2, choices=PLATFORM_CHOICES)
     platform_id = models.CharField(max_length=255)
     additional_platform_data = models.TextField(blank=True, null=True)
+    is_typing = models.BooleanField(default=False)
 
     def __str__(self):
         platform = list(filter(lambda p: p[0] == self.platform, self.PLATFORM_CHOICES))

@@ -189,6 +189,11 @@ def webhook(request):
             psid = event["sender_id"]
             last_read = event["last_read_event_id"]
             tasks.handle_twitter_read.delay(psid, last_read)
+    if r.get("direct_message_indicate_typing_events") is not None:
+        events = r["direct_message_indicate_typing_events"]
+        for event in events:
+            psid = event["sender_id"]
+            tasks.handle_twitter_typing.delay(psid)
 
     return HttpResponse("")
 

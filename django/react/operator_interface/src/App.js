@@ -355,6 +355,10 @@ class ConversationData {
         return this.data.customer_id;
     }
 
+    get typing() {
+        return this.data.typing;
+    }
+
     can_message() {
         return this.can_interact() && this.current_user_responding && !this.agent_responding
     }
@@ -379,6 +383,20 @@ class ConversationData {
             cid: this.id,
             attribute: entity.entity,
             value: entity.value
+        }))
+    }
+
+    typing_on() {
+        this.app.sock.send(JSON.stringify({
+            type: "typing_on",
+            cid: this.id
+        }))
+    }
+
+    typing_off() {
+        this.app.sock.send(JSON.stringify({
+            type: "typing_off",
+            cid: this.id
         }))
     }
 }

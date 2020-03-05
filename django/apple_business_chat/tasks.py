@@ -107,6 +107,19 @@ def handle_abc_typing_on(pid: int):
 
 
 @shared_task
+def handle_abc_typing_off(pid: int):
+    platform = ConversationPlatform.objects.get(id=pid)
+    r = send_abc_request(uuid.uuid4(), platform.platform_id, {
+        "type": "application/vnd.lime.chatstate+json",
+        "content": {
+            "state": "paused"
+        }
+    })
+    if r.status_code != 200:
+        logging.error(f"Error sending ABC typing off: {r.status_code} {r.text}")
+
+
+@shared_task
 def send_message(mid: int):
     message = Message.objects.get(id=mid)
 

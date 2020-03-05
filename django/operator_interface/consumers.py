@@ -252,7 +252,8 @@ class OperatorConsumer(JsonWebsocketConsumer):
                 "messages": [m.id for m in messages],
                 "repair_bookings": [b.id for b in bookings],
                 "payments": payments,
-                "can_message": conversation.can_message()
+                "can_message": conversation.can_message(),
+                "typing": conversation.is_typing()
             }
         )
 
@@ -310,7 +311,7 @@ class OperatorConsumer(JsonWebsocketConsumer):
     def make_message(self, cid, text):
         conversation = self.get_conversation(cid)
         message = operator_interface.models.Message(
-            platform=conversation.last_usable_platform("HUMAN_AGENT"),
+            platform=conversation.last_usable_platform(),
             text=text,
             direction=operator_interface.models.Message.TO_CUSTOMER,
             message_id=uuid.uuid4(),
@@ -363,7 +364,7 @@ class OperatorConsumer(JsonWebsocketConsumer):
             return
 
         message = operator_interface.models.Message(
-            platform=conversation.last_usable_platform("HUMAN_AGENT"),
+            platform=conversation.last_usable_platform(),
             direction=operator_interface.models.Message.TO_CUSTOMER,
             message_id=uuid.uuid4(),
             user=self.user,
@@ -437,7 +438,7 @@ class OperatorConsumer(JsonWebsocketConsumer):
                 self.send_conversation(conversation.update_user_id(user.get("id")))
             else:
                 message = operator_interface.models.Message(
-                    platform=conversation.last_usable_platform("HUMAN_AGENT"),
+                    platform=conversation.last_usable_platform(),
                     text="An account is already associated with that email address. Please log in.",
                     direction=operator_interface.models.Message.TO_CUSTOMER,
                     user=self.user,
@@ -449,7 +450,7 @@ class OperatorConsumer(JsonWebsocketConsumer):
     def request_sign_in(self, conversation: operator_interface.models.Conversation):
         if not conversation.conversation_user_id:
             message = operator_interface.models.Message(
-                platform=conversation.last_usable_platform("HUMAN_AGENT"),
+                platform=conversation.last_usable_platform(),
                 text="Please sign in to continue",
                 direction=operator_interface.models.Message.TO_CUSTOMER,
                 user=self.user,
@@ -528,6 +529,20 @@ class OperatorConsumer(JsonWebsocketConsumer):
             try:
                 conv = self.get_conversation(cid)
                 self.request_sign_in(conv)
+            except operator_interface.models.Conversation.DoesNotExist:
+                pass
+        elif message["type"] == "typing_on":
+            cid = message["cid"]
+            try:
+                conv = self.get_conversation(cid)
+                operator_interface.tasks.process_typing_on.delay(conv.last_usable_platform().id)
+            except operator_interface.models.Conversation.DoesNotExist:
+                pass
+        elif message["type"] == "typing_off":
+            cid = message["cid"]
+            try:
+                conv = self.get_conversation(cid)
+                operator_interface.tasks.process_typing_off.delay(conv.last_usable_platform().id)
             except operator_interface.models.Conversation.DoesNotExist:
                 pass
         elif message["type"] == "requestPayment":

@@ -50,6 +50,7 @@ export default class Conversation extends Component {
         this.messageObserverCallback = this.messageObserverCallback.bind(this);
         this.openEntityDialog = this.openEntityDialog.bind(this);
         this.updateEntity = this.updateEntity.bind(this);
+        this.updateMessage = this.updateMessage.bind(this);
 
         this.observer = new IntersectionObserver(this.messageObserverCallback, {
             root: null,
@@ -105,6 +106,18 @@ export default class Conversation extends Component {
             this.props.conversation.save_entity(this.state.entity);
         }
         this.setState({isOpen: false});
+    }
+
+    updateMessage(e) {
+        const newVal = e.currentTarget.value;
+        if (newVal.length && !this.state.value.length) {
+            this.props.conversation.typing_on();
+        } else if (!newVal.length && this.state.value.length) {
+            this.props.conversation.typing_off();
+        }
+        this.setState({
+            value: e.currentTarget.value
+        })
     }
 
     render() {
@@ -191,7 +204,8 @@ export default class Conversation extends Component {
                                         {m.entities
                                             .filter(e => typeof entity_map[e.entity] !== "undefined")
                                             .map((entity, i) => (
-                                                <span className="entity" key={i} onClick={() => this.openEntityDialog(entity)}>
+                                                <span className="entity" key={i}
+                                                      onClick={() => this.openEntityDialog(entity)}>
                                                     {a_or_an(entity_map[entity.entity])} was detected. Click here to save it.
                                                 </span>
                                             ))
@@ -224,13 +238,14 @@ export default class Conversation extends Component {
                                             <span>{status_map[m.state]}</span> : null
                                         }
                                     </div> : <div className="dir-O">
-                                        <div>Loading...</div>
-                                    </div>
+                                    <div>Loading...</div>
+                                </div>
                                 }
                             </div>);
 
                             return out
                         })}
+                        {this.props.conversation.typing ? <span>Customer is typing...</span> : null}
                     </div>
                     {this.props.conversation.can_interact() ?
                         <TextField
@@ -248,7 +263,7 @@ export default class Conversation extends Component {
                             <Input
                                 value={this.state.value}
                                 disabled={!this.props.conversation.can_message()}
-                                onChange={(e) => this.setState({value: e.currentTarget.value})}
+                                onChange={this.updateMessage}
                             />
                         </TextField>
                         :
