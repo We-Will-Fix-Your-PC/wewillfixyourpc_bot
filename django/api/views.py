@@ -84,7 +84,7 @@ def send_message(request, customer_id):
                         pass
 
             if not platform:
-                conv = Conversation(customer_user_id=customer_id)
+                conv = Conversation(conversation_user_id=customer_id)
                 conv.save()
 
                 platform = ConversationPlatform(
