@@ -98,7 +98,7 @@ def handle_abc_typing_on(pid: int):
             "content": {"state": "composing"},
         },
     )
-    if r.status_code != 200:
+    if r.status_code != 202:
         logging.error(f"Error sending ABC typing on: {r.status_code} {r.text}")
 
 
@@ -110,7 +110,7 @@ def handle_abc_typing_off(pid: int):
         platform.platform_id,
         {"type": "application/vnd.lime.chatstate+json", "content": {"state": "paused"}},
     )
-    if r.status_code != 200:
+    if r.status_code != 202:
         logging.error(f"Error sending ABC typing off: {r.status_code} {r.text}")
 
 
