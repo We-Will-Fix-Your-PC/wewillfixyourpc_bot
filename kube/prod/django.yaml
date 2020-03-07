@@ -115,6 +115,9 @@ spec:
             - secretRef:
                 name: blip
               prefix: "BLIP_"
+            - secretRef:
+                name: twilio
+              prefix: "TWILIO_"
           env:
             - name: RELEASE
               value: theenbyperor/wewillfixyourpcbot_django:(version)
@@ -164,6 +167,9 @@ spec:
             - secretRef:
                 name: blip
               prefix: "BLIP_"
+            - secretRef:
+                name: twilio
+              prefix: "TWILIO_"
           env:
             - name: RELEASE
               value: theenbyperor/wewillfixyourpcbot_django:(version)
@@ -212,6 +218,9 @@ spec:
             - secretRef:
                 name: blip
               prefix: "BLIP_"
+            - secretRef:
+                name: twilio
+              prefix: "TWILIO_"
           env:
             - name: RELEASE
               value: theenbyperor/wewillfixyourpcbot_django:(version)
@@ -286,6 +295,9 @@ spec:
             - secretRef:
                 name: blip
               prefix: "BLIP_"
+            - secretRef:
+                name: twilio
+              prefix: "TWILIO_"
           env:
             - name: RELEASE
               value: theenbyperor/wewillfixyourpcbot_django:(version)

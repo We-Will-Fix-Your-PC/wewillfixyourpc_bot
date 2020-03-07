@@ -16,8 +16,9 @@ twilio_validator = RequestValidator(settings.TWILIO_TOKEN)
 
 def check_auth(f):
     def new_f(request, *args, **kwargs):
+        uri = f"https://{request.get_host()}{request.path}"
         sig_valid = twilio_validator.validate(
-            request.build_absolute_uri(), request.POST, request.META.get("HTTP_X_TWILIO_SIGNATURE")
+            uri, request.POST, request.META.get("HTTP_X_TWILIO_SIGNATURE")
         )
         if not sig_valid:
             return HttpResponseForbidden()
