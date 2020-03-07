@@ -9,7 +9,6 @@ import operator_interface.tasks
 import json
 import hashlib
 import hmac
-import uuid
 import base64
 import requests
 import requests_oauthlib
@@ -209,11 +208,11 @@ def account_linking(request):
 
     if state.timestamp + datetime.timedelta(minutes=5) < timezone.now():
         return HttpResponseBadRequest()
-    state.conversation.update_user_id(request.user.username)
+    state.conversation.conversation.update_user_id(request.user.username)
     state.delete()
 
     message = Message(
-        platform=state.conversation.last_usable_platform(),
+        platform=state.conversation,
         text="Login complete, thanks!",
         direction=Message.TO_CUSTOMER,
     )

@@ -1,13 +1,16 @@
 from celery import shared_task
 import typing
+import json
 import phonenumbers
 import operator_interface.consumers
 import operator_interface.tasks
 import django_keycloak_auth.users
 from django.conf import settings
 import twilio.base.exceptions
+from django.shortcuts import reverse
 from operator_interface.models import ConversationPlatform, Message
 from . import views
+from . import models
 
 
 def get_platform(msg_from):
@@ -61,7 +64,18 @@ def send_message(mid: int):
 
     msg_args = {}
 
-    if message.text:
+    if message.selection:
+        selection_data = json.loads(message.selection)
+        msg_args["body"] = "\n".join([
+            f"{i+1}) {item.get('title')}?"
+            for i, item in enumerate(selection_data.get("items", []))
+        ])
+    elif message.request == "sign_in":
+        state = models.AccountLinkingState(conversation=message.platform)
+        state.save()
+        url = settings.EXTERNAL_URL_BASE + reverse("sms:account_linking") + f"?state={state.id}"
+        msg_args["body"] = f"{message.text}\n\nSign in here: {url}"
+    elif message.text:
         msg_args["body"] = message.text
     else:
         return

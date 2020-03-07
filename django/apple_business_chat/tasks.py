@@ -8,7 +8,9 @@ from django.conf import settings
 
 import operator_interface.consumers
 import operator_interface.tasks
+from django.shortcuts import reverse
 from operator_interface.models import ConversationPlatform, Message
+from . import models
 
 
 def send_abc_request(mid, to, data):
@@ -123,9 +125,11 @@ def handle_abc_typing_off(pid: int):
 def send_message(mid: int):
     message = Message.objects.get(id=mid)
 
+    messages = []
+
     if message.selection:
         selection_data = json.loads(message.selection)
-        msg_data = {
+        messages.append({
             "type": "application/vnd.lime.select+json",
             "content": {
                 "title": selection_data.get("title", ""),
@@ -139,25 +143,44 @@ def send_message(mid: int):
                 ]
             }
 
-        }
+        })
     elif message.image:
-        msg_data = {
+        messages.append({
             "type": "application/vnd.lime.media-link+json",
             "content": {
-                "title": message.text,
-                "text": "Here is a cat image for you!",
+                "text": message.text,
                 "uri": message.image,
             }
-        }
-    elif message.text:
-        msg_data = {
+        })
+    elif message.request == "sign_in":
+        state = models.AccountLinkingState(conversation=message.platform)
+        state.save()
+        url = settings.EXTERNAL_URL_BASE + reverse("apple_business_chat:account_linking") + f"?state={state.id}"
+        messages.append({
             "type": "text/plain",
             "content": message.text
-        }
+        })
+        messages.append({
+            "type": "application/json",
+            "content": {
+                "type": "richLink",
+                "richLinkData": {
+                    "url": url,
+                    "title": "Sign in here",
+                    "assets": {}
+                }
+            }
+        })
+    elif message.text:
+        messages.append({
+            "type": "text/plain",
+            "content": message.text
+        })
     else:
         return
 
-    r = send_abc_request(message.message_id, message.platform.platform_id, msg_data)
-    if r.status_code != 202:
-        message.state = Message.FAILED
-        message.save()
+    for msg_data in messages:
+        r = send_abc_request(message.message_id, message.platform.platform_id, msg_data)
+        if r.status_code != 202:
+            message.state = Message.FAILED
+            message.save()

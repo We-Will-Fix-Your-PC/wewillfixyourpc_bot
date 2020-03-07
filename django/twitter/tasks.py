@@ -13,10 +13,9 @@ from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.core.files.storage import DefaultStorage
 from django.conf import settings
 from django.shortcuts import reverse
-
 import operator_interface.tasks
 import django_keycloak_auth.users
-from operator_interface.models import Conversation, ConversationPlatform, Message
+from operator_interface.models import ConversationPlatform, Message
 from . import views
 from . import models
 
@@ -226,7 +225,7 @@ def send_twitter_message(mid: int):
     #         }
     #     ]
     if message.request == "sign_in":
-        state = models.AccountLinkingState(conversation=message.conversation)
+        state = models.AccountLinkingState(conversation=message.platform)
         state.save()
         request_body["event"]["message_create"]["message_data"]["ctas"] = [
             {

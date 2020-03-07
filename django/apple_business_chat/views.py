@@ -1,8 +1,12 @@
 from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseForbidden
 from django.views.decorators.csrf import csrf_exempt
+from django.contrib.auth.decorators import login_required
 from django.conf import settings
 import operator_interface.tasks
+from django.utils import timezone
+import datetime
 from . import tasks
+from . import models
 from operator_interface.models import Message, ConversationPlatform
 import json
 import logging
@@ -86,3 +90,30 @@ def notif_webhook(request):
         msg.save()
 
     return HttpResponse("")
+
+
+@login_required
+def account_linking(request):
+    state = request.GET.get("state")
+
+    try:
+        state = models.AccountLinkingState.objects.get(id=state)
+    except models.AccountLinkingState.DoesNotExist:
+        return HttpResponseBadRequest()
+
+    if state.timestamp + datetime.timedelta(minutes=5) < timezone.now():
+        return HttpResponseBadRequest()
+    state.conversation.conversation.update_user_id(request.user.username)
+    state.delete()
+
+    message = Message(
+        platform=state.conversation,
+        text="Login complete, thanks!",
+        direction=Message.TO_CUSTOMER,
+    )
+    message.save()
+    operator_interface.tasks.process_message.delay(message.id)
+
+    return HttpResponse(
+        '<script type="text/javascript">window.close();</script><h1>You can now close this window</h1>'
+    )
