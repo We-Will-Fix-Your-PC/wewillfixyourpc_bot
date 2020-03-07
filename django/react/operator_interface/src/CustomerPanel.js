@@ -2,7 +2,7 @@ import React, {Component} from 'react';
 import Tab from '@material/react-tab';
 import TabBar from '@material/react-tab-bar';
 import List, {ListItem, ListItemText} from '@material/react-list';
-import Card, {CardPrimaryContent} from '@material/react-card';
+import Card from '@material/react-card';
 import dateformat from "dateformat";
 import OrderCard from "./OrderCard";
 import RepairCard from "./RepairCard";
@@ -10,6 +10,7 @@ import Dialog, {DialogButton, DialogContent, DialogFooter, DialogTitle} from "@m
 import {entity_map} from "./Conversation";
 import TextField, {Input} from "@material/react-text-field";
 import MaterialIcon from "@material/react-material-icon";
+import Button from "@material/react-button";
 
 export default class CustomerPanel extends Component {
     constructor(props) {
@@ -150,6 +151,16 @@ export default class CustomerPanel extends Component {
                             </React.Fragment> : null }
                         </Card>;
                     })}
+                    {this.props.conversation.customer_id ?
+                        <React.Fragment>
+                            <h3>CLS</h3>
+                            <Button href={`https://cardifftec.uk/customers/customer/${this.props.conversation.customer_id}/`}>
+                                View customer
+                            </Button>
+                            <Button href={`https://cardifftec.uk/tickets/new/${this.props.conversation.customer_id}/`}>
+                                New ticket
+                            </Button>
+                        </React.Fragment> : null}
                 </div>
                 : null}
             {this.state.activeTab === 2 ?
