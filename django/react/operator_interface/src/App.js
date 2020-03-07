@@ -687,7 +687,7 @@ class App extends Component {
                                             </Button>
                                         }
                                         Signed in as {this.state.config.user_name}
-                                        <Button href="/auth/logout">Logout</Button>
+                                        <Button ripple colored raised href="/auth/logout">Logout</Button>
                                     </React.Fragment>
                                 }
                             </TopAppBarSection>

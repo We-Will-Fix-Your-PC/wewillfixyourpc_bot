@@ -154,10 +154,10 @@ export default class CustomerPanel extends Component {
                     {this.props.conversation.customer_id ?
                         <React.Fragment>
                             <h3>CLS</h3>
-                            <Button href={`https://cardifftec.uk/customers/customer/${this.props.conversation.customer_id}/`}>
+                            <Button ripple colored raised href={`https://cardifftec.uk/customers/customer/${this.props.conversation.customer_id}/`} target="_blank">
                                 View customer
                             </Button>
-                            <Button href={`https://cardifftec.uk/tickets/new/${this.props.conversation.customer_id}/`}>
+                            <Button ripple colored raised href={`https://cardifftec.uk/tickets/new/${this.props.conversation.customer_id}/`} target="_blank">
                                 New ticket
                             </Button>
                         </React.Fragment> : null}
