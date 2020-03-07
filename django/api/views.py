@@ -66,7 +66,7 @@ def send_message(request, customer_id):
                 try:
                     platform = ConversationPlatform.objects.get(
                         platform=ConversationPlatform.SMS,
-                        platform_id=n
+                        platform_id=phonenumbers.format_number(n, phonenumbers.PhoneNumberFormat.E164)
                     )
                     break
                 except ConversationPlatform.DoesNotExist:
@@ -77,7 +77,7 @@ def send_message(request, customer_id):
                     try:
                         platform = ConversationPlatform.objects.get(
                             platform=ConversationPlatform.SMS,
-                            platform_id=n
+                            platform_id=phonenumbers.format_number(n, phonenumbers.PhoneNumberFormat.E164)
                         )
                         break
                     except ConversationPlatform.DoesNotExist:
@@ -90,7 +90,9 @@ def send_message(request, customer_id):
                 platform = ConversationPlatform(
                     conversation=conv,
                     platform=ConversationPlatform.SMS,
-                    platform_id=mobile_numbers[0] if len(mobile_numbers) else other_numbers[0]
+                    platform_id=phonenumbers.format_number(mobile_numbers[0], phonenumbers.PhoneNumberFormat.E164)
+                    if len(mobile_numbers) else
+                    phonenumbers.format_number(other_numbers[0], phonenumbers.PhoneNumberFormat.E164)
                 )
                 platform.save()
             else:
