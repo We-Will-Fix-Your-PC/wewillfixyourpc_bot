@@ -414,6 +414,7 @@ class App extends Component {
             messages: {},
             payments: {},
             bookings: {},
+            config: {}
         };
 
         this.pending_messages = [];
@@ -509,6 +510,10 @@ class App extends Component {
         } else if (data.type === "error") {
             this.setState({
                 error: data.msg
+            });
+        } else if (data.type === "config") {
+            this.setState({
+                config: data.config
             });
         }
     }
@@ -681,6 +686,8 @@ class App extends Component {
                                                 Take over from bot
                                             </Button>
                                         }
+                                        Signed in as {this.state.config.user_name}
+                                        <Button href="/auth/logout">Logout</Button>
                                     </React.Fragment>
                                 }
                             </TopAppBarSection>

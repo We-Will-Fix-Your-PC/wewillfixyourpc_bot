@@ -2,6 +2,7 @@ import datetime
 import json
 import uuid
 import payment
+import typing
 import dateutil.parser
 
 import django_keycloak_auth.users
@@ -10,8 +11,8 @@ import phonenumbers
 from asgiref.sync import async_to_sync
 from channels.generic.websocket import JsonWebsocketConsumer
 from channels.layers import get_channel_layer
+from django.contrib.auth.models import User
 from django.conf import settings
-from django.contrib.staticfiles import finders
 from django.db import transaction
 from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
@@ -92,7 +93,7 @@ def repair_booking_saved(sender, instance: operator_interface.models.Message, **
 class OperatorConsumer(JsonWebsocketConsumer):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.user = None
+        self.user: typing.Optional[User] = None
 
     def close(self, code=None):
         return super().close(code)
@@ -188,6 +189,14 @@ class OperatorConsumer(JsonWebsocketConsumer):
 
     def send_error(self, error: str):
         self.send_json({"type": "error", "msg": error})
+
+    def send_config(self):
+        self.send_json({
+            "type": "config",
+            "config": {
+                "user_name": f"{self.user.first_name} {self.user.last_name}"
+            }
+        })
 
     def send_conversation(self, conversation: operator_interface.models.Conversation):
         pic = settings.STATIC_URL + "operator_interface/img/default_profile_normal.png"
@@ -461,6 +470,7 @@ class OperatorConsumer(JsonWebsocketConsumer):
 
     def receive_json(self, message, **kwargs):
         if message["type"] == "resyncReq":
+            self.send_config()
             last_message = message["lastMessage"]
             last_message = datetime.datetime.fromtimestamp(last_message)
             conversations = set()
