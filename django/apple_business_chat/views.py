@@ -45,6 +45,8 @@ def webhook(request):
         tasks.handle_abc_text.delay(msg_id, msg_from, data)
     elif msg_type == "application/vnd.lime.media-link+json":
         tasks.handle_abc_media.delay(msg_id, msg_from, data)
+    elif msg_type == "application/vnd.lime.chatstate+json":
+        tasks.handle_abc_chatstate.delay(msg_id, msg_from, data)
 
     return HttpResponse("")
 

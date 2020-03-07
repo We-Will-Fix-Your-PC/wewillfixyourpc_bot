@@ -199,6 +199,7 @@ BLIP_KEY = blip_conf["key"]
 GOOGLE_PROJECT_ID = "we-will-fix-your-pc-dev"
 
 RASA_HTTP_URL = "http://172.30.0.13:5005"
+VSMS_URL = "http://localhost:3000"
 
 DEFAULT_PAYMENT_ENVIRONMENT = "TEST"
 PAYMENT_HTTP_URL = "https://wwfypc-payments.eu.ngrok.io"

@@ -61,7 +61,7 @@ def handle_text(platform: ConversationPlatform, text: str):
                 continue
 
             message = Message(
-                conversation_platform=platform,
+                platform=platform,
                 direction=Message.TO_CUSTOMER,
                 message_id=uuid.uuid4(),
             )

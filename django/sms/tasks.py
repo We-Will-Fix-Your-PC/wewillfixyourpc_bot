@@ -1,10 +1,12 @@
 from celery import shared_task
 import typing
 import json
+import requests
 import phonenumbers
 import operator_interface.consumers
 import operator_interface.tasks
 import django_keycloak_auth.users
+import django_keycloak_auth.clients
 from django.conf import settings
 import twilio.base.exceptions
 from django.shortcuts import reverse
@@ -65,11 +67,11 @@ def handle_sms(msg_id, msg_from, data):
 def send_message(mid: int):
     message = Message.objects.get(id=mid)
 
-    msg_args = {}
+    msg_body = ""
 
     if message.selection:
         selection_data = json.loads(message.selection)
-        msg_args["body"] = "\n".join(
+        msg_body = "\n".join(
             [
                 f"{i+1}) {item.get('title')}?"
                 for i, item in enumerate(selection_data.get("items", []))
@@ -83,18 +85,25 @@ def send_message(mid: int):
             + reverse("sms:account_linking")
             + f"?state={state.id}"
         )
-        msg_args["body"] = f"{message.text}\n\nSign in here: {url}"
+        msg_body = f"{message.text}\n\nSign in here: {url}"
     elif message.text:
-        msg_args["body"] = message.text
+        msg_body = message.text
     else:
         return
+
+    requests.post(f"{settings.VSMS_URL}message/new/",  headers={
+        "Authorization": f"Bearer {django_keycloak_auth.clients.get_access_token()}"
+    }, json={
+        "to": message.platform.platform_id,
+        "contents": msg_body
+    })
 
     try:
         msg_resp = views.twilio_client.messages.create(
             to=message.platform.platform_id,
             provide_feedback=True,
             messaging_service_sid=settings.TWILIO_MSID,
-            **msg_args,
+            body=msg_body
         )
     except twilio.base.exceptions.TwilioException:
         message.state = Message.FAILED

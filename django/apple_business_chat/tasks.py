@@ -88,6 +88,19 @@ def handle_abc_media(msg_id, msg_from, data):
 
 
 @shared_task
+def handle_abc_chatstate(msg_id, msg_from, data):
+    state = data.get("content", {}).get("state")
+    platform = get_platform(msg_from)
+    if state == "composing":
+        platform.is_typing = True
+        platform.save()
+    elif state == "paused":
+        platform.is_typing = False
+        platform.save()
+    send_abc_notification(msg_id, msg_from, "consumed")
+
+
+@shared_task
 def handle_abc_typing_on(pid: int):
     platform = ConversationPlatform.objects.get(id=pid)
     r = send_abc_request(

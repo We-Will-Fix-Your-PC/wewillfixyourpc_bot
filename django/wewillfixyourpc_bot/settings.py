@@ -183,6 +183,7 @@ PUSH_PRIV_KEY = os.getenv("PUSH_PRIV_KEY")
 BLIP_KEY = os.getenv("BLIP_KEY")
 
 RASA_HTTP_URL = os.getenv("RASA_HTTP_URL", "http://localhost:5005")
+VSMS_URL = os.getenv("VSMS_URL", "http://vsms")
 
 EMAIL_HOST = os.getenv("EMAIL_HOST")
 EMAIL_PORT = int(os.getenv("EMAIL_PORT", 25))
