@@ -41,7 +41,8 @@ def conversation_saved(
 ):
     transaction.on_commit(
         lambda: async_to_sync(channel_layer.group_send)(
-            "operator_interface", {"type": "conversation_update", "cid": instance.conversation.id}
+            "operator_interface",
+            {"type": "conversation_update", "cid": instance.conversation.id},
         )
     )
 
@@ -112,19 +113,14 @@ class OperatorConsumer(JsonWebsocketConsumer):
         self.send_conversation(conversation)
 
     def conversation_delete(self, event):
-        self.send_json({
-            "type": "conversation_delete",
-            "id": event["cid"]
-        })
+        self.send_json({"type": "conversation_delete", "id": event["cid"]})
 
     def conversation_merge(self, event):
         conversation = self.get_conversation(event["ncid"])
         self.send_conversation(conversation)
-        self.send_json({
-            "type": "conversation_merge",
-            "nid": event["ncid"],
-            "id": event["cid"]
-        })
+        self.send_json(
+            {"type": "conversation_merge", "nid": event["ncid"], "id": event["cid"]}
+        )
 
     def repair_booking_update(self, event):
         booking = self.get_booking(event["bid"])
@@ -179,11 +175,11 @@ class OperatorConsumer(JsonWebsocketConsumer):
                 "end": message.end,
                 "guessed_intent": message.guessed_intent,
                 "entities": [
-                    {"entity": e.entity, "value": e.value,}
+                    {"entity": e.entity, "value": e.value}
                     for e in message.messageentity_set.all()
                 ],
                 "selection": message.selection,
-                "card": message.card
+                "card": message.card,
             }
         )
 
@@ -191,12 +187,14 @@ class OperatorConsumer(JsonWebsocketConsumer):
         self.send_json({"type": "error", "msg": error})
 
     def send_config(self):
-        self.send_json({
-            "type": "config",
-            "config": {
-                "user_name": f"{self.user.first_name} {self.user.last_name}"
+        self.send_json(
+            {
+                "type": "config",
+                "config": {
+                    "user_name": f"{self.user.first_name} {self.user.last_name}"
+                },
             }
-        })
+        )
 
     def send_conversation(self, conversation: operator_interface.models.Conversation):
         pic = settings.STATIC_URL + "operator_interface/img/default_profile_normal.png"
@@ -247,7 +245,9 @@ class OperatorConsumer(JsonWebsocketConsumer):
                 "current_user_responding": conversation.current_agent.id == self.user.id
                 if conversation.current_agent
                 else False,
-                "customer_id": str(conversation.conversation_user_id) if conversation.conversation_user_id else None,
+                "customer_id": str(conversation.conversation_user_id)
+                if conversation.conversation_user_id
+                else None,
                 "customer_name": user.get("name", f"{first_name} {last_name}"),
                 "customer_first_name": first_name,
                 "customer_last_name": last_name,
@@ -262,7 +262,7 @@ class OperatorConsumer(JsonWebsocketConsumer):
                 "repair_bookings": [b.id for b in bookings],
                 "payments": payments,
                 "can_message": conversation.can_message(),
-                "typing": conversation.is_typing()
+                "typing": conversation.is_typing(),
             }
         )
 
@@ -438,7 +438,7 @@ class OperatorConsumer(JsonWebsocketConsumer):
             elif attribute == "email":
                 attr = attr["email"]
                 user = django_keycloak_auth.users.get_user_by_federated_identity(
-                    email=attr,
+                    email=attr
                 )
 
                 if user:
@@ -457,7 +457,11 @@ class OperatorConsumer(JsonWebsocketConsumer):
                         email=attr,
                         last_name=name[-1] if len(name) else "",
                         first_name=" ".join(name[:-1]),
-                        required_actions=["UPDATE_PASSWORD", "UPDATE_PROFILE", "VERIFY_EMAIL"],
+                        required_actions=[
+                            "UPDATE_PASSWORD",
+                            "UPDATE_PROFILE",
+                            "VERIFY_EMAIL",
+                        ],
                     )
                     self.send_conversation(conversation.update_user_id(user.get("id")))
                     message = operator_interface.models.Message(
@@ -476,15 +480,24 @@ class OperatorConsumer(JsonWebsocketConsumer):
                     numbers = u.user.get("attributes", {}).get("phone", [])
                     for num in numbers:
                         try:
-                            num = phonenumbers.parse(num, settings.PHONENUMBER_DEFAULT_REGION)
+                            num = phonenumbers.parse(
+                                num, settings.PHONENUMBER_DEFAULT_REGION
+                            )
                         except phonenumbers.NumberParseException:
                             continue
-                        if phonenumbers.format_number(num, phonenumbers.PhoneNumberFormat.E164) == attr:
+                        if (
+                            phonenumbers.format_number(
+                                num, phonenumbers.PhoneNumberFormat.E164
+                            )
+                            == attr
+                        ):
                             return True
 
                     return False
 
-                user = next(filter(match_user, django_keycloak_auth.users.get_users()), None)
+                user = next(
+                    filter(match_user, django_keycloak_auth.users.get_users()), None
+                )
                 if user:
                     message = operator_interface.models.Message(
                         platform=conversation.last_usable_platform(),
@@ -501,11 +514,17 @@ class OperatorConsumer(JsonWebsocketConsumer):
                         phone=attr,
                         last_name=name[-1] if len(name) else "",
                         first_name=" ".join(name[:-1]),
-                        required_actions=["UPDATE_PASSWORD", "UPDATE_PROFILE", "VERIFY_EMAIL"],
+                        required_actions=[
+                            "UPDATE_PASSWORD",
+                            "UPDATE_PROFILE",
+                            "VERIFY_EMAIL",
+                        ],
                     )
                     self.send_conversation(conversation.update_user_id(user.get("id")))
                     password = secrets.token_hex(4)
-                    django_keycloak_auth.users.get_user_by_id(user.get("id")).reset_password(password, temporary=True)
+                    django_keycloak_auth.users.get_user_by_id(
+                        user.get("id")
+                    ).reset_password(password, temporary=True)
                     message = operator_interface.models.Message(
                         platform=conversation.last_usable_platform(),
                         text=f"Welcome to your We Will Fix Your PC account. Your username is "
@@ -605,14 +624,18 @@ class OperatorConsumer(JsonWebsocketConsumer):
             cid = message["cid"]
             try:
                 conv = self.get_conversation(cid)
-                operator_interface.tasks.process_typing_on.delay(conv.last_usable_platform().id)
+                operator_interface.tasks.process_typing_on.delay(
+                    conv.last_usable_platform().id
+                )
             except operator_interface.models.Conversation.DoesNotExist:
                 pass
         elif message["type"] == "typing_off":
             cid = message["cid"]
             try:
                 conv = self.get_conversation(cid)
-                operator_interface.tasks.process_typing_off.delay(conv.last_usable_platform().id)
+                operator_interface.tasks.process_typing_off.delay(
+                    conv.last_usable_platform().id
+                )
             except operator_interface.models.Conversation.DoesNotExist:
                 pass
         elif message["type"] == "requestPayment":

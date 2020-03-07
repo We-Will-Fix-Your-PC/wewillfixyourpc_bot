@@ -18,8 +18,11 @@ def send_message(mid: int) -> None:
     )
 
     try:
-        data = json.loads(message.platform.additional_platform_data) \
-            if message.platform.additional_platform_data else {}
+        data = (
+            json.loads(message.platform.additional_platform_data)
+            if message.platform.additional_platform_data
+            else {}
+        )
     except json.JSONDecodeError:
         data = {}
 
@@ -29,15 +32,15 @@ def send_message(mid: int) -> None:
         try:
             webpush(
                 subscription_info=p,
-                data=json.dumps({
-                    "type": "message",
-                    "contents": message.text,
-                    "timestamp": message.timestamp.timestamp()
-                }),
+                data=json.dumps(
+                    {
+                        "type": "message",
+                        "contents": message.text,
+                        "timestamp": message.timestamp.timestamp(),
+                    }
+                ),
                 vapid_private_key=settings.PUSH_PRIV_KEY,
-                vapid_claims={
-                    "sub": "mailto:q@misell.cymru",
-                },
+                vapid_claims={"sub": "mailto:q@misell.cymru"},
             )
         except WebPushException as e:
             print(e, e.response)

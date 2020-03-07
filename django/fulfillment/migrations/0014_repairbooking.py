@@ -6,9 +6,7 @@ import django.db.models.deletion
 
 class Migration(migrations.Migration):
 
-    dependencies = [
-        ("fulfillment", "0013_auto_20190927_2012"),
-    ]
+    dependencies = [("fulfillment", "0013_auto_20190927_2012")]
 
     operations = [
         migrations.CreateModel(
@@ -33,5 +31,5 @@ class Migration(migrations.Migration):
                     ),
                 ),
             ],
-        ),
+        )
     ]

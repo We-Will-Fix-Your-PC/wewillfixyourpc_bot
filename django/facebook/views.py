@@ -35,7 +35,9 @@ def webhook(request):
     sig = request.META.get("HTTP_X_HUB_SIGNATURE")
     if not sig.startswith("sha1="):
         return HttpResponseBadRequest()
-    own_sig = hmac.new(settings.FACEBOOK_APP_SECRET.encode(), request.body, 'sha1').hexdigest()
+    own_sig = hmac.new(
+        settings.FACEBOOK_APP_SECRET.encode(), request.body, "sha1"
+    ).hexdigest()
     if not hmac.compare_digest(own_sig, sig[5:]):
         return HttpResponseForbidden()
 
@@ -58,7 +60,10 @@ def webhook(request):
 
     for entry2 in entries:
         for entry in entry2["messaging"]:
-            psid = {"sender": entry["sender"]["id"], "recipient": entry["recipient"]["id"]}
+            psid = {
+                "sender": entry["sender"]["id"],
+                "recipient": entry["recipient"]["id"],
+            }
 
             message = entry.get("message")
             timestamp = entry.get("timestamp")

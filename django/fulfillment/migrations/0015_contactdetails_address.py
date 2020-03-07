@@ -5,9 +5,7 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
 
-    dependencies = [
-        ("fulfillment", "0014_repairbooking"),
-    ]
+    dependencies = [("fulfillment", "0014_repairbooking")]
 
     operations = [
         migrations.AddField(
@@ -15,5 +13,5 @@ class Migration(migrations.Migration):
             name="address",
             field=models.TextField(default=""),
             preserve_default=False,
-        ),
+        )
     ]

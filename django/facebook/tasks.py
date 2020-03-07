@@ -48,7 +48,7 @@ def handle_facebook_message(psid: dict, message: dict, timestamp: int) -> None:
                     platform_message_id=mid,
                     text=text,
                     direction=Message.FROM_CUSTOMER,
-                    timestamp=datetime.datetime.fromtimestamp(timestamp / 1000)
+                    timestamp=datetime.datetime.fromtimestamp(timestamp / 1000),
                 )
                 message_m.save()
                 operator_interface.tasks.process_message.delay(message_m.id)
@@ -72,7 +72,9 @@ def handle_facebook_message(psid: dict, message: dict, timestamp: int) -> None:
                                     platform_message_id=mid,
                                     image=fs.base_url + file_name,
                                     direction=Message.FROM_CUSTOMER,
-                                    timestamp=datetime.datetime.fromtimestamp(timestamp / 1000),
+                                    timestamp=datetime.datetime.fromtimestamp(
+                                        timestamp / 1000
+                                    ),
                                 )
                                 message_m.save()
                                 operator_interface.tasks.process_message.delay(
@@ -83,7 +85,9 @@ def handle_facebook_message(psid: dict, message: dict, timestamp: int) -> None:
                                     platform=platform,
                                     platform_message_id=mid,
                                     direction=Message.FROM_CUSTOMER,
-                                    timestamp=datetime.datetime.fromtimestamp(timestamp / 1000),
+                                    timestamp=datetime.datetime.fromtimestamp(
+                                        timestamp / 1000
+                                    ),
                                     text=f'<a href="{fs.base_url + file_name}" target="_blank">'
                                     f"{orig_file_name}"
                                     f"</a>",
@@ -97,7 +101,7 @@ def handle_facebook_message(psid: dict, message: dict, timestamp: int) -> None:
                             platform=platform,
                             platform_message_id=mid,
                             direction=Message.FROM_CUSTOMER,
-                                timestamp=datetime.datetime.fromtimestamp(timestamp / 1000),
+                            timestamp=datetime.datetime.fromtimestamp(timestamp / 1000),
                             text=f"<a href=\"{attachment.get('url')}\" target=\"_blank\">Location</a>",
                         )
                         message_m.save()
@@ -111,7 +115,7 @@ def handle_facebook_message(psid: dict, message: dict, timestamp: int) -> None:
                 platform_message_id=mid,
                 text=text if text else "",
                 direction=Message.TO_CUSTOMER,
-                state=operator_interface.models.Message.DELIVERED
+                state=operator_interface.models.Message.DELIVERED,
             )
             message_m.save()
             operator_interface.tasks.send_message_to_interface.delay(message_m.id)
@@ -179,7 +183,9 @@ def handle_facebook_optin(psid: dict, optin: dict) -> None:
     user_id = None
     if optin.get("ref"):
         try:
-            ref = jwt.decode(optin.get("ref"), settings.FACEBOOK_OPTIN_SECRET, algorithms=['HS256'])
+            ref = jwt.decode(
+                optin.get("ref"), settings.FACEBOOK_OPTIN_SECRET, algorithms=["HS256"]
+            )
             user_id = ref.get("cust_id")
         except jwt.exceptions.InvalidTokenError:
             return
@@ -201,7 +207,7 @@ def handle_facebook_optin(psid: dict, optin: dict) -> None:
         platform=platform,
         message_id=uuid.uuid4(),
         text="Thanks for opting to receive messages from us over Facebook Messenger."
-             " We'll be sure to keep you updated.",
+        " We'll be sure to keep you updated.",
         direction=Message.TO_CUSTOMER,
     )
     message_m.save()
@@ -229,7 +235,7 @@ def attempt_get_user_id(psid: str) -> typing.Optional[str]:
         return False
 
     user = django_keycloak_auth.users.get_user_by_federated_identity(
-        federated_provider="facebook", check_federated_user=check_asid_with_psid,
+        federated_provider="facebook", check_federated_user=check_asid_with_psid
     )
     if user:
         django_keycloak_auth.users.link_roles_to_user(user.get("id"), ["customer"])
@@ -265,14 +271,17 @@ def update_facebook_profile(psid: str, cid) -> None:
     if not conversation.conversation_pic:
         pic_r = requests.get(profile_pic)
         if pic_r.status_code == 200:
-            conversation.conversation_pic.save(psid, InMemoryUploadedFile(
-                file=BytesIO(pic_r.content),
-                size=len(pic_r.content),
-                charset=pic_r.encoding,
-                content_type=pic_r.headers.get("content-type"),
-                field_name=psid,
-                name=psid,
-            ))
+            conversation.conversation_pic.save(
+                psid,
+                InMemoryUploadedFile(
+                    file=BytesIO(pic_r.content),
+                    size=len(pic_r.content),
+                    charset=pic_r.encoding,
+                    content_type=pic_r.headers.get("content-type"),
+                    field_name=psid,
+                    name=psid,
+                ),
+            )
     if not conversation.conversation_name:
         conversation.conversation_name = name
     conversation.save()
@@ -310,10 +319,7 @@ def handle_facebook_message_typing_on(pid: int) -> None:
     requests.post(
         "https://graph.facebook.com/me/messages",
         params={"access_token": settings.FACEBOOK_ACCESS_TOKEN},
-        json={
-            "recipient": {"id": platform.platform_id},
-            "sender_action": "typing_on",
-        },
+        json={"recipient": {"id": platform.platform_id}, "sender_action": "typing_on"},
     ).raise_for_status()
 
 
@@ -323,10 +329,7 @@ def handle_facebook_message_typing_off(pid: int) -> None:
     requests.post(
         "https://graph.facebook.com/me/messages",
         params={"access_token": settings.FACEBOOK_ACCESS_TOKEN},
-        json={
-            "recipient": {"id": platform.platform_id},
-            "sender_action": "typing_off",
-        },
+        json={"recipient": {"id": platform.platform_id}, "sender_action": "typing_off"},
     ).raise_for_status()
 
 

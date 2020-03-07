@@ -15,13 +15,17 @@ channel_layer = get_channel_layer()
 class ChatConsumer(JsonWebsocketConsumer):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.platform = None  # type: typing.Union[operator_interface.models.ConversationPlatform, None]
+        self.platform = (
+            None
+        )  # type: typing.Union[operator_interface.models.ConversationPlatform, None]
 
     def close(self, code=None):
         return super().close(code)
 
     def message(self, event):
-        message: operator_interface.models.Message = operator_interface.models.Message.objects.get(id=event.get("mid"))
+        message: operator_interface.models.Message = operator_interface.models.Message.objects.get(
+            id=event.get("mid")
+        )
         self.send_message(message)
         self.send_conversation(message.platform)
         message.state = operator_interface.models.Message.DELIVERED
@@ -41,11 +45,7 @@ class ChatConsumer(JsonWebsocketConsumer):
 
         buttons = []
         if len(urls):
-            buttons.append({
-                "text": "Open link",
-                "type": "url",
-                "url": urls[0]
-            })
+            buttons.append({"text": "Open link", "type": "url", "url": urls[0]})
 
         self.send_json(
             {
@@ -59,25 +59,30 @@ class ChatConsumer(JsonWebsocketConsumer):
                 "state": message.state,
                 "request": message.request,
                 "sent_by": message.user.first_name if message.user else None,
-                "profile_picture_url": settings.EXTERNAL_URL_BASE + reverse(
-                    "operator:profile_pic", args=[message.user.id]
-                ) if message.user else None,
+                "profile_picture_url": settings.EXTERNAL_URL_BASE
+                + reverse("operator:profile_pic", args=[message.user.id])
+                if message.user
+                else None,
                 "selection": message.selection,
                 "card": message.card,
-                "buttons": buttons
+                "buttons": buttons,
             }
         )
 
     def send_error(self, error: str):
         self.send_json({"type": "error", "msg": error})
 
-    def send_conversation(self, platform: operator_interface.models.ConversationPlatform):
+    def send_conversation(
+        self, platform: operator_interface.models.ConversationPlatform
+    ):
         conversation = platform.conversation
         self.send_json(
             {
                 "type": "conversation",
-                "current_agent": conversation.current_agent.first_name if conversation.current_agent else None,
-                "messages": [m.id for m in platform.messages.all()]
+                "current_agent": conversation.current_agent.first_name
+                if conversation.current_agent
+                else None,
+                "messages": [m.id for m in platform.messages.all()],
             }
         )
 
@@ -87,7 +92,7 @@ class ChatConsumer(JsonWebsocketConsumer):
             platform=self.platform,
             text=content,
             state=operator_interface.models.Message.DELIVERED,
-            message_id=mid
+            message_id=mid,
         )
         message.save()
         operator_interface.tasks.process_message.delay(message.id)
@@ -99,7 +104,11 @@ class ChatConsumer(JsonWebsocketConsumer):
             return
 
         try:
-            data = json.loads(self.platform.additional_platform_data) if self.platform.additional_platform_data else {}
+            data = (
+                json.loads(self.platform.additional_platform_data)
+                if self.platform.additional_platform_data
+                else {}
+            )
         except json.JSONDecodeError:
             data = {}
         push = data.get("push", [])
@@ -127,7 +136,7 @@ class ChatConsumer(JsonWebsocketConsumer):
             try:
                 platform = operator_interface.models.ConversationPlatform.objects.get(
                     platform=operator_interface.models.ConversationPlatform.CHAT,
-                    platform_id=token
+                    platform_id=token,
                 )
             except operator_interface.models.ConversationPlatform.DoesNotExist:
                 self.close()
@@ -146,7 +155,10 @@ class ChatConsumer(JsonWebsocketConsumer):
             msg_id = message["id"]
             try:
                 msg = operator_interface.models.Message.objects.get(id=msg_id)
-                if msg.direction == operator_interface.models.Message.TO_CUSTOMER and msg.platform_id == self.platform.id:
+                if (
+                    msg.direction == operator_interface.models.Message.TO_CUSTOMER
+                    and msg.platform_id == self.platform.id
+                ):
                     msg.state = operator_interface.models.Message.READ
                     msg.save()
             except operator_interface.models.Message.DoesNotExist:

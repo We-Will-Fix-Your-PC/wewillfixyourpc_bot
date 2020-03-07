@@ -49,7 +49,7 @@ def process_inputs(inputs, conversation):
                 a["textValue"] for a in arguments if a.get("name") == "OPTION"
             )
             if option.startswith("SELECTION_NUM_"):
-                num = option[len("SELECTION_NUM_"):]
+                num = option[len("SELECTION_NUM_") :]
                 outputs_l.append(
                     operator_interface.tasks.process_event.delay(
                         conversation.id, f'resolve_entity{{"number": "{num}"}}'
@@ -62,7 +62,7 @@ def process_inputs(inputs, conversation):
             )
             outputs_l.append(
                 operator_interface.tasks.process_event.delay(
-                    conversation.id, 'affirm' if option else 'deny'
+                    conversation.id, "affirm" if option else "deny"
                 )
             )
         elif intent == "actions.intent.DATETIME":
@@ -71,8 +71,12 @@ def process_inputs(inputs, conversation):
                 a["datetimeValue"] for a in arguments if a.get("name") == "DATETIME"
             )
             time = timezone.datetime(
-                year=option["date"]["year"], month=option["date"]["month"], day=option["date"]["day"],
-                hour=option["time"]["hours"], minute=option["time"].get("minutes", 0), second=0
+                year=option["date"]["year"],
+                month=option["date"]["month"],
+                day=option["date"]["day"],
+                hour=option["time"]["hours"],
+                minute=option["time"].get("minutes", 0),
+                second=0,
             )
             message_m = Message(
                 conversation=conversation,
@@ -229,9 +233,7 @@ def process_outputs(outputs_l, is_guest_user, conversation):
                 "intent": "actions.intent.CONFIRMATION",
                 "inputValueData": {
                     "@type": "type.googleapis.com/google.actions.v2.ConfirmationValueSpec",
-                    "dialogSpec": {
-                        "requestConfirmationText": messages
-                    },
+                    "dialogSpec": {"requestConfirmationText": messages},
                 },
             }
         )
@@ -244,17 +246,18 @@ def process_outputs(outputs_l, is_guest_user, conversation):
                 }
             }
         )
-        possible_intents.append({
-            "intent": "actions.intent.DATETIME",
-            "inputValueData": {
-                "@type": "type.googleapis.com/google.actions.v2.DateTimeValueSpec",
-                "dialogSpec": {
-                    "requestDatetimeText": "When would best for you?",
-                    "requestDateText": "What day was that?",
-                    "requestTimeText": "What time works for you?"
-                }
+        possible_intents.append(
+            {
+                "intent": "actions.intent.DATETIME",
+                "inputValueData": {
+                    "@type": "type.googleapis.com/google.actions.v2.DateTimeValueSpec",
+                    "dialogSpec": {
+                        "requestDatetimeText": "When would best for you?",
+                        "requestDateText": "What day was that?",
+                        "requestTimeText": "What time works for you?",
+                    },
+                },
             }
-        }
         )
     elif last_output.selection:
         selection = json.loads(last_output.selection)

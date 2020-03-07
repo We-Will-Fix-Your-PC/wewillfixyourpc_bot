@@ -46,6 +46,8 @@ INSTALLED_APPS = [
     "azure_bot",
     "operator_interface",
     "customer_chat",
+    "apple_business_chat",
+    "sms",
     "rasa_api",
     "api",
     "gactions",
@@ -199,7 +201,7 @@ CORS_ORIGIN_ALLOW_ALL = True
 CORS_ALLOW_CREDENTIALS = True
 SESSION_COOKIE_SAMESITE = None
 SESSION_COOKIE_SECURE = True
-SESSION_COOKIE_AGE = 315360000
+SESSION_COOKIE_AGE = 315_360_000
 
 LOGGING = {
     "version": 1,

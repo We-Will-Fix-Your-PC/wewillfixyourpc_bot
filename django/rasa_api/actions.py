@@ -143,12 +143,15 @@ def reduce_days(days: List[Tuple[str, str, models.OpeningHours]]):
     return days
 
 
-def sender_id_to_conversation(sender_id: str) -> operator_interface.models.ConversationPlatform:
+def sender_id_to_conversation(
+    sender_id: str
+) -> operator_interface.models.ConversationPlatform:
     sender_id = sender_id.split(":")
     if len(sender_id) >= 2 and sender_id[0] == "CONV":
         try:
-            conversation: operator_interface.models.ConversationPlatform = \
-                operator_interface.models.ConversationPlatform.objects.get(id=sender_id[1])
+            conversation: operator_interface.models.ConversationPlatform = operator_interface.models.ConversationPlatform.objects.get(
+                id=sender_id[1]
+            )
 
             return conversation
         except operator_interface.models.ConversationPlatform.DoesNotExist:
@@ -192,7 +195,8 @@ def get_conversation_capabilities(sender_id) -> SurfaceCapabilities:
 
     if platform:
         if (
-            platform.platform == operator_interface.models.ConversationPlatform.GOOGLE_ACTIONS
+            platform.platform
+            == operator_interface.models.ConversationPlatform.GOOGLE_ACTIONS
         ):
             instant_response_required = True
             supports_sign_in = True
@@ -295,7 +299,9 @@ class ActionUpdateInfoSlots(Action):
         tracker: Tracker,
         domain: Dict[Text, Any],
     ) -> List[Dict[Text, Any]]:
-        conversation = await sync_to_async(sender_id_to_conversation)(tracker.sender_id).conversation
+        conversation = await sync_to_async(sender_id_to_conversation)(
+            tracker.sender_id
+        ).conversation
         capabilities = await sync_to_async(get_conversation_capabilities)(
             tracker.sender_id
         )
@@ -368,7 +374,7 @@ class ActionSignIn(Action):
         domain: Dict[Text, Any],
     ) -> List[Dict[Text, Any]]:
         dispatcher.utter_custom_json(
-            {"type": "request", "request": "sign_in", "text": "Please sign in",}
+            {"type": "request", "request": "sign_in", "text": "Please sign in"}
         )
 
         return []
@@ -1249,7 +1255,9 @@ class RepairBookForm(BaseForm):
 
     @staticmethod
     async def required_slots(tracker: Tracker) -> List[Text]:
-        capabilities = await sync_to_async(get_conversation_capabilities)(tracker.sender_id)
+        capabilities = await sync_to_async(get_conversation_capabilities)(
+            tracker.sender_id
+        )
         ask_phone = capabilities.input_supported != "voice" if capabilities else True
 
         if not ask_phone:
@@ -1306,9 +1314,7 @@ class RepairBookForm(BaseForm):
                     )
                     return {"time": None}
 
-                if (
-                    value_dt < timezone.now()
-                ):
+                if value_dt < timezone.now():
                     dispatcher.utter_message("That time is in the past")
                     return {"time": None}
 

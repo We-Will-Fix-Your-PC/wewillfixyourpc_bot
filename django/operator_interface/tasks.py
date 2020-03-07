@@ -42,9 +42,7 @@ def send_push_notification(sid, data):
             subscription_info=subscription.subscription_info_json,
             data=json.dumps(data),
             vapid_private_key=settings.PUSH_PRIV_KEY,
-            vapid_claims={
-                "sub": "mailto:q@misell.cymru",
-            },
+            vapid_claims={"sub": "mailto:q@misell.cymru"},
         )
     except WebPushException as e:
         if e.response.status_code in [404, 410]:
@@ -114,7 +112,9 @@ def process_message(mid: int):
             admin_client = django_keycloak_auth.clients.get_keycloak_admin_client()
             if conversation.conversation_user_id:
                 try:
-                    user = admin_client.users.by_id(conversation.conversation_user_id).user
+                    user = admin_client.users.by_id(
+                        conversation.conversation_user_id
+                    ).user
                     name = f'{user.get("firstName", "")} {user.get("lastName", "")}'
                 except keycloak.exceptions.KeycloakClientError:
                     name = conversation.conversation_name

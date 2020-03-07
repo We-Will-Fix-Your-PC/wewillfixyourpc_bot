@@ -12,10 +12,15 @@ application = SentryAsgiMiddleware(
         {
             "websocket": AuthMiddlewareStack(
                 OIDCChannelsMiddleware(
-                    URLRouter([
-                        path("ws/operator/", operator_interface.consumers.OperatorConsumer),
-                        path("ws/chat/", customer_chat.consumers.ChatConsumer),
-                    ])
+                    URLRouter(
+                        [
+                            path(
+                                "ws/operator/",
+                                operator_interface.consumers.OperatorConsumer,
+                            ),
+                            path("ws/chat/", customer_chat.consumers.ChatConsumer),
+                        ]
+                    )
                 )
             )
         }

@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 
 def check_auth(f):
     def new_f(request, *args, **kwargs):
-        key: str = request.META.get('HTTP_AUTHORIZATION', "")
+        key: str = request.META.get("HTTP_AUTHORIZATION", "")
         if not key.startswith("Key "):
             return HttpResponseForbidden()
         key = key[4:]
@@ -63,7 +63,7 @@ def notif_webhook(request):
     from_id = data.get("from")
     msg_event = data.get("event")
     conv: ConversationPlatform = ConversationPlatform.objects.filter(
-       platform=ConversationPlatform.ABC, platform_id=from_id
+        platform=ConversationPlatform.ABC, platform_id=from_id
     ).first()
     msg: Message = Message.objects.filter(message_id=msg_id).first()
 
@@ -75,7 +75,7 @@ def notif_webhook(request):
                 platform=conv,
                 platform_message_id=msg_id,
                 end=True,
-                direction=Message.FROM_CUSTOMER
+                direction=Message.FROM_CUSTOMER,
             )
             m.save()
             operator_interface.tasks.process_message.delay(m.id)

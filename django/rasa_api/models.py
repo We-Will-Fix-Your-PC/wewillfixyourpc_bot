@@ -34,7 +34,9 @@ class EnvironmentModel(models.Model):
 
 
 class TestingUser(models.Model):
-    conversation = models.ForeignKey(operator_interface.models.Conversation, on_delete=models.CASCADE)
+    conversation = models.ForeignKey(
+        operator_interface.models.Conversation, on_delete=models.CASCADE
+    )
     rasa_url = models.URLField()
 
     def __str__(self):

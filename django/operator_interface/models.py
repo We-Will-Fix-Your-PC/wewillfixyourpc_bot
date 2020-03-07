@@ -50,7 +50,9 @@ class Conversation(models.Model):
         if not self.conversation_user_id:
             return self.conversation_name if self.conversation_name else "Unknown"
         try:
-            user = django_keycloak_auth.users.get_user_by_id(self.conversation_user_id).user
+            user = django_keycloak_auth.users.get_user_by_id(
+                self.conversation_user_id
+            ).user
         except keycloak.exceptions.KeycloakClientError as e:
             return self.conversation_name if self.conversation_name else "Unknown"
         return f"{user.get('firstName')} {user.get('lastName')}"
@@ -63,8 +65,11 @@ class Conversation(models.Model):
         return last_message.platform
 
     def last_usable_platform(self, tag=None, alert=False):
-        platforms = self.conversationplatform_set.annotate(page_count=Count('messages')).filter(page_count__gte=1)\
-            .order_by('-messages__timestamp')
+        platforms = (
+            self.conversationplatform_set.annotate(page_count=Count("messages"))
+            .filter(page_count__gte=1)
+            .order_by("-messages__timestamp")
+        )
         for platform in platforms:
             if platform.can_message(tag, alert):
                 return platform
@@ -142,9 +147,7 @@ class ConversationPlatform(models.Model):
             except Conversation.DoesNotExist:
                 pass
         if conv is None:
-            conv = Conversation(
-                conversation_user_id=customer_user_id,
-            )
+            conv = Conversation(conversation_user_id=customer_user_id)
             conv.save()
 
         plat = cls(platform=platform, platform_id=platform_id, conversation=conv)
@@ -153,15 +156,31 @@ class ConversationPlatform(models.Model):
 
     def can_message(self, tag=None, alert=False):
         if self.platform == self.FACEBOOK:
-            if tag in ["CONFIRMED_EVENT_UPDATE", "POST_PURCHASE_UPDATE", "ACCOUNT_UPDATE"]:
+            if tag in [
+                "CONFIRMED_EVENT_UPDATE",
+                "POST_PURCHASE_UPDATE",
+                "ACCOUNT_UPDATE",
+            ]:
                 return True
             elif tag == "HUMAN_AGENT":
-                last_message = self.messages.order_by('-timestamp').filter(direction=Message.FROM_CUSTOMER).first()
-                if last_message and last_message.timestamp > timezone.now() - datetime.timedelta(days=7):
+                last_message = (
+                    self.messages.order_by("-timestamp")
+                    .filter(direction=Message.FROM_CUSTOMER)
+                    .first()
+                )
+                if last_message and last_message.timestamp > timezone.now() - datetime.timedelta(
+                    days=7
+                ):
                     return True
             else:
-                last_message = self.messages.order_by('-timestamp').filter(direction=Message.FROM_CUSTOMER).first()
-                if last_message and last_message.timestamp > timezone.now() - datetime.timedelta(hours=24):
+                last_message = (
+                    self.messages.order_by("-timestamp")
+                    .filter(direction=Message.FROM_CUSTOMER)
+                    .first()
+                )
+                if last_message and last_message.timestamp > timezone.now() - datetime.timedelta(
+                    hours=24
+                ):
                     return True
             return False
         elif self.platform == self.GOOGLE_ACTIONS:
@@ -178,7 +197,9 @@ class ConversationPlatform(models.Model):
             # return len(push) > 0
             return False
         elif self.platform == self.ABC:
-            last_message: Message = self.messages.order_by('-timestamp').filter(direction=Message.FROM_CUSTOMER).first()
+            last_message: Message = self.messages.order_by("-timestamp").filter(
+                direction=Message.FROM_CUSTOMER
+            ).first()
             if last_message:
                 return not last_message.end
             return True
@@ -208,7 +229,7 @@ class Message(models.Model):
         (SENDING, "Sending"),
         (DELIVERED, "Delivered"),
         (READ, "Read"),
-        (FAILED, "Failed")
+        (FAILED, "Failed"),
     )
 
     platform = models.ForeignKey(

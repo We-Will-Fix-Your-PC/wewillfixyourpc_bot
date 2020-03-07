@@ -6,24 +6,38 @@ import django.db.models.deletion
 
 class Migration(migrations.Migration):
 
-    dependencies = [
-        ('operator_interface', '0047_auto_20200208_1407'),
-    ]
+    dependencies = [("operator_interface", "0047_auto_20200208_1407")]
 
     operations = [
         migrations.AddField(
-            model_name='conversationplatform',
-            name='is_typing',
+            model_name="conversationplatform",
+            name="is_typing",
             field=models.BooleanField(default=False),
         ),
         migrations.AlterField(
-            model_name='conversationplatform',
-            name='platform',
-            field=models.CharField(choices=[('FB', 'Facebook'), ('TW', 'Twitter'), ('TG', 'Telegram'), ('AZ', 'Azure'), ('GA', 'Actions on Google'), ('TX', 'SMS'), ('CH', 'Customer chat'), ('AB', 'Apple Business chat')], max_length=2),
+            model_name="conversationplatform",
+            name="platform",
+            field=models.CharField(
+                choices=[
+                    ("FB", "Facebook"),
+                    ("TW", "Twitter"),
+                    ("TG", "Telegram"),
+                    ("AZ", "Azure"),
+                    ("GA", "Actions on Google"),
+                    ("TX", "SMS"),
+                    ("CH", "Customer chat"),
+                    ("AB", "Apple Business chat"),
+                ],
+                max_length=2,
+            ),
         ),
         migrations.AlterField(
-            model_name='message',
-            name='platform',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='messages', to='operator_interface.ConversationPlatform'),
+            model_name="message",
+            name="platform",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="messages",
+                to="operator_interface.ConversationPlatform",
+            ),
         ),
     ]

@@ -5,13 +5,11 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
 
-    dependencies = [
-        ("fulfillment", "0012_auto_20190903_0735"),
-    ]
+    dependencies = [("fulfillment", "0012_auto_20190903_0735")]
 
     operations = [
-        migrations.RemoveField(model_name="unlockform", name="email",),
-        migrations.RemoveField(model_name="unlockform", name="name",),
+        migrations.RemoveField(model_name="unlockform", name="email"),
+        migrations.RemoveField(model_name="unlockform", name="name"),
         migrations.AddField(
             model_name="unlockform",
             name="customer_id",

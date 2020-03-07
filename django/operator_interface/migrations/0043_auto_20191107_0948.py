@@ -5,9 +5,7 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
 
-    dependencies = [
-        ("operator_interface", "0042_message_selection"),
-    ]
+    dependencies = [("operator_interface", "0042_message_selection")]
 
     operations = [
         migrations.RemoveField(model_name="message", name="payment_confirm_id"),

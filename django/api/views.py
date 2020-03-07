@@ -1,4 +1,10 @@
-from django.http import HttpResponse, HttpResponseNotAllowed, HttpResponseBadRequest, Http404, HttpResponseForbidden
+from django.http import (
+    HttpResponse,
+    HttpResponseNotAllowed,
+    HttpResponseBadRequest,
+    Http404,
+    HttpResponseForbidden,
+)
 import json
 import phonenumbers
 import django_keycloak_auth.users
@@ -21,11 +27,15 @@ def send_message(request, customer_id):
         return HttpResponseForbidden()
 
     try:
-        claims = django_keycloak_auth.clients.verify_token(auth[len('Bearer '):].strip())
+        claims = django_keycloak_auth.clients.verify_token(
+            auth[len("Bearer ") :].strip()
+        )
     except keycloak.exceptions.KeycloakClientError:
         return HttpResponseForbidden()
 
-    if "send-messages" not in claims.get("resource_access", {}).get("bot-server", {}).get("roles", []):
+    if "send-messages" not in claims.get("resource_access", {}).get(
+        "bot-server", {}
+    ).get("roles", []):
         return HttpResponseForbidden()
 
     try:
@@ -57,7 +67,10 @@ def send_message(request, customer_id):
             except phonenumbers.phonenumberutil.NumberParseException:
                 continue
             if phonenumbers.is_valid_number(n):
-                if phonenumbers.phonenumberutil.number_type(n) == phonenumbers.PhoneNumberType.MOBILE:
+                if (
+                    phonenumbers.phonenumberutil.number_type(n)
+                    == phonenumbers.PhoneNumberType.MOBILE
+                ):
                     mobile_numbers.append(n)
                 else:
                     other_numbers.append(n)
@@ -66,7 +79,9 @@ def send_message(request, customer_id):
                 try:
                     platform = ConversationPlatform.objects.get(
                         platform=ConversationPlatform.SMS,
-                        platform_id=phonenumbers.format_number(n, phonenumbers.PhoneNumberFormat.E164)
+                        platform_id=phonenumbers.format_number(
+                            n, phonenumbers.PhoneNumberFormat.E164
+                        ),
                     )
                     break
                 except ConversationPlatform.DoesNotExist:
@@ -77,7 +92,9 @@ def send_message(request, customer_id):
                     try:
                         platform = ConversationPlatform.objects.get(
                             platform=ConversationPlatform.SMS,
-                            platform_id=phonenumbers.format_number(n, phonenumbers.PhoneNumberFormat.E164)
+                            platform_id=phonenumbers.format_number(
+                                n, phonenumbers.PhoneNumberFormat.E164
+                            ),
                         )
                         break
                     except ConversationPlatform.DoesNotExist:
@@ -90,9 +107,13 @@ def send_message(request, customer_id):
                 platform = ConversationPlatform(
                     conversation=conv,
                     platform=ConversationPlatform.SMS,
-                    platform_id=phonenumbers.format_number(mobile_numbers[0], phonenumbers.PhoneNumberFormat.E164)
-                    if len(mobile_numbers) else
-                    phonenumbers.format_number(other_numbers[0], phonenumbers.PhoneNumberFormat.E164)
+                    platform_id=phonenumbers.format_number(
+                        mobile_numbers[0], phonenumbers.PhoneNumberFormat.E164
+                    )
+                    if len(mobile_numbers)
+                    else phonenumbers.format_number(
+                        other_numbers[0], phonenumbers.PhoneNumberFormat.E164
+                    ),
                 )
                 platform.save()
             else:
@@ -100,10 +121,8 @@ def send_message(request, customer_id):
 
     if platform is None:
         return HttpResponse(
-            json.dumps({
-                "status": "no_platform_available"
-            }),
-            content_type='application/json'
+            json.dumps({"status": "no_platform_available"}),
+            content_type="application/json",
         )
 
     message = Message(
@@ -115,9 +134,4 @@ def send_message(request, customer_id):
     message.save()
     operator_interface.tasks.process_message.delay(message.id)
 
-    return HttpResponse(
-        json.dumps({
-            "status": "ok"
-        }),
-        content_type='application/json'
-    )
+    return HttpResponse(json.dumps({"status": "ok"}), content_type="application/json")

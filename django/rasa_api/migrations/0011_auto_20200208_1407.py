@@ -7,23 +7,21 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('operator_interface', '0047_auto_20200208_1407'),
-        ('rasa_api', '0010_auto_20190831_1627'),
+        ("operator_interface", "0047_auto_20200208_1407"),
+        ("rasa_api", "0010_auto_20190831_1627"),
     ]
 
     operations = [
-        migrations.RemoveField(
-            model_name='testinguser',
-            name='platform',
-        ),
-        migrations.RemoveField(
-            model_name='testinguser',
-            name='platform_id',
-        ),
+        migrations.RemoveField(model_name="testinguser", name="platform"),
+        migrations.RemoveField(model_name="testinguser", name="platform_id"),
         migrations.AddField(
-            model_name='testinguser',
-            name='conversation',
-            field=models.ForeignKey(default=None, on_delete=django.db.models.deletion.CASCADE, to='operator_interface.Conversation'),
+            model_name="testinguser",
+            name="conversation",
+            field=models.ForeignKey(
+                default=None,
+                on_delete=django.db.models.deletion.CASCADE,
+                to="operator_interface.Conversation",
+            ),
             preserve_default=False,
         ),
     ]

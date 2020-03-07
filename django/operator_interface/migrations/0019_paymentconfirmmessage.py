@@ -6,9 +6,7 @@ import django.db.models.deletion
 
 class Migration(migrations.Migration):
 
-    dependencies = [
-        ("operator_interface", "0018_auto_20190805_2029"),
-    ]
+    dependencies = [("operator_interface", "0018_auto_20190805_2029")]
 
     operations = [
         migrations.CreateModel(

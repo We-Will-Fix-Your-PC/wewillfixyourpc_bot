@@ -33,7 +33,10 @@ def attempt_get_user_id(msg_from: str) -> typing.Optional[str]:
                 num = phonenumbers.parse(num, settings.PHONENUMBER_DEFAULT_REGION)
             except phonenumbers.NumberParseException:
                 continue
-            if phonenumbers.format_number(num, phonenumbers.PhoneNumberFormat.E164) == msg_from:
+            if (
+                phonenumbers.format_number(num, phonenumbers.PhoneNumberFormat.E164)
+                == msg_from
+            ):
                 return True
 
         return False
@@ -52,7 +55,7 @@ def handle_sms(msg_id, msg_from, data):
                 platform=platform,
                 platform_message_id=msg_id,
                 text=text,
-                direction=Message.FROM_CUSTOMER
+                direction=Message.FROM_CUSTOMER,
             )
             message_m.save()
             operator_interface.tasks.process_message.delay(message_m.id)
@@ -66,14 +69,20 @@ def send_message(mid: int):
 
     if message.selection:
         selection_data = json.loads(message.selection)
-        msg_args["body"] = "\n".join([
-            f"{i+1}) {item.get('title')}?"
-            for i, item in enumerate(selection_data.get("items", []))
-        ])
+        msg_args["body"] = "\n".join(
+            [
+                f"{i+1}) {item.get('title')}?"
+                for i, item in enumerate(selection_data.get("items", []))
+            ]
+        )
     elif message.request == "sign_in":
         state = models.AccountLinkingState(conversation=message.platform)
         state.save()
-        url = settings.EXTERNAL_URL_BASE + reverse("sms:account_linking") + f"?state={state.id}"
+        url = (
+            settings.EXTERNAL_URL_BASE
+            + reverse("sms:account_linking")
+            + f"?state={state.id}"
+        )
         msg_args["body"] = f"{message.text}\n\nSign in here: {url}"
     elif message.text:
         msg_args["body"] = message.text
@@ -85,7 +94,7 @@ def send_message(mid: int):
             to=message.platform.platform_id,
             provide_feedback=True,
             messaging_service_sid=settings.TWILIO_MSID,
-            **msg_args
+            **msg_args,
         )
     except twilio.base.exceptions.TwilioException:
         message.state = Message.FAILED
