@@ -4,7 +4,7 @@ import uuid
 import payment
 import typing
 import dateutil.parser
-
+import secrets
 import django_keycloak_auth.users
 import keycloak.exceptions
 import phonenumbers
@@ -414,7 +414,7 @@ class OperatorConsumer(JsonWebsocketConsumer):
         elif attribute == "last-name":
             return {"last_name": value.get("value")}
         elif attribute == "email":
-            return value.get("value")
+            return {"email": value.get("value")}
 
     def attribute_update(
         self,
@@ -423,38 +423,98 @@ class OperatorConsumer(JsonWebsocketConsumer):
         value: str,
     ):
         value = json.loads(value)
-        if conversation.conversation_user_id:
-            attr = self.decode_attribute(attribute, value)
-            if attr:
+        attr = self.decode_attribute(attribute, value)
+        if attr:
+            if conversation.conversation_user_id:
                 django_keycloak_auth.users.update_user(
                     str(conversation.conversation_user_id), force_update=True, **attr
                 )
                 self.send_conversation(conversation)
-        elif attribute != "email":
-            self.send_error(
-                "No user account is currently associated with this conversation, "
-                "please set an email first"
-            )
-        else:
-            attr = self.decode_attribute(attribute, value)
-            user = django_keycloak_auth.users.get_or_create_user(
-                email=attr,
-                first_name=conversation.conversation_name,
-                required_actions=["UPDATE_PASSWORD", "UPDATE_PROFILE", "VERIFY_EMAIL"],
-            )
-
-            if user.get("new"):
-                self.send_conversation(conversation.update_user_id(user.get("id")))
-            else:
-                message = operator_interface.models.Message(
-                    platform=conversation.last_usable_platform(),
-                    text="An account is already associated with that email address. Please log in.",
-                    direction=operator_interface.models.Message.TO_CUSTOMER,
-                    user=self.user,
-                    request="sign_in",
+            elif attribute not in ["email", "phone-number"]:
+                self.send_error(
+                    "No user account is currently associated with this conversation, "
+                    "please set an email or phone number first"
                 )
-                self.save_object(message)
-                operator_interface.tasks.process_message.delay(message.id)
+            elif attribute == "email":
+                attr = attr["email"]
+                user = django_keycloak_auth.users.get_user_by_federated_identity(
+                    email=attr,
+                )
+
+                if user:
+                    message = operator_interface.models.Message(
+                        platform=conversation.last_usable_platform(),
+                        text="An account is already associated with that email address. Please log in.",
+                        direction=operator_interface.models.Message.TO_CUSTOMER,
+                        user=self.user,
+                        request="sign_in",
+                    )
+                    self.save_object(message)
+                    operator_interface.tasks.process_message.delay(message.id)
+                else:
+                    name = conversation.conversation_name.split(" ")
+                    user = django_keycloak_auth.users.get_or_create_user(
+                        email=attr,
+                        last_name=name[-1] if len(name) else "",
+                        first_name=" ".join(name[:-1]),
+                        required_actions=["UPDATE_PASSWORD", "UPDATE_PROFILE", "VERIFY_EMAIL"],
+                    )
+                    self.send_conversation(conversation.update_user_id(user.get("id")))
+                    message = operator_interface.models.Message(
+                        platform=conversation.last_usable_platform(),
+                        text="Welcome to your We Will Fix Your PC account. Your username is "
+                        f"{user.get('username')}, and details to setup your account have been"
+                        f"emailed to you.",
+                        direction=operator_interface.models.Message.TO_CUSTOMER,
+                        user=self.user,
+                    )
+                    self.save_object(message)
+            elif attribute == "phone-number":
+                attr = attr["phone"]
+
+                def match_user(u):
+                    numbers = u.user.get("attributes", {}).get("phone", [])
+                    for num in numbers:
+                        try:
+                            num = phonenumbers.parse(num, settings.PHONENUMBER_DEFAULT_REGION)
+                        except phonenumbers.NumberParseException:
+                            continue
+                        if phonenumbers.format_number(num, phonenumbers.PhoneNumberFormat.E164) == attr:
+                            return True
+
+                    return False
+
+                user = next(filter(match_user, django_keycloak_auth.users.get_users()), None)
+                if user:
+                    message = operator_interface.models.Message(
+                        platform=conversation.last_usable_platform(),
+                        text="An account is already associated with that phone number. Please log in.",
+                        direction=operator_interface.models.Message.TO_CUSTOMER,
+                        user=self.user,
+                        request="sign_in",
+                    )
+                    self.save_object(message)
+                    operator_interface.tasks.process_message.delay(message.id)
+                else:
+                    name = conversation.conversation_name.split(" ")
+                    user = django_keycloak_auth.users.get_or_create_user(
+                        phone=attr,
+                        last_name=name[-1] if len(name) else "",
+                        first_name=" ".join(name[:-1]),
+                        required_actions=["UPDATE_PASSWORD", "UPDATE_PROFILE", "VERIFY_EMAIL"],
+                    )
+                    self.send_conversation(conversation.update_user_id(user.get("id")))
+                    password = secrets.token_hex(4)
+                    django_keycloak_auth.users.get_user_by_id(user.get("id")).reset_password(password, temporary=True)
+                    message = operator_interface.models.Message(
+                        platform=conversation.last_usable_platform(),
+                        text=f"Welcome to your We Will Fix Your PC account. Your username is "
+                        f"{user.get('username')}, and your temporary password is "
+                        f"{password}.",
+                        direction=operator_interface.models.Message.TO_CUSTOMER,
+                        user=self.user,
+                    )
+                    self.save_object(message)
 
     def request_sign_in(self, conversation: operator_interface.models.Conversation):
         if not conversation.conversation_user_id:
