@@ -17,6 +17,7 @@ import twitter.tasks
 import azure_bot.tasks
 import customer_chat.tasks
 import apple_business_chat.tasks
+import sms.tasks
 import keycloak.exceptions
 import django_keycloak_auth.clients
 from django.utils import timezone
@@ -143,6 +144,8 @@ def process_message(mid: int):
             customer_chat.tasks.send_message(mid)
         elif platform == models.ConversationPlatform.ABC:
             apple_business_chat.tasks.send_message(mid)
+        elif platform == models.ConversationPlatform.SMS:
+            sms.tasks.send_message(mid)
         elif platform == models.ConversationPlatform.GOOGLE_ACTIONS:
             return mid
 

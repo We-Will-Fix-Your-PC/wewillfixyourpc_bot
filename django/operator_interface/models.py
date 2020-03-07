@@ -3,6 +3,8 @@ from django.utils import timezone
 import json
 import uuid
 import datetime
+import django_keycloak_auth.users
+import keycloak.exceptions
 from django.db.models import Count
 from django.contrib.auth.models import User
 
@@ -45,7 +47,13 @@ class Conversation(models.Model):
     conversation_pic = models.ImageField(blank=True, null=True)
 
     def __str__(self):
-        return f"{self.conversation_name}"
+        if not self.conversation_user_id:
+            return self.conversation_name if self.conversation_name else "Unknown"
+        try:
+            user = django_keycloak_auth.users.get_user_by_id(self.conversation_user_id).user
+        except keycloak.exceptions.KeycloakClientError as e:
+            return self.conversation_name if self.conversation_name else "Unknown"
+        return f"{user.get('firstName')} {user.get('lastName')}"
 
     def last_platform(self):
         messages = Message.objects.filter(platform__conversation=self)

@@ -1,7 +1,6 @@
 from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseForbidden
 from django.views.decorators.csrf import csrf_exempt
 from django.conf import settings
-from django.shortcuts import get_object_or_404
 import operator_interface.tasks
 from . import tasks
 from operator_interface.models import Message, ConversationPlatform

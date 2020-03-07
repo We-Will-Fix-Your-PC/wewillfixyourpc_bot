@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     "operator_interface",
     "customer_chat",
     "apple_business_chat",
+    "sms",
     "rasa_api",
     "api",
     "gactions",
@@ -168,6 +169,8 @@ with open(os.path.join(BASE_DIR, "secrets/keycloak.json")) as f:
     keycloak_conf = json.load(f)
 with open(os.path.join(BASE_DIR, "secrets/blip.json")) as f:
     blip_conf = json.load(f)
+with open(os.path.join(BASE_DIR, "secrets/twilio.json")) as f:
+    twilio_conf = json.load(f)
 
 AZURE_APP_ID = azure_conf["app-id"]
 AZURE_APP_PASSWORD = azure_conf["app-password"]
@@ -186,6 +189,10 @@ TWITTER_ENVNAME = "main"
 
 TELEGRAM_TOKEN = telegram_conf["token"]
 TELEGRAM_PAYMENT_TOKEN = telegram_conf["payment_token"]
+
+TWILIO_ACCOUNT = twilio_conf["account"]
+TWILIO_TOKEN = twilio_conf["token"]
+TWILIO_MSID = twilio_conf["msid"]
 
 BLIP_KEY = blip_conf["key"]
 
@@ -233,6 +240,7 @@ LOGGING = {
         "django_keycloak_auth": {"handlers": ["console"], "level": "DEBUG"},
         "keycloak": {"handlers": ["console"], "level": "DEBUG"},
         "apple_business_chat": {"handlers": ["console"], "level": "DEBUG"},
+        "sms": {"handlers": ["console"], "level": "DEBUG"},
         "customer_chat": {"handlers": ["console"], "level": "DEBUG"},
     },
 }

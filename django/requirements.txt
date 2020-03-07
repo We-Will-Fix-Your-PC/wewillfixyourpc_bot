@@ -32,6 +32,7 @@ pytest-runner<5
 six==1.12.0
 aiohttp
 flask
+twilio
 git+https://github.com/Peter-Slump/python-keycloak-client.git@master
 git+https://github.com/TheEnbyperor/rasa-sdk.git@master
 git+https://github.com/TheEnbyperor/django-keycloak-auth.git@master

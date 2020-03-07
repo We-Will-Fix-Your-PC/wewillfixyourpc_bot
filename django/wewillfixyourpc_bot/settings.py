@@ -170,6 +170,10 @@ TWITTER_ACCESS_TOKEN = os.getenv("TWITTER_ACCESS_TOKEN")
 TWITTER_ACCESS_TOKEN_SECRET = os.getenv("TWITTER_ACCESS_TOKEN_SECRET")
 TWITTER_ENVNAME = "main"
 
+TWILIO_ACCOUNT = os.getenv("TWILIO_ACCOUNT_ID")
+TWILIO_TOKEN = os.getenv("TWILIO_TOKEN")
+TWILIO_MSID = os.getenv("TWILIO_MSID")
+
 GOOGLE_PROJECT_ID = "we-will-fix-your-pc-c0198"
 
 PUSH_PRIV_KEY = os.getenv("PUSH_PRIV_KEY")
@@ -214,6 +218,7 @@ LOGGING = {
         "django_keycloak_auth": {"handlers": ["console"], "level": "INFO"},
         "keycloak": {"handlers": ["console"], "level": "INFO"},
         "apple_business_chat": {"handlers": ["console"], "level": "INFO"},
+        "sms": {"handlers": ["console"], "level": "INFO"},
         "customer_chat": {"handlers": ["console"], "level": "INFO"},
     },
 }

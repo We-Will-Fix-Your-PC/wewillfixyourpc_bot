@@ -33,6 +33,7 @@ urlpatterns = [
     path("gactions/", include("gactions.urls", namespace="gactions")),
     path("chat/", include("customer_chat.urls", namespace="customer_chat")),
     path("abc/", include("apple_business_chat.urls", namespace="apple_business_chat")),
+    path("sms/", include("sms.urls", namespace="sms")),
     path("", include("operator_interface.urls", namespace="operator")),
 ]
 
