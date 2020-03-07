@@ -452,7 +452,7 @@ class OperatorConsumer(JsonWebsocketConsumer):
                     self.save_object(message)
                     operator_interface.tasks.process_message.delay(message.id)
                 else:
-                    name = conversation.conversation_name.split(" ")
+                    name = (conversation.conversation_name if conversation.conversation_name else "").split(" ")
                     user = django_keycloak_auth.users.get_or_create_user(
                         email=attr,
                         last_name=name[-1] if len(name) else "",
@@ -509,7 +509,7 @@ class OperatorConsumer(JsonWebsocketConsumer):
                     self.save_object(message)
                     operator_interface.tasks.process_message.delay(message.id)
                 else:
-                    name = conversation.conversation_name.split(" ")
+                    name = (conversation.conversation_name if conversation.conversation_name else "").split(" ")
                     user = django_keycloak_auth.users.get_or_create_user(
                         phone=attr,
                         last_name=name[-1] if len(name) else "",
