@@ -47,6 +47,8 @@ def get_platform(msg_from):
 def handle_abc_text(msg_id, msg_from, data):
     text = data.get("content")
     platform = get_platform(msg_from)
+    platform.is_typing = False
+    platform.save()
     if not Message.message_exits(platform, msg_id):
         if text:
             message_m: Message = Message(
@@ -64,6 +66,8 @@ def handle_abc_text(msg_id, msg_from, data):
 def handle_abc_media(msg_id, msg_from, data):
     content = data.get("content", {})
     platform = get_platform(msg_from)
+    platform.is_typing = False
+    platform.save()
     if not Message.message_exits(platform, msg_id):
         if content.get("type", "").startswith("image/"):
             message_m: Message = Message(

@@ -534,6 +534,7 @@ class OperatorConsumer(JsonWebsocketConsumer):
                         user=self.user,
                     )
                     self.save_object(message)
+                    operator_interface.tasks.process_message.delay(message.id)
 
     def request_sign_in(self, conversation: operator_interface.models.Conversation):
         if not conversation.conversation_user_id:
