@@ -68,6 +68,7 @@ def send_message(mid: int):
     message = Message.objects.get(id=mid)
 
     msg_body = ""
+    other_args = {}
 
     if message.selection:
         selection_data = json.loads(message.selection)
@@ -86,24 +87,29 @@ def send_message(mid: int):
             + f"?state={state.id}"
         )
         msg_body = f"{message.text}\n\nSign in here: {url}"
+    elif message.image:
+        msg_body = message.text
+        other_args["media_url"] = [message.image]
     elif message.text:
         msg_body = message.text
     else:
         return
 
-    requests.post(f"{settings.VSMS_URL}message/new/",  headers={
-        "Authorization": f"Bearer {django_keycloak_auth.clients.get_access_token()}"
-    }, json={
-        "to": message.platform.platform_id,
-        "contents": msg_body
-    })
+    requests.post(
+        f"{settings.VSMS_URL}message/new/",
+        headers={
+            "Authorization": f"Bearer {django_keycloak_auth.clients.get_access_token()}"
+        },
+        json={"to": message.platform.platform_id, "contents": msg_body},
+    )
 
     try:
         msg_resp = views.twilio_client.messages.create(
             to=message.platform.platform_id,
             provide_feedback=True,
             messaging_service_sid=settings.TWILIO_MSID,
-            body=msg_body
+            body=msg_body,
+            **other_args,
         )
     except twilio.base.exceptions.TwilioException:
         message.state = Message.FAILED
