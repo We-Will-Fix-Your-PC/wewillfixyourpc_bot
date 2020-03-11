@@ -66,14 +66,14 @@ class Conversation(models.Model):
             return None
         return last_message.platform
 
-    def last_usable_platform(self, tag=None, alert=False):
+    def last_usable_platform(self, tag=None, alert=False, text=None):
         platforms = (
             self.conversationplatform_set.annotate(page_count=Count("messages"))
             .filter(page_count__gte=1)
             .order_by("-messages__timestamp")
         )
         for platform in platforms:
-            if platform.can_message(tag, alert):
+            if platform.can_message(tag, alert, text):
                 return platform
         return None
 
@@ -95,8 +95,8 @@ class Conversation(models.Model):
             self.save()
             return self
 
-    def can_message(self, tag=None):
-        return any([p.can_message(tag) for p in self.conversationplatform_set.all()])
+    def can_message(self, tag=None, alert=False, text=None):
+        return any([p.can_message(tag, alert, text) for p in self.conversationplatform_set.all()])
 
     def is_typing(self):
         return any([p.is_typing for p in self.conversationplatform_set.all()])

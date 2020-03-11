@@ -57,10 +57,14 @@ def send_message(request, customer_id):
         return HttpResponseBadRequest()
 
     platform = None
+    conv = None
     try:
         conv = Conversation.objects.get(conversation_user_id=customer_id)
         platform = conv.last_usable_platform(tag, True, text)
     except Conversation.DoesNotExist:
+        pass
+
+    if platform is None:
         mobile_numbers = []
         other_numbers = []
         for n in customer.get("attributes", {}).get("phone", []):
@@ -77,7 +81,6 @@ def send_message(request, customer_id):
                 else:
                     other_numbers.append(n)
         if len(mobile_numbers) or len(other_numbers):
-
             for n in mobile_numbers:
                 formatted_num = phonenumbers.format_number(
                     n, phonenumbers.PhoneNumberFormat.E164
@@ -128,8 +131,9 @@ def send_message(request, customer_id):
                         pass
 
             if not platform:
-                conv = Conversation(conversation_user_id=customer_id)
-                conv.save()
+                if not conv:
+                    conv = Conversation(conversation_user_id=customer_id)
+                    conv.save()
 
                 if ConversationPlatform.is_whatsapp_template(text):
                     platform_id = ConversationPlatform.WHATSAPP
@@ -157,12 +161,11 @@ def send_message(request, customer_id):
                 platform.save()
             else:
                 platform.conversation.update_user_id(customer_id)
-
-    if platform is None:
-        return HttpResponse(
-            json.dumps({"status": "no_platform_available"}),
-            content_type="application/json",
-        )
+        else:
+            return HttpResponse(
+                json.dumps({"status": "no_platform_available"}),
+                content_type="application/json",
+            )
 
     message = Message(
         platform=platform,
