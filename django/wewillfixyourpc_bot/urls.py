@@ -34,6 +34,8 @@ urlpatterns = [
     path("chat/", include("customer_chat.urls", namespace="customer_chat")),
     path("abc/", include("apple_business_chat.urls", namespace="apple_business_chat")),
     path("sms/", include("sms.urls", namespace="sms")),
+    path("email/", include("customer_email.urls", namespace="customer_email")),
+    path("whatsapp/", include("whatsapp.urls", namespace="whatsapp")),
     path("", include("operator_interface.urls", namespace="operator")),
 ]
 
