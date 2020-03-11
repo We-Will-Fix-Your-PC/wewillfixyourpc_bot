@@ -140,7 +140,7 @@ class ConversationPlatform(models.Model):
     @classmethod
     def exists(cls, platform, platform_id):
         try:
-            return cls.objects.get(platform=platform, platform_id=platform_id)
+            return cls.objects.filter(platform=platform, platform_id=platform_id).first() is not None
         except cls.DoesNotExist:
             return None
 
@@ -148,10 +148,7 @@ class ConversationPlatform(models.Model):
     def create(cls, platform, platform_id, customer_user_id=None):
         conv = None
         if customer_user_id is not None:
-            try:
-                conv = Conversation.objects.get(conversation_user_id=customer_user_id)
-            except Conversation.DoesNotExist:
-                pass
+            conv = Conversation.objects.filter(conversation_user_id=customer_user_id).first()
         if conv is None:
             conv = Conversation(conversation_user_id=customer_user_id)
             conv.save()

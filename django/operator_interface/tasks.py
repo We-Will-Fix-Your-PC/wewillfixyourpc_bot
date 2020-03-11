@@ -47,8 +47,10 @@ def send_push_notification(sid, data):
             vapid_claims={"sub": "mailto:q@misell.cymru"},
         )
     except WebPushException as e:
-        if e.response.status_code in [404, 410]:
+        if e.response.status_code in [404, 410, 301]:
             subscription.delete()
+        elif e.response.status_code in [401, 500, 502, 503]:
+            pass
         else:
             sentry_sdk.capture_exception(e)
 
