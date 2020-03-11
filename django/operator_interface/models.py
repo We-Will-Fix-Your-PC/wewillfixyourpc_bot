@@ -5,8 +5,10 @@ import uuid
 import datetime
 import django_keycloak_auth.users
 import keycloak.exceptions
+import re
 from django.db.models import Count
 from django.contrib.auth.models import User
+from django.db.models import Q
 
 
 class UserProfile(models.Model):
@@ -78,7 +80,7 @@ class Conversation(models.Model):
     def update_user_id(self, user_id):
         if user_id == self.conversation_user_id:
             return self
-        other_conversation = Conversation.objects.filter(conversation_user_id=user_id)
+        other_conversation = Conversation.objects.filter(Q(conversation_user_id=user_id), ~Q(id=self.id))
         if len(other_conversation) > 0:
             for platform in self.conversationplatform_set.all():
                 platform.conversation = other_conversation[0]
@@ -109,6 +111,8 @@ class ConversationPlatform(models.Model):
     SMS = "TX"
     CHAT = "CH"
     ABC = "AB"
+    EMAIL = "EM"
+    WHATSAPP = "WA"
     PLATFORM_CHOICES = (
         (FACEBOOK, "Facebook"),
         (TWITTER, "Twitter"),
@@ -118,6 +122,8 @@ class ConversationPlatform(models.Model):
         (SMS, "SMS"),
         (CHAT, "Customer chat"),
         (ABC, "Apple Business chat"),
+        (EMAIL, "Email"),
+        (WHATSAPP, "WhatsApp"),
     )
 
     conversation = models.ForeignKey(Conversation, on_delete=models.CASCADE)
@@ -154,7 +160,7 @@ class ConversationPlatform(models.Model):
         plat.save()
         return plat
 
-    def can_message(self, tag=None, alert=False):
+    def can_message(self, tag=None, alert=False, text=None):
         if self.platform == self.FACEBOOK:
             if tag in [
                 "CONFIRMED_EVENT_UPDATE",
@@ -183,6 +189,29 @@ class ConversationPlatform(models.Model):
                 ):
                     return True
             return False
+        elif self.platform == self.WHATSAPP:
+            TEMPLATES = [re.compile(t) for t in [
+                r"Your (.+) repair \(ticket #(.+)\) of (.+) is complete and your device is ready to collect at your"
+                r" earliest convenience"
+            ]]
+
+            def is_template(msg):
+                any(t.fullmatch(msg) for t in TEMPLATES)
+
+            if text and is_template(text):
+                return True
+            else:
+                last_message = (
+                    self.messages.order_by("-timestamp")
+                    .filter(direction=Message.FROM_CUSTOMER)
+                    .first()
+                )
+                if last_message and last_message.timestamp > timezone.now() - datetime.timedelta(
+                    hours=24
+                ):
+                    return True
+                else:
+                    return False
         elif self.platform == self.GOOGLE_ACTIONS:
             return False
         elif self.platform == self.CHAT and alert:
@@ -203,6 +232,8 @@ class ConversationPlatform(models.Model):
             if last_message:
                 return not last_message.end
             return True
+        elif self.platform == self.EMAIL and alert:
+            return False
         else:
             return True
 

@@ -24,6 +24,10 @@ def get_platform(msg_from):
         platform = ConversationPlatform.create(
             ConversationPlatform.SMS, msg_from, customer_user_id=user_id
         )
+    if platform:
+        user_id = attempt_get_user_id(msg_from)
+        if user_id and str(platform.conversation.conversation_user_id) != user_id:
+            platform.conversation.update_user_id(user_id)
     return platform
 
 
@@ -91,19 +95,20 @@ def send_message(mid: int):
     else:
         return
 
-    requests.post(f"{settings.VSMS_URL}message/new/",  headers={
-        "Authorization": f"Bearer {django_keycloak_auth.clients.get_access_token()}"
-    }, json={
-        "to": message.platform.platform_id,
-        "contents": msg_body
-    })
+    requests.post(
+        f"{settings.VSMS_URL}message/new/",
+        headers={
+            "Authorization": f"Bearer {django_keycloak_auth.clients.get_access_token()}"
+        },
+        json={"to": message.platform.platform_id, "contents": msg_body},
+    )
 
     try:
         msg_resp = views.twilio_client.messages.create(
             to=message.platform.platform_id,
             provide_feedback=True,
             messaging_service_sid=settings.TWILIO_MSID,
-            body=msg_body
+            body=msg_body,
         )
     except twilio.base.exceptions.TwilioException:
         message.state = Message.FAILED

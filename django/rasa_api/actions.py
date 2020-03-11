@@ -144,7 +144,7 @@ def reduce_days(days: List[Tuple[str, str, models.OpeningHours]]):
 
 
 def sender_id_to_conversation(
-    sender_id: str
+    sender_id: str,
 ) -> operator_interface.models.ConversationPlatform:
     sender_id = sender_id.split(":")
     if len(sender_id) >= 2 and sender_id[0] == "CONV":

@@ -221,6 +221,10 @@ class MessageData {
             return "Customer chat";
         } else if (this.data.platform === "AB") {
             return "Apple Business chat";
+        } else if (this.data.platform === "EM") {
+            return "Email";
+        } else if (this.data.platform === "WA") {
+            return "WhatsApp";
         }
         return "Unknown platform"
     }

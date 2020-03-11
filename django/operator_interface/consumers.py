@@ -16,6 +16,7 @@ from django.conf import settings
 from django.db import transaction
 from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
+from django.utils import html
 
 import operator_interface.models
 import operator_interface.tasks
@@ -159,7 +160,7 @@ class OperatorConsumer(JsonWebsocketConsumer):
                 "id": message.id,
                 "direction": message.direction,
                 "timestamp": int(message.timestamp.timestamp()),
-                "text": message.text,
+                "text": html.conditional_escape(message.text),
                 "image": message.image,
                 "state": message.state,
                 "platform": message.platform.platform,
@@ -452,7 +453,11 @@ class OperatorConsumer(JsonWebsocketConsumer):
                     self.save_object(message)
                     operator_interface.tasks.process_message.delay(message.id)
                 else:
-                    name = (conversation.conversation_name if conversation.conversation_name else "").split(" ")
+                    name = (
+                        conversation.conversation_name
+                        if conversation.conversation_name
+                        else ""
+                    ).split(" ")
                     user = django_keycloak_auth.users.get_or_create_user(
                         email=attr,
                         last_name=name[-1] if len(name) else "",
@@ -509,7 +514,11 @@ class OperatorConsumer(JsonWebsocketConsumer):
                     self.save_object(message)
                     operator_interface.tasks.process_message.delay(message.id)
                 else:
-                    name = (conversation.conversation_name if conversation.conversation_name else "").split(" ")
+                    name = (
+                        conversation.conversation_name
+                        if conversation.conversation_name
+                        else ""
+                    ).split(" ")
                     user = django_keycloak_auth.users.get_or_create_user(
                         phone=attr,
                         last_name=name[-1] if len(name) else "",
