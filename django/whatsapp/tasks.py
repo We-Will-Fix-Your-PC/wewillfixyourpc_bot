@@ -106,3 +106,62 @@ def send_message(mid: int):
 
     message.platform_message_id = msg_resp.sid
     message.save()
+
+
+@shared_task
+def attempt_alternative_delivery(mid: int):
+    message = Message.objects.get(id=mid)
+    platform = message.platform
+    if not platform.additional_platform_data:
+        info = {}
+    else:
+        try:
+            info = json.loads(platform.additional_platform_data)
+        except json.JSONDecodeError:
+            return
+    try_others = info.get("try_others", [])
+    already_tried = info.get("already_tried", [])
+    if type(try_others) != list or type(already_tried) != list:
+        return
+
+    i = 0
+    new_number = try_others[i]
+    while new_number in already_tried or new_number == platform.platform_id:
+        i += 1
+        if i == len(try_others):
+            new_number = None
+            break
+        else:
+            new_number = try_others[i]
+
+    if new_number:
+        already_tried.append(platform.platform_id)
+        platform.platform_id = new_number
+        info["already_tried"] = already_tried
+        platform.additional_platform_data = json.dumps(info)
+        platform.save()
+        send_message.delay(mid)
+    else:
+        info["already_tried"] = []
+        new_platform = None
+        for n in try_others:
+            try:
+                new_platform = ConversationPlatform.objects.get(
+                    platform=ConversationPlatform.SMS,
+                    platform_id=n,
+                )
+                break
+            except ConversationPlatform.DoesNotExist:
+                pass
+        if not new_platform:
+            new_platform = ConversationPlatform(
+                conversation=platform.conversation,
+                platform=ConversationPlatform.SMS,
+                platform_id=platform.platform_id,
+                additional_platform_data=json.dumps(info)
+            )
+            new_platform.save()
+
+        message.platform = new_platform
+        message.save()
+        send_message.delay(message.id)

@@ -55,14 +55,18 @@ def notif_webhook(request):
 
     msg_id = request.POST.get("MessageSid")
     msg_status = request.POST.get("MessageStatus")
+    msc_error_code = request.POST.get("ErrorCode")
     msg: Message = Message.objects.filter(platform_message_id=msg_id).first()
 
     if msg_status == "delivered" and msg and msg.state != Message.READ:
         msg.state = Message.DELIVERED
         msg.save()
     elif msg_status == "failed" and msg:
-        msg.state = Message.FAILED
-        msg.save()
+        if msc_error_code == "63003":
+            tasks.attempt_alternative_delivery.delay(msg.id)
+        else:
+            msg.state = Message.FAILED
+            msg.save()
     elif msg_status == "read" and msg:
         msg.state = Message.READ
         msg.save()

@@ -71,7 +71,6 @@ def handle_sms(msg_id, msg_from, data):
 def send_message(mid: int):
     message = Message.objects.get(id=mid)
 
-    msg_body = ""
     other_args = {}
 
     if message.selection:

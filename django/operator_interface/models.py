@@ -160,6 +160,15 @@ class ConversationPlatform(models.Model):
         plat.save()
         return plat
 
+    @classmethod
+    def is_whatsapp_template(cls, text):
+        TEMPLATES = [re.compile(t) for t in [
+            r"Your (.+) repair \(ticket #(.+)\) of (.+) is complete and your device is ready to collect at your"
+            r" earliest convenience"
+        ]]
+
+        return any(t.fullmatch(text) for t in TEMPLATES)
+
     def can_message(self, tag=None, alert=False, text=None):
         if self.platform == self.FACEBOOK:
             if tag in [
@@ -190,15 +199,7 @@ class ConversationPlatform(models.Model):
                     return True
             return False
         elif self.platform == self.WHATSAPP:
-            TEMPLATES = [re.compile(t) for t in [
-                r"Your (.+) repair \(ticket #(.+)\) of (.+) is complete and your device is ready to collect at your"
-                r" earliest convenience"
-            ]]
-
-            def is_template(msg):
-                any(t.fullmatch(msg) for t in TEMPLATES)
-
-            if text and is_template(text):
+            if text and self.is_whatsapp_template(text):
                 return True
             else:
                 last_message = (

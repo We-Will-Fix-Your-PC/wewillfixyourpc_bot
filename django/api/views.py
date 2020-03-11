@@ -1,3 +1,11 @@
+import json
+import uuid
+
+import django_keycloak_auth.clients
+import django_keycloak_auth.users
+import keycloak.exceptions
+import phonenumbers
+from django.conf import settings
 from django.http import (
     HttpResponse,
     HttpResponseNotAllowed,
@@ -5,15 +13,9 @@ from django.http import (
     Http404,
     HttpResponseForbidden,
 )
-import json
-import phonenumbers
-import django_keycloak_auth.users
-import django_keycloak_auth.clients
-import keycloak.exceptions
-import uuid
-import operator_interface.tasks
-from django.conf import settings
 from django.views.decorators.csrf import csrf_exempt
+
+import operator_interface.tasks
 from operator_interface.models import Message, Conversation, ConversationPlatform
 
 
@@ -34,7 +36,7 @@ def send_message(request, customer_id):
         return HttpResponseForbidden()
 
     if "send-messages" not in claims.get("resource_access", {}).get(
-        "bot-server", {}
+            "bot-server", {}
     ).get("roles", []):
         return HttpResponseForbidden()
 
@@ -68,20 +70,33 @@ def send_message(request, customer_id):
                 continue
             if phonenumbers.is_valid_number(n):
                 if (
-                    phonenumbers.phonenumberutil.number_type(n)
-                    == phonenumbers.PhoneNumberType.MOBILE
+                        phonenumbers.phonenumberutil.number_type(n)
+                        == phonenumbers.PhoneNumberType.MOBILE
                 ):
                     mobile_numbers.append(n)
                 else:
                     other_numbers.append(n)
         if len(mobile_numbers) or len(other_numbers):
+
             for n in mobile_numbers:
+                formatted_num = phonenumbers.format_number(
+                    n, phonenumbers.PhoneNumberFormat.E164
+                )
+                try:
+                    platform = ConversationPlatform.objects.get(
+                        platform=ConversationPlatform.WHATSAPP,
+                        platform_id=formatted_num,
+                    )
+                    if not platform.can_message(tag, True, text):
+                        platform = None
+                    else:
+                        break
+                except ConversationPlatform.DoesNotExist:
+                    pass
                 try:
                     platform = ConversationPlatform.objects.get(
                         platform=ConversationPlatform.SMS,
-                        platform_id=phonenumbers.format_number(
-                            n, phonenumbers.PhoneNumberFormat.E164
-                        ),
+                        platform_id=formatted_num,
                     )
                     break
                 except ConversationPlatform.DoesNotExist:
@@ -89,12 +104,24 @@ def send_message(request, customer_id):
 
             if not platform:
                 for n in other_numbers:
+                    formatted_num = phonenumbers.format_number(
+                        n, phonenumbers.PhoneNumberFormat.E164
+                    )
+                    try:
+                        platform = ConversationPlatform.objects.get(
+                            platform=ConversationPlatform.WHATSAPP,
+                            platform_id=formatted_num,
+                        )
+                        if not platform.can_message(tag, True, text):
+                            platform = None
+                        else:
+                            break
+                    except ConversationPlatform.DoesNotExist:
+                        pass
                     try:
                         platform = ConversationPlatform.objects.get(
                             platform=ConversationPlatform.SMS,
-                            platform_id=phonenumbers.format_number(
-                                n, phonenumbers.PhoneNumberFormat.E164
-                            ),
+                            platform_id=formatted_num
                         )
                         break
                     except ConversationPlatform.DoesNotExist:
@@ -104,9 +131,14 @@ def send_message(request, customer_id):
                 conv = Conversation(conversation_user_id=customer_id)
                 conv.save()
 
+                if ConversationPlatform.is_whatsapp_template(text):
+                    platform_id = ConversationPlatform.WHATSAPP
+                else:
+                    platform_id = ConversationPlatform.SMS
+
                 platform = ConversationPlatform(
                     conversation=conv,
-                    platform=ConversationPlatform.SMS,
+                    platform=platform_id,
                     platform_id=phonenumbers.format_number(
                         mobile_numbers[0], phonenumbers.PhoneNumberFormat.E164
                     )
@@ -114,6 +146,13 @@ def send_message(request, customer_id):
                     else phonenumbers.format_number(
                         other_numbers[0], phonenumbers.PhoneNumberFormat.E164
                     ),
+                    additional_platform_data=json.dumps({
+                        "try_others": [phonenumbers.format_number(
+                            n, phonenumbers.PhoneNumberFormat.E164
+                        ) for n in mobile_numbers] + [phonenumbers.format_number(
+                            n, phonenumbers.PhoneNumberFormat.E164
+                        ) for n in other_numbers]
+                    })
                 )
                 platform.save()
             else:
