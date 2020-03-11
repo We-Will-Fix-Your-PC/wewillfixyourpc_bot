@@ -251,6 +251,7 @@ export default class Conversation extends Component {
                         <TextField
                             fullWidth
                             outlined
+                            textarea
                             onTrailingIconSelect={() => {
                                 if (this.state.value.length && this.props.conversation.can_message()) {
                                     this.props.conversation.send(this.state.value);
@@ -261,6 +262,7 @@ export default class Conversation extends Component {
                         >
 
                             <Input
+                                inputType="textarea"
                                 value={this.state.value}
                                 disabled={!this.props.conversation.can_message()}
                                 onChange={this.updateMessage}

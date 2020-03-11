@@ -84,7 +84,7 @@ def notif_webhook(request):
         if msg:
             msg.state = Message.FAILED
             msg.save()
-    elif msg_event == "accepted" and msg:
+    elif msg_event == "accepted" and msg and msg.state != Message.READ:
         msg.state = Message.DELIVERED
         msg.save()
     elif msg_event == "consumed" and msg:

@@ -1,7 +1,6 @@
 from celery import shared_task
 import typing
 import json
-import requests
 import phonenumbers
 import operator_interface.consumers
 import operator_interface.tasks
@@ -17,12 +16,12 @@ from . import models
 
 def get_platform(msg_from):
     platform: ConversationPlatform = ConversationPlatform.exists(
-        ConversationPlatform.SMS, msg_from
+        ConversationPlatform.WHATSAPP, msg_from
     )
     if not platform:
         user_id = attempt_get_user_id(msg_from)
         platform = ConversationPlatform.create(
-            ConversationPlatform.SMS, msg_from, customer_user_id=user_id
+            ConversationPlatform.WHATSAPP, msg_from, customer_user_id=user_id
         )
     if platform:
         user_id = attempt_get_user_id(msg_from)
@@ -52,7 +51,7 @@ def attempt_get_user_id(msg_from: str) -> typing.Optional[str]:
 
 
 @shared_task
-def handle_sms(msg_id, msg_from, data):
+def handle_whatsapp(msg_id, msg_from, data):
     text = data.get("Body")
     platform = get_platform(msg_from)
     if not Message.message_exits(platform, msg_id):
@@ -71,9 +70,6 @@ def handle_sms(msg_id, msg_from, data):
 def send_message(mid: int):
     message = Message.objects.get(id=mid)
 
-    msg_body = ""
-    other_args = {}
-
     if message.selection:
         selection_data = json.loads(message.selection)
         msg_body = "\n".join(
@@ -87,33 +83,21 @@ def send_message(mid: int):
         state.save()
         url = (
             settings.EXTERNAL_URL_BASE
-            + reverse("sms:account_linking")
+            + reverse("whatsapp:account_linking")
             + f"?state={state.id}"
         )
         msg_body = f"{message.text}\n\nSign in here: {url}"
-    elif message.image:
-        msg_body = message.text
-        other_args["media_url"] = [message.image]
     elif message.text:
         msg_body = message.text
     else:
         return
 
-    requests.post(
-        f"{settings.VSMS_URL}message/new/",
-        headers={
-            "Authorization": f"Bearer {django_keycloak_auth.clients.get_access_token()}"
-        },
-        json={"to": message.platform.platform_id, "contents": msg_body},
-    )
-
     try:
         msg_resp = views.twilio_client.messages.create(
-            to=message.platform.platform_id,
+            to=f"whatsapp:{message.platform.platform_id}",
             provide_feedback=True,
-            messaging_service_sid=settings.TWILIO_MSID,
+            from_=f"whatsapp:{settings.TWILIO_WHATSAPP_NUMBER}",
             body=msg_body,
-            **other_args,
         )
     except twilio.base.exceptions.TwilioException:
         message.state = Message.FAILED

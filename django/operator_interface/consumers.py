@@ -16,6 +16,7 @@ from django.conf import settings
 from django.db import transaction
 from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
+from django.utils import html
 
 import operator_interface.models
 import operator_interface.tasks
@@ -159,7 +160,7 @@ class OperatorConsumer(JsonWebsocketConsumer):
                 "id": message.id,
                 "direction": message.direction,
                 "timestamp": int(message.timestamp.timestamp()),
-                "text": message.text,
+                "text": html.conditional_escape(message.text),
                 "image": message.image,
                 "state": message.state,
                 "platform": message.platform.platform,

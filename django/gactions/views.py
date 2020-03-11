@@ -429,9 +429,6 @@ def webhook(request):
                 profile_picture=profile_pic,
             )
             if user:
-                django_keycloak_auth.users.user_required_actions(
-                    user.get("id"), ["UPDATE_PROFILE"]
-                )
                 django_keycloak_auth.users.link_roles_to_user(
                     user.get("id"), ["customer"]
                 )

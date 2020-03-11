@@ -50,6 +50,8 @@ INSTALLED_APPS = [
     "customer_chat",
     "apple_business_chat",
     "sms",
+    "customer_email",
+    "whatsapp",
     "rasa_api",
     "api",
     "gactions",
@@ -171,6 +173,8 @@ with open(os.path.join(BASE_DIR, "secrets/blip.json")) as f:
     blip_conf = json.load(f)
 with open(os.path.join(BASE_DIR, "secrets/twilio.json")) as f:
     twilio_conf = json.load(f)
+with open(os.path.join(BASE_DIR, "secrets/sendgrid.json")) as f:
+    sendgrid_conf = json.load(f)
 
 AZURE_APP_ID = azure_conf["app-id"]
 AZURE_APP_PASSWORD = azure_conf["app-password"]
@@ -193,8 +197,11 @@ TELEGRAM_PAYMENT_TOKEN = telegram_conf["payment_token"]
 TWILIO_ACCOUNT = twilio_conf["account"]
 TWILIO_TOKEN = twilio_conf["token"]
 TWILIO_MSID = twilio_conf["msid"]
+TWILIO_WHATSAPP_NUMBER = twilio_conf["whatsapp_number"]
 
 BLIP_KEY = blip_conf["key"]
+
+SENDGRID_KEY = sendgrid_conf["key"]
 
 GOOGLE_PROJECT_ID = "we-will-fix-your-pc-dev"
 
@@ -243,6 +250,7 @@ LOGGING = {
         "apple_business_chat": {"handlers": ["console"], "level": "DEBUG"},
         "sms": {"handlers": ["console"], "level": "DEBUG"},
         "customer_chat": {"handlers": ["console"], "level": "DEBUG"},
+        "customer_email": {"handlers": ["console"], "level": "DEBUG"},
     },
 }
 

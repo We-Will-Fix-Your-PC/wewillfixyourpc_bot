@@ -28,7 +28,7 @@ def send_message(request, customer_id):
 
     try:
         claims = django_keycloak_auth.clients.verify_token(
-            auth[len("Bearer ") :].strip()
+            auth[len("Bearer "):].strip()
         )
     except keycloak.exceptions.KeycloakClientError:
         return HttpResponseForbidden()
@@ -57,7 +57,7 @@ def send_message(request, customer_id):
     platform = None
     try:
         conv = Conversation.objects.get(conversation_user_id=customer_id)
-        platform = conv.last_usable_platform(tag, True)
+        platform = conv.last_usable_platform(tag, True, text)
     except Conversation.DoesNotExist:
         mobile_numbers = []
         other_numbers = []

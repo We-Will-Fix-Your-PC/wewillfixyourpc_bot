@@ -1,0 +1,51 @@
+<html lang="en">
+<head>
+    <style type="text/css" style="font-weight: 300">
+        @import url(https://fonts.googleapis.com/css?family=Lato:400,700);
+    </style>
+</head>
+<body style="padding: 0;margin: 0">
+<div style="background-image: url('https://wewillfixyourpc.co.uk/retro-apple-tile.png'); background-position: 50% 50%; font-family: Lato, 'Helvetica Neue', helvetica, sans-serif;">
+    <div style="padding: 40px 20px;">
+        <table style="margin: 0 auto; border-radius: 5px; background: #fff; max-width: 600px; width:100%; border: 1px solid #c7d0d4; border-spacing: 0;">
+            <tr>
+                <td style="border-bottom: 1px solid #dee7eb; text-align: center;">
+                    <img src="https://wewillfixyourpc.co.uk/wwfypc-logo-wd.png" height="150px"
+                         alt="We Will Fix Your PC"/>
+                </td>
+            </tr>
+            <tr>
+                <td style="padding: 20px;">
+                    {{ content|safe }}
+                    {% if attachments %}
+                        <br>
+                        <br>
+                    {% endif %}
+                    {% for attachment in attachments %}
+                    <img src="{{ attachment }}" alt="">
+                    {% endfor %}
+                </td>
+            </tr>
+            {% if sender_pic %}
+            <tr>
+                <td style="border-top: 1px solid #dee7eb;padding: 20px;text-align: center;">
+                    <img src="{{ sender_pic }}" alt="" style="border-radius: 50%;border: 1px solid #aaa;">
+                    <br>
+                    Sent by <b>{{ sender_name }}</b>
+                </td>
+            </tr>
+            {% endif %}
+            <tr>
+                <td style="border-top: 1px solid #dee7eb;padding: 20px;text-align: center;">
+                    <h4>Questions? We can help.</h4>
+                    <a href="https://bcrw.apple.com/urn:biz:959b0d05-a091-4bd7-96cb-7a2fbe53174d" style="margin-right:15px;">
+                        <img src="https://wewillfixyourpc.co.uk/BusinessChatButton_chat.png"></a>
+                    <a href="tel://+442920766039"><img src="https://wewillfixyourpc.co.uk/BusinessChatButton_call.png"></a>
+                    <p>Chat with one of our pros to get the help you need</p>
+                </td>
+            </tr>
+        </table>
+    </div>
+</div>
+</body>
+</html>
