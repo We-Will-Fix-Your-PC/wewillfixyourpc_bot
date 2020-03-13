@@ -140,7 +140,8 @@ class ConversationPlatform(models.Model):
     @classmethod
     def exists(cls, platform, platform_id):
         try:
-            return cls.objects.filter(platform=platform, platform_id=platform_id).first() is not None
+            conv = cls.objects.filter(platform=platform, platform_id=platform_id).first()
+            return conv if conv else None
         except cls.DoesNotExist:
             return None
 
