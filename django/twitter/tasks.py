@@ -13,6 +13,7 @@ from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.core.files.storage import DefaultStorage
 from django.conf import settings
 from django.shortcuts import reverse
+from django.utils import html
 import operator_interface.tasks
 import django_keycloak_auth.users
 from operator_interface.models import ConversationPlatform, Message
@@ -72,7 +73,7 @@ def handle_twitter_message(mid: str, psid, message, user):
             message_m: Message = Message(
                 platform=platform,
                 platform_message_id=mid,
-                text=text.strip(),
+                text=html.conditional_escape(text.strip()),
                 direction=Message.FROM_CUSTOMER,
             )
             platform.is_typing = False

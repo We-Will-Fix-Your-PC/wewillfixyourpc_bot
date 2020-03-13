@@ -3,6 +3,7 @@ from channels.generic.websocket import JsonWebsocketConsumer
 from channels.layers import get_channel_layer
 from django.conf import settings
 from django.shortcuts import reverse
+from django.utils import html
 import typing
 import json
 import re
@@ -90,7 +91,7 @@ class ChatConsumer(JsonWebsocketConsumer):
         message = operator_interface.models.Message(
             direction=operator_interface.models.Message.FROM_CUSTOMER,
             platform=self.platform,
-            text=content,
+            text=html.conditional_escape(content),
             state=operator_interface.models.Message.DELIVERED,
             message_id=mid,
         )

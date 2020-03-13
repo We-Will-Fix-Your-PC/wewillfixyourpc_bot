@@ -17,6 +17,7 @@ from django.contrib.auth.models import User
 from django.core.files.storage import DefaultStorage
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.shortcuts import reverse
+from django.utils import html
 
 import operator_interface.consumers
 import operator_interface.tasks
@@ -46,7 +47,7 @@ def handle_facebook_message(psid: dict, message: dict, timestamp: int) -> None:
                 message_m: Message = Message(
                     platform=platform,
                     platform_message_id=mid,
-                    text=text,
+                    text=html.conditional_escape(text),
                     direction=Message.FROM_CUSTOMER,
                     timestamp=datetime.datetime.fromtimestamp(timestamp / 1000),
                 )
@@ -89,7 +90,7 @@ def handle_facebook_message(psid: dict, message: dict, timestamp: int) -> None:
                                         timestamp / 1000
                                     ),
                                     text=f'<a href="{fs.base_url + file_name}" target="_blank">'
-                                    f"{orig_file_name}"
+                                    f"{html.conditional_escape(orig_file_name)}"
                                     f"</a>",
                                 )
                                 message_m.save()
@@ -113,7 +114,7 @@ def handle_facebook_message(psid: dict, message: dict, timestamp: int) -> None:
             message_m: Message = Message(
                 platform=platform,
                 platform_message_id=mid,
-                text=text if text else "",
+                text=html.conditional_escape(text) if text else "",
                 direction=Message.TO_CUSTOMER,
                 state=operator_interface.models.Message.DELIVERED,
             )
@@ -145,7 +146,7 @@ def handle_facebook_postback(psid: dict, postback: dict, timestamp: int) -> None
         message_m: Message = Message(
             platform=platform,
             message_id=uuid.uuid4(),
-            text=title,
+            text=html.conditional_escape(title),
             direction=Message.FROM_CUSTOMER,
             timestamp=datetime.datetime.fromtimestamp(timestamp / 1000),
         )

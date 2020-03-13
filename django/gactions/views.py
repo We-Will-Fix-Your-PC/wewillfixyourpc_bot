@@ -13,7 +13,7 @@ import google.oauth2.id_token
 import jose.exceptions
 import jwt
 import requests
-from django.utils import timezone
+from django.utils import timezone, html
 from django.conf import settings
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseForbidden
@@ -94,7 +94,7 @@ def process_inputs(inputs, conversation):
             message_m = Message(
                 conversation=conversation,
                 message_id=uuid.uuid4(),
-                text=text,
+                text=html.conditional_escape(text),
                 direction=Message.FROM_CUSTOMER,
             )
             message_m.save()

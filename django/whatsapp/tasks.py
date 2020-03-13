@@ -7,6 +7,7 @@ import operator_interface.tasks
 import django_keycloak_auth.users
 import django_keycloak_auth.clients
 from django.conf import settings
+from django.utils import html
 import twilio.base.exceptions
 from django.shortcuts import reverse
 from operator_interface.models import ConversationPlatform, Message
@@ -59,7 +60,7 @@ def handle_whatsapp(msg_id, msg_from, data):
             message_m: Message = Message(
                 platform=platform,
                 platform_message_id=msg_id,
-                text=text,
+                text=html.conditional_escape(text),
                 direction=Message.FROM_CUSTOMER,
             )
             message_m.save()

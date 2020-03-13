@@ -9,6 +9,7 @@ import django_keycloak_auth.users
 import operator_interface.tasks
 from . import models
 from django.shortcuts import reverse
+from django.utils import html
 from django.template.loader import render_to_string
 from django.template.defaultfilters import linebreaksbr
 from sendgrid import SendGridAPIClient
@@ -130,7 +131,7 @@ def handle_email(
         message_m: Message = Message(
             platform=platform,
             platform_message_id=str(msg_id),
-            text=msg_text,
+            text=html.conditional_escape(msg_text),
             direction=Message.FROM_CUSTOMER,
         )
         message_m.save()

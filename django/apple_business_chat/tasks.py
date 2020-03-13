@@ -10,6 +10,7 @@ import operator_interface.consumers
 import operator_interface.tasks
 from django.shortcuts import reverse
 from operator_interface.models import ConversationPlatform, Message
+from django.utils import html
 from . import models
 
 
@@ -54,7 +55,7 @@ def handle_abc_text(msg_id, msg_from, data):
             message_m: Message = Message(
                 platform=platform,
                 platform_message_id=msg_id,
-                text=text,
+                text=html.conditional_escape(text),
                 direction=Message.FROM_CUSTOMER,
             )
             message_m.save()
@@ -83,7 +84,7 @@ def handle_abc_media(msg_id, msg_from, data):
                 message_m: Message = Message(
                     platform=platform,
                     platform_message_id=msg_id,
-                    text=text,
+                    text=html.conditional_escape(text),
                     direction=Message.FROM_CUSTOMER,
                 )
                 message_m.save()

@@ -160,7 +160,7 @@ class OperatorConsumer(JsonWebsocketConsumer):
                 "id": message.id,
                 "direction": message.direction,
                 "timestamp": int(message.timestamp.timestamp()),
-                "text": html.conditional_escape(message.text),
+                "text": message.text,
                 "image": message.image,
                 "state": message.state,
                 "platform": message.platform.platform,
