@@ -112,6 +112,12 @@ def process_message(mid: int):
                 == 1
             ):
                 send_welcome_message.delay(platform.id)
+            if len([i for s in (
+                p.messages.filter(timestamp__gte=timezone.now() - timezone.timedelta(hours=24))
+                    for p in platform.conversation.conversationplatform_set.all()
+            ) for i in s]) == 1:
+                conversation.current_agent = None
+                conversation.save()
 
             admin_client = django_keycloak_auth.clients.get_keycloak_admin_client()
             if conversation.conversation_user_id:
@@ -240,6 +246,7 @@ def end_conversation(cid):
 @shared_task
 def take_over(cid, uid):
     conversation = models.Conversation.objects.get(id=cid)
+    old_agent = conversation.current_agent
     platform = conversation.last_usable_platform()
     user = User.objects.get(id=uid)
     conversation.agent_responding = False
@@ -247,12 +254,17 @@ def take_over(cid, uid):
     conversation.save()
 
     if platform.platform != models.ConversationPlatform.EMAIL:
+        if old_agent is None:
+            text = f"Hello I'm {user.first_name} and I'll be help you today"
+        else:
+            text = f"Hello I'm {user.first_name} and I'll be taking over from here"
+
         message = models.Message(
             message_id=uuid.uuid4(),
             platform=platform,
             direction=models.Message.TO_CUSTOMER,
             user=user,
-            text=f"Hello I'm {user.first_name} and I'll be taking over from here",
+            text=text,
         )
         message.save()
         process_message(message.id)
