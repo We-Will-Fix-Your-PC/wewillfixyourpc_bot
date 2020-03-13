@@ -255,7 +255,7 @@ def take_over(cid, uid):
 
     if platform.platform != models.ConversationPlatform.EMAIL:
         if old_agent is None:
-            text = f"Hello I'm {user.first_name} and I'll be help you today"
+            text = f"Hello I'm {user.first_name} and I'll be happy to help you today"
         else:
             text = f"Hello I'm {user.first_name} and I'll be taking over from here"
 
