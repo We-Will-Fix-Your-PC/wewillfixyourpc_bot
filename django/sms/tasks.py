@@ -98,13 +98,16 @@ def send_message(mid: int):
     else:
         return
 
-    requests.post(
-        f"{settings.VSMS_URL}message/new/",
-        headers={
-            "Authorization": f"Bearer {django_keycloak_auth.clients.get_access_token()}"
-        },
-        json={"to": message.platform.platform_id, "contents": msg_body},
-    )
+    try:
+        requests.post(
+            f"{settings.VSMS_URL}message/new/",
+            headers={
+                "Authorization": f"Bearer {django_keycloak_auth.clients.get_access_token()}"
+            },
+            json={"to": message.platform.platform_id, "contents": msg_body},
+        )
+    except requests.exceptions.RequestException:
+        pass
 
     try:
         msg_resp = views.twilio_client.messages.create(

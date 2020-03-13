@@ -66,14 +66,14 @@ class Conversation(models.Model):
             return None
         return last_message.platform
 
-    def last_usable_platform(self, tag=None, alert=False):
+    def last_usable_platform(self, tag=None, alert=False, text=None):
         platforms = (
             self.conversationplatform_set.annotate(page_count=Count("messages"))
             .filter(page_count__gte=1)
             .order_by("-messages__timestamp")
         )
         for platform in platforms:
-            if platform.can_message(tag, alert):
+            if platform.can_message(tag, alert, text):
                 return platform
         return None
 
@@ -95,8 +95,8 @@ class Conversation(models.Model):
             self.save()
             return self
 
-    def can_message(self, tag=None):
-        return any([p.can_message(tag) for p in self.conversationplatform_set.all()])
+    def can_message(self, tag=None, alert=False, text=None):
+        return any([p.can_message(tag, alert, text) for p in self.conversationplatform_set.all()])
 
     def is_typing(self):
         return any([p.is_typing for p in self.conversationplatform_set.all()])
@@ -140,7 +140,7 @@ class ConversationPlatform(models.Model):
     @classmethod
     def exists(cls, platform, platform_id):
         try:
-            return cls.objects.get(platform=platform, platform_id=platform_id)
+            return cls.objects.filter(platform=platform, platform_id=platform_id).first() is not None
         except cls.DoesNotExist:
             return None
 
@@ -148,10 +148,7 @@ class ConversationPlatform(models.Model):
     def create(cls, platform, platform_id, customer_user_id=None):
         conv = None
         if customer_user_id is not None:
-            try:
-                conv = Conversation.objects.get(conversation_user_id=customer_user_id)
-            except Conversation.DoesNotExist:
-                pass
+            conv = Conversation.objects.filter(conversation_user_id=customer_user_id).first()
         if conv is None:
             conv = Conversation(conversation_user_id=customer_user_id)
             conv.save()
