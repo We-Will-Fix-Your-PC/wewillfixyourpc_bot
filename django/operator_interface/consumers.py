@@ -244,11 +244,10 @@ class OperatorConsumer(JsonWebsocketConsumer):
                 "id": conversation.id,
                 "agent_responding": conversation.agent_responding,
                 "current_user_responding": conversation.current_agent.id == self.user.id
-                if conversation.current_agent
-                else False,
+                if conversation.current_agent else False,
+                "user_responding": conversation.current_agent is not None,
                 "customer_id": str(conversation.conversation_user_id)
-                if conversation.conversation_user_id
-                else None,
+                if conversation.conversation_user_id else None,
                 "customer_name": user.get("name", f"{first_name} {last_name}"),
                 "customer_first_name": first_name,
                 "customer_last_name": last_name,

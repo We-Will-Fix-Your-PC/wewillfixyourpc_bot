@@ -82,6 +82,19 @@ export default class Conversation extends Component {
         messages.scrollTo(0, messages.scrollHeight - messages.offsetHeight);
         messages.childNodes.forEach(child => {
             this.observer.observe(child);
+            let bounding = child.getBoundingClientRect();
+            if (
+                bounding.top >= 0 &&
+                bounding.left >= 0 &&
+                bounding.right <= (window.innerWidth || document.documentElement.clientWidth) &&
+                bounding.bottom <= (window.innerHeight || document.documentElement.clientHeight)
+            ) {
+                const msgId = child.dataset.msgId;
+                if (typeof msgId !== "undefined") {
+                    const message = this.props.conversation.get_message(msgId);
+                    message.load();
+                }
+            }
         })
     }
 

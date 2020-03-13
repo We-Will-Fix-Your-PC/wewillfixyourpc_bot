@@ -327,6 +327,10 @@ class ConversationData {
         return this.data.current_user_responding
     }
 
+    get user_responding() {
+        return this.data.user_responding
+    }
+
     get customer_username() {
         return this.data.customer_username;
     }
@@ -633,7 +637,7 @@ class App extends Component {
                                     <ListItemText
                                         primaryText={c.c.customer_name}
                                         secondaryText={(c.lastMsg.direction === "O" ? "Them: " : "You: ") + c.lastMsg.text}/>
-                                    {!(c.c.agent_responding || c.c.current_user_responding) ?
+                                    {!(c.c.agent_responding || c.c.user_responding) ?
                                         <ListItemMeta meta={<MaterialIcon icon='notification_important'/>}/> : null}
                                 </ListItem>
                             })}
