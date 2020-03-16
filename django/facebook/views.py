@@ -71,6 +71,7 @@ def webhook(request):
             read = entry.get("read")
             acccount_linking = entry.get("account_linking")
             optin = entry.get("optin")
+            reaction = entry.get("reaction")
 
             if message is not None:
                 tasks.handle_facebook_message.delay(psid, message, timestamp)
@@ -97,6 +98,8 @@ def webhook(request):
                     state.delete()
             if optin is not None:
                 tasks.handle_facebook_optin.delay(psid, optin)
+            if reaction is not None:
+                tasks.handle_facebook_reaction.delay(reaction)
 
     return HttpResponse("")
 

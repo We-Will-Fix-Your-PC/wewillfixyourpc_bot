@@ -227,6 +227,8 @@ LOGGING = {
         "keycloak": {"handlers": ["console"], "level": "INFO"},
         "apple_business_chat": {"handlers": ["console"], "level": "INFO"},
         "sms": {"handlers": ["console"], "level": "INFO"},
+        "whatsapp": {"handlers": ["console"], "level": "INFO"},
         "customer_chat": {"handlers": ["console"], "level": "INFO"},
+        "customer_email": {"handlers": ["console"], "level": "DEBUG"},
     },
 }

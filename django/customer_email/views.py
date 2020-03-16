@@ -23,8 +23,10 @@ def webhook(request):
     msg_num_attachments = request.POST.get("attachments")
     msg_attachment_info = request.POST.get("attachment-info")
 
-    if request.POST.get("to") != "hello@wewillfixyourpc.co.uk":
-        return HttpResponse()
+    logger.debug(
+        f"Got sendgrid webhook; from: {request.POST.get('from')}, text: {msg_text}, html: {msg_html},"
+        f" attachments: {msg_attachment_info}"
+    )
 
     try:
         msg_num_attachments = int(msg_num_attachments)
@@ -37,11 +39,6 @@ def webhook(request):
             return HttpResponseBadRequest()
     else:
         msg_attachment_info = None
-
-    logger.debug(
-        f"Got sendgrid webhook; from: {request.POST.get('from')}, text: {msg_text}, html: {msg_html},"
-        f" attachments: {msg_attachment_info}"
-    )
 
     attachments_img = []
     attachments_other = []

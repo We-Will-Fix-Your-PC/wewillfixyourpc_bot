@@ -69,6 +69,15 @@ def handle_email(
     except email.errors.HeaderParseError:
         return
 
+    msg_to = msg_headers["to"]
+
+    if msg_to.addresses[0].addr_spec != "hello@wewillfixyourpc.co.uk":
+        return
+
+    msg_from = msg_headers["from"]
+    msg_id = msg_headers["message-id"]
+    platform = get_platform(msg_from)
+
     if not msg_text:
         h = html2text.HTML2Text()
         h.ignore_emphasis = True
@@ -93,10 +102,6 @@ def handle_email(
         else:
             new_msg_lines.append(line)
     msg_text = "\n".join(new_msg_lines)
-
-    msg_from = msg_headers["from"]
-    msg_id = msg_headers["message-id"]
-    platform = get_platform(msg_from)
 
     if not platform.additional_platform_data:
         platform.additional_platform_data = str(msg_headers["subject"])
@@ -207,6 +212,7 @@ def send_message(mid: int):
     ))
     email_msg.add_header(Header("References", references))
     email_msg.add_header(Header("In-Reply-To", last_message.platform_message_id))
+    email_msg.add_header(Header("Message-Id", msg_id))
     try:
         sg.send(email_msg)
         message.state = Message.DELIVERED

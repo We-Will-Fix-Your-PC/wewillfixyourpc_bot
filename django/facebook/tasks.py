@@ -27,6 +27,7 @@ from operator_interface.models import Conversation, ConversationPlatform, Messag
 @shared_task
 def handle_facebook_message(psid: dict, message: dict, timestamp: int) -> None:
     text: typing.Text = message.get("text")
+    reply_to = message.get("reply_to", {})
     attachments: typing.List[typing.Dict] = message.get("attachments")
     mid: typing.Text = message["mid"]
     is_echo: bool = message.get("is_echo")
@@ -39,20 +40,19 @@ def handle_facebook_message(psid: dict, message: dict, timestamp: int) -> None:
         platform = ConversationPlatform.create(
             ConversationPlatform.FACEBOOK, psid, customer_user_id=user_id
         )
+    message_m: typing.Optional[Message] = None
     if not is_echo:
         update_facebook_profile(psid, platform.conversation.id)
         if not Message.message_exits(platform, mid):
             handle_mark_facebook_message_read.delay(psid)
             if text:
-                message_m: Message = Message(
+                message_m = Message(
                     platform=platform,
                     platform_message_id=mid,
                     text=html.conditional_escape(text),
                     direction=Message.FROM_CUSTOMER,
                     timestamp=datetime.datetime.fromtimestamp(timestamp / 1000),
                 )
-                message_m.save()
-                operator_interface.tasks.process_message.delay(message_m.id)
             if attachments:
                 for attachment in attachments:
                     payload = attachment["payload"]
@@ -68,7 +68,7 @@ def handle_facebook_message(psid: dict, message: dict, timestamp: int) -> None:
                             file_name = fs.save(orig_file_name, BytesIO(r.content))
 
                             if att_type == "image":
-                                message_m: Message = Message(
+                                message_m = Message(
                                     platform=platform,
                                     platform_message_id=mid,
                                     image=fs.base_url + file_name,
@@ -77,12 +77,8 @@ def handle_facebook_message(psid: dict, message: dict, timestamp: int) -> None:
                                         timestamp / 1000
                                     ),
                                 )
-                                message_m.save()
-                                operator_interface.tasks.process_message.delay(
-                                    message_m.id
-                                )
                             else:
-                                message_m: Message = Message(
+                                message_m = Message(
                                     platform=platform,
                                     platform_message_id=mid,
                                     direction=Message.FROM_CUSTOMER,
@@ -93,21 +89,21 @@ def handle_facebook_message(psid: dict, message: dict, timestamp: int) -> None:
                                     f"{html.conditional_escape(orig_file_name)}"
                                     f"</a>",
                                 )
-                                message_m.save()
-                                operator_interface.tasks.send_message_to_interface.delay(
-                                    message_m.id
-                                )
                     elif att_type == "location":
-                        message_m: Message = Message(
+                        message_m = Message(
                             platform=platform,
                             platform_message_id=mid,
                             direction=Message.FROM_CUSTOMER,
                             timestamp=datetime.datetime.fromtimestamp(timestamp / 1000),
                             text=f"<a href=\"{attachment.get('url')}\" target=\"_blank\">Location</a>",
                         )
-                        message_m.save()
-                        operator_interface.tasks.send_message_to_interface.delay(
-                            message_m.id
+                    elif att_type == "fallback":
+                        message_m = Message(
+                            platform=platform,
+                            platform_message_id=mid,
+                            direction=Message.FROM_CUSTOMER,
+                            timestamp=datetime.datetime.fromtimestamp(timestamp / 1000),
+                            text=f"<a href=\"{payload.get('url')}\" target=\"_blank\">{payload.get('title')}</a>",
                         )
     else:
         if not Message.message_exits(platform, mid):
@@ -118,8 +114,15 @@ def handle_facebook_message(psid: dict, message: dict, timestamp: int) -> None:
                 direction=Message.TO_CUSTOMER,
                 state=operator_interface.models.Message.DELIVERED,
             )
-            message_m.save()
-            operator_interface.tasks.send_message_to_interface.delay(message_m.id)
+
+    if message_m:
+        if reply_to:
+            reply_to_mid = reply_to.get("mid")
+            reply_to_m = Message.objects.filter(platform_message_id=reply_to_mid).first()
+            if reply_to_m:
+                message_m.reply_to = reply_to_m
+        message_m.save()
+        operator_interface.tasks.process_message.delay(message_m.id)
 
 
 @shared_task
@@ -213,6 +216,19 @@ def handle_facebook_optin(psid: dict, optin: dict) -> None:
     )
     message_m.save()
     operator_interface.tasks.process_message(message_m.id)
+
+
+@shared_task
+def handle_facebook_reaction(reaction: dict) -> None:
+    mid = reaction.get("mid")
+    action = reaction.get("action")
+    message_m = Message.objects.filter(platform_message_id=mid).first()
+    if message_m:
+        if action == "unreact":
+            message_m.reaction = None
+        elif action == "react":
+            message_m.reaction = reaction.get("emoji")
+        message_m.save()
 
 
 def attempt_get_user_id(psid: str) -> typing.Optional[str]:
