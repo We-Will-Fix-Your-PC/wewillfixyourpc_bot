@@ -93,11 +93,13 @@ def handle_email(
             break
         elif line.startswith("________________________________"):
             break
-        elif line.startswith("On ") and line.endswith(" wrote:"):
+        elif (line.startswith("On ") or line.startswith("> On")) and line.endswith(" wrote:"):
             break
         elif line.startswith("From: "):
             break
         elif line.startswith("Sent from my iPhone"):
+            break
+        elif line.startswith("Sent from my iPad"):
             break
         else:
             new_msg_lines.append(line)

@@ -45,6 +45,7 @@ data:
   KEYCLOAK_REALM: wwfypc
   KEYCLOAK_SCOPES: "openid email profile"
   KEYCLOAK_CLIENT_ID: "bot-server"
+  TWILIO_WHATSAPP_NUMBER: "+447723479702"
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -119,9 +120,12 @@ spec:
             - secretRef:
                 name: twilio
               prefix: "TWILIO_"
+            - secretRef:
+                name: sendgrid
+              prefix: "SENDGRID_"
           env:
             - name: RELEASE
-              value: theenbyperor/wewillfixyourpcbot_django:(version)
+              value: (version)
       containers:
         - name: gunicorn
           image: theenbyperor/wewillfixyourpcbot_django:(version)
@@ -171,9 +175,12 @@ spec:
             - secretRef:
                 name: twilio
               prefix: "TWILIO_"
+            - secretRef:
+                name: sendgrid
+              prefix: "SENDGRID_"
           env:
             - name: RELEASE
-              value: theenbyperor/wewillfixyourpcbot_django:(version)
+              value: (version)
         - name: daphne
           image: theenbyperor/wewillfixyourpcbot_django:(version)
           imagePullPolicy: Always
@@ -222,9 +229,12 @@ spec:
             - secretRef:
                 name: twilio
               prefix: "TWILIO_"
+            - secretRef:
+                name: sendgrid
+              prefix: "SENDGRID_"
           env:
             - name: RELEASE
-              value: theenbyperor/wewillfixyourpcbot_django:(version)
+              value: (version)
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -299,9 +309,12 @@ spec:
             - secretRef:
                 name: twilio
               prefix: "TWILIO_"
+            - secretRef:
+                name: sendgrid
+              prefix: "SENDGRID_"
           env:
             - name: RELEASE
-              value: theenbyperor/wewillfixyourpcbot_django:(version)
+              value: (version)
 ---
 apiVersion: v1
 kind: Service
