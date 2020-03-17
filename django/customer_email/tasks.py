@@ -36,6 +36,8 @@ def attempt_get_user_id(
 
 
 def get_platform(msg_from: email.headerregistry.UniqueAddressHeader):
+    if not msg_from:
+        return None
     platform: ConversationPlatform = ConversationPlatform.exists(
         ConversationPlatform.EMAIL, msg_from.addresses[0].addr_spec
     )
@@ -71,12 +73,15 @@ def handle_email(
 
     msg_to = msg_headers["to"]
 
-    if msg_to.addresses[0].addr_spec != "hello@wewillfixyourpc.co.uk":
+    if not msg_to or msg_to.addresses[0].addr_spec != "hello@wewillfixyourpc.co.uk":
         return
 
     msg_from = msg_headers["from"]
     msg_id = msg_headers["message-id"]
     platform = get_platform(msg_from)
+
+    if not platform:
+        return
 
     if not msg_text:
         h = html2text.HTML2Text()
