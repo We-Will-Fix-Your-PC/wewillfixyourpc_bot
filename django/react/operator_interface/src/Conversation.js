@@ -51,6 +51,7 @@ export default class Conversation extends Component {
         this.openEntityDialog = this.openEntityDialog.bind(this);
         this.updateEntity = this.updateEntity.bind(this);
         this.updateMessage = this.updateMessage.bind(this);
+        this.loadMessages = this.loadMessages.bind(this);
 
         this.observer = new IntersectionObserver(this.messageObserverCallback, {
             root: null,
@@ -67,19 +68,7 @@ export default class Conversation extends Component {
         }
     }
 
-    componentDidUpdate(prevProps, prevState, snapshot) {
-        const messages = this.refs.messages;
-        if (snapshot.scrollTop === snapshot.scrollTopMax) {
-            messages.scrollTo(0, messages.scrollHeight - messages.offsetHeight);
-        }
-        messages.childNodes.forEach(child => {
-            this.observer.observe(child);
-        })
-    }
-
-    componentDidMount() {
-        const messages = this.refs.messages;
-        messages.scrollTo(0, messages.scrollHeight - messages.offsetHeight);
+    loadMessages(messages) {
         messages.childNodes.forEach(child => {
             this.observer.observe(child);
             let bounding = child.getBoundingClientRect();
@@ -96,6 +85,20 @@ export default class Conversation extends Component {
                 }
             }
         })
+    }
+
+    componentDidUpdate(prevProps, prevState, snapshot) {
+        const messages = this.refs.messages;
+        if (snapshot.scrollTop === snapshot.scrollTopMax) {
+            messages.scrollTo(0, messages.scrollHeight - messages.offsetHeight);
+        }
+        this.loadMessages(messages);
+    }
+
+    componentDidMount() {
+        const messages = this.refs.messages;
+        messages.scrollTo(0, messages.scrollHeight - messages.offsetHeight);
+        this.loadMessages(messages)
     }
 
     messageObserverCallback(entries) {
