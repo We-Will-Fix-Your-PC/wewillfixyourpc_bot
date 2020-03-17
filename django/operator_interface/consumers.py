@@ -37,7 +37,7 @@ def conversation_saved(
 
 
 @receiver(post_save, sender=operator_interface.models.ConversationPlatform)
-def conversation_saved(
+def conversation_platform_saved(
     sender, instance: operator_interface.models.ConversationPlatform, **kwargs
 ):
     transaction.on_commit(
@@ -394,7 +394,6 @@ class OperatorConsumer(JsonWebsocketConsumer):
 
     def decode_attribute(self, attribute: str, value):
         if attribute == "phone-number":
-            value = value.get("value")
             try:
                 phone = phonenumbers.parse(value, settings.PHONENUMBER_DEFAULT_REGION)
             except phonenumbers.phonenumberutil.NumberParseException:
@@ -410,11 +409,11 @@ class OperatorConsumer(JsonWebsocketConsumer):
                 )
                 return {"phone": phone}
         elif attribute == "first-name":
-            return {"first_name": value.get("value")}
+            return {"first_name": value}
         elif attribute == "last-name":
-            return {"last_name": value.get("value")}
+            return {"last_name": value}
         elif attribute == "email":
-            return {"email": value.get("value")}
+            return {"email": value}
 
     def attribute_update(
         self,

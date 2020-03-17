@@ -87,7 +87,7 @@ def extract_entities_from_message(mid):
 
     for match in data.get("entities", []):
         match_o = models.MessageEntity(
-            message=message, entity=match["entity"], value=json.dumps(match)
+            message=message, entity=match["entity"], value=json.dumps(match["value"])
         )
         match_o.save()
 
