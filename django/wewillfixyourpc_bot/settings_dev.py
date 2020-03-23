@@ -171,6 +171,8 @@ with open(os.path.join(BASE_DIR, "secrets/keycloak.json")) as f:
     keycloak_conf = json.load(f)
 with open(os.path.join(BASE_DIR, "secrets/blip.json")) as f:
     blip_conf = json.load(f)
+with open(os.path.join(BASE_DIR, "secrets/abc.json")) as f:
+    abc_conf = json.load(f)
 with open(os.path.join(BASE_DIR, "secrets/twilio.json")) as f:
     twilio_conf = json.load(f)
 with open(os.path.join(BASE_DIR, "secrets/sendgrid.json")) as f:
@@ -200,6 +202,9 @@ TWILIO_MSID = twilio_conf["msid"]
 TWILIO_WHATSAPP_NUMBER = twilio_conf["whatsapp_number"]
 
 BLIP_KEY = blip_conf["key"]
+
+ABC_PLATFORM = "own"
+ABC_KEY = abc_conf["key"]
 
 SENDGRID_KEY = sendgrid_conf["key"]
 

@@ -83,6 +83,7 @@ def process_inputs(inputs, conversation):
                 message_id=uuid.uuid4(),
                 text=time.strftime("%c"),
                 direction=Message.FROM_CUSTOMER,
+                state=Message.DELIVERED,
             )
             message_m.save()
             outputs_l.append(
@@ -96,6 +97,7 @@ def process_inputs(inputs, conversation):
                 message_id=uuid.uuid4(),
                 text=html.conditional_escape(text),
                 direction=Message.FROM_CUSTOMER,
+                state=Message.DELIVERED,
             )
             message_m.save()
             outputs_l.append(

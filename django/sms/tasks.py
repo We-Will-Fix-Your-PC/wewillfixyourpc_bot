@@ -63,6 +63,7 @@ def handle_sms(msg_id, msg_from, data):
                 platform_message_id=msg_id,
                 text=html.conditional_escape(text),
                 direction=Message.FROM_CUSTOMER,
+                state=Message.DELIVERED,
             )
             message_m.save()
             operator_interface.tasks.process_message.delay(message_m.id)

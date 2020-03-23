@@ -1,4 +1,4 @@
-from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseForbidden
+from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseForbidden, HttpResponseNotFound
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
 from django.conf import settings
@@ -10,18 +10,26 @@ from . import models
 from operator_interface.models import Message, ConversationPlatform
 import json
 import logging
+import hmac
 
 logger = logging.getLogger(__name__)
 
 
 def check_auth(f):
     def new_f(request, *args, **kwargs):
-        key: str = request.META.get("HTTP_AUTHORIZATION", "")
-        if not key.startswith("Key "):
-            return HttpResponseForbidden()
-        key = key[4:]
-        if key != settings.BLIP_KEY:
-            return HttpResponseForbidden()
+        if settings.ABC_PLATFORM == "blip":
+            key: str = request.META.get("HTTP_AUTHORIZATION", "")
+            if not key.startswith("Key "):
+                return HttpResponseForbidden()
+            key = key[4:]
+            if key != settings.BLIP_KEY:
+                return HttpResponseForbidden()
+
+        elif settings.ABC_PLATFORM == "own":
+            sig: str = request.META.get("HTTP_X_BODY_SIGNATURE", "")
+            digest = hmac.new(key=settings.ABC_KEY.encode(), msg=request.body, digestmod='sha512')
+            if not hmac.compare_digest(sig, digest.hexdigest()):
+                return HttpResponseForbidden()
 
         return f(request, *args, **kwargs)
 
@@ -53,6 +61,21 @@ def webhook(request):
 
 @csrf_exempt
 @check_auth
+def message(request):
+    try:
+        data = json.loads(request.body)
+    except json.JSONDecodeError:
+        return HttpResponseBadRequest()
+
+    logger.debug(f"Got event from ABC webhook: {data}")
+
+    tasks.handle_abc_own.delay(data)
+
+    return HttpResponse("")
+
+
+@csrf_exempt
+@check_auth
 def notif_webhook(request):
     try:
         data = json.loads(request.body)
@@ -78,6 +101,7 @@ def notif_webhook(request):
                 platform_message_id=msg_id,
                 end=True,
                 direction=Message.FROM_CUSTOMER,
+                state=Message.DELIVERED,
             )
             m.save()
             operator_interface.tasks.process_message.delay(m.id)
@@ -92,6 +116,33 @@ def notif_webhook(request):
         msg.save()
 
     return HttpResponse("")
+
+
+@csrf_exempt
+@check_auth
+def notification(request):
+    try:
+        data = json.loads(request.body)
+    except json.JSONDecodeError:
+        return HttpResponseBadRequest()
+
+    logger.debug(f"Got event from ABC notification webhook: {data}")
+
+    msg_id = data.get("id")
+    msg_status = data.get("status")
+    msg: Message = Message.objects.filter(message_id=msg_id).first()
+
+    if msg:
+        if msg_status == "failed":
+            msg.state = Message.FAILED
+            msg.save()
+        elif msg_status == "sent":
+            msg.state = Message.DELIVERED
+            msg.save()
+
+        return HttpResponse("")
+    else:
+        return HttpResponseNotFound()
 
 
 @login_required

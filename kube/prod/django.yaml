@@ -46,6 +46,7 @@ data:
   KEYCLOAK_SCOPES: "openid email profile"
   KEYCLOAK_CLIENT_ID: "bot-server"
   TWILIO_WHATSAPP_NUMBER: "+447723479702"
+  ABC_PLATFORM: "blip"
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -78,12 +79,12 @@ spec:
           command: ["sh", "-c", "python3 manage.py collectstatic --noinput && python3 manage.py migrate && python3 manage.py sync-keycloak"]
           ports:
             - containerPort: 8000
-          volumeMounts:
+          volumeMounts: &djangovolume
             - mountPath: "/app/static/"
               name: static
             - mountPath: "/app/media/"
               name: media
-          envFrom:
+          envFrom: &djangoenvfrom
             - configMapRef:
                 name: django-conf
             - configMapRef:
@@ -118,12 +119,15 @@ spec:
                 name: blip
               prefix: "BLIP_"
             - secretRef:
+                name: abc
+              prefix: "ABC_"
+            - secretRef:
                 name: twilio
               prefix: "TWILIO_"
             - secretRef:
                 name: sendgrid
               prefix: "SENDGRID_"
-          env:
+          env: &djangoenv
             - name: RELEASE
               value: (version)
       containers:
@@ -133,108 +137,18 @@ spec:
           command: ["gunicorn", "-w", "4", "-b", "0.0.0.0:8000", "--forwarded-allow-ips", "*", "--access-logfile", "-", "wewillfixyourpc_bot.wsgi:application"]
           ports:
             - containerPort: 8000
-          volumeMounts:
-            - mountPath: "/app/static/"
-              name: static
-            - mountPath: "/app/media/"
-              name: media
-          envFrom:
-            - configMapRef:
-                name: django-conf
-            - configMapRef:
-                name: db-conf
-              prefix: "DB_"
-            - secretRef:
-                name: db-creds
-              prefix: "DB_"
-            - secretRef:
-                name: rabbitmq-user
-              prefix: "CELERY_BROKER_"
-            - secretRef:
-                name: django-secret
-            - secretRef:
-                name: webpush-secrets
-            - secretRef:
-                name: facebook-secrets
-              prefix: "FACEBOOK_"
-            - secretRef:
-                name: twitter-secrets
-              prefix: "TWITTER_"
-            - secretRef:
-                name: telegram-secrets
-              prefix: "TELEGRAM_"
-            - secretRef:
-                name: email-creds
-              prefix: "EMAIL_"
-            - secretRef:
-                name: keycloak
-              prefix: "KEYCLOAK_"
-            - secretRef:
-                name: blip
-              prefix: "BLIP_"
-            - secretRef:
-                name: twilio
-              prefix: "TWILIO_"
-            - secretRef:
-                name: sendgrid
-              prefix: "SENDGRID_"
-          env:
-            - name: RELEASE
-              value: (version)
+          volumeMounts: *djangovolume
+          envFrom: *djangoenvfrom
+          env: *djangoenv
         - name: daphne
           image: theenbyperor/wewillfixyourpcbot_django:(version)
           imagePullPolicy: Always
           command: ["daphne", "-b", "0.0.0.0", "-p", "8001", "--proxy-headers", "--access-log", "-", "wewillfixyourpc_bot.asgi:application"]
           ports:
             - containerPort: 8001
-          volumeMounts:
-            - mountPath: "/app/static/"
-              name: static
-            - mountPath: "/app/media/"
-              name: media
-          envFrom:
-            - configMapRef:
-                name: django-conf
-            - configMapRef:
-                name: db-conf
-              prefix: "DB_"
-            - secretRef:
-                name: db-creds
-              prefix: "DB_"
-            - secretRef:
-                name: rabbitmq-user
-              prefix: "CELERY_BROKER_"
-            - secretRef:
-                name: django-secret
-            - secretRef:
-                name: webpush-secrets
-            - secretRef:
-                name: facebook-secrets
-              prefix: "FACEBOOK_"
-            - secretRef:
-                name: twitter-secrets
-              prefix: "TWITTER_"
-            - secretRef:
-                name: telegram-secrets
-              prefix: "TELEGRAM_"
-            - secretRef:
-                name: email-creds
-              prefix: "EMAIL_"
-            - secretRef:
-                name: keycloak
-              prefix: "KEYCLOAK_"
-            - secretRef:
-                name: blip
-              prefix: "BLIP_"
-            - secretRef:
-                name: twilio
-              prefix: "TWILIO_"
-            - secretRef:
-                name: sendgrid
-              prefix: "SENDGRID_"
-          env:
-            - name: RELEASE
-              value: (version)
+          volumeMounts: *djangovolume
+          envFrom: *djangoenvfrom
+          env: *djangoenv
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -267,54 +181,9 @@ spec:
           command: ["celery", "worker", "-A", "wewillfixyourpc_bot", "--loglevel=INFO", "-c", "32"]
           ports:
             - containerPort: 8000
-          volumeMounts:
-            - mountPath: "/app/static/"
-              name: static
-            - mountPath: "/app/media/"
-              name: media
-          envFrom:
-            - configMapRef:
-                name: django-conf
-            - configMapRef:
-                name: db-conf
-              prefix: "DB_"
-            - secretRef:
-                name: db-creds
-              prefix: "DB_"
-            - secretRef:
-                name: rabbitmq-user
-              prefix: "CELERY_BROKER_"
-            - secretRef:
-                name: django-secret
-            - secretRef:
-                name: webpush-secrets
-            - secretRef:
-                name: facebook-secrets
-              prefix: "FACEBOOK_"
-            - secretRef:
-                name: twitter-secrets
-              prefix: "TWITTER_"
-            - secretRef:
-                name: telegram-secrets
-              prefix: "TELEGRAM_"
-            - secretRef:
-                name: email-creds
-              prefix: "EMAIL_"
-            - secretRef:
-                name: keycloak
-              prefix: "KEYCLOAK_"
-            - secretRef:
-                name: blip
-              prefix: "BLIP_"
-            - secretRef:
-                name: twilio
-              prefix: "TWILIO_"
-            - secretRef:
-                name: sendgrid
-              prefix: "SENDGRID_"
-          env:
-            - name: RELEASE
-              value: (version)
+          volumeMounts: *djangovolume
+          envFrom: *djangoenvfrom
+          env: *djangoenv
 ---
 apiVersion: v1
 kind: Service

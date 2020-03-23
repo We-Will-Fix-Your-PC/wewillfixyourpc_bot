@@ -162,7 +162,10 @@ class ConversationPlatform(models.Model):
     def is_whatsapp_template(cls, text):
         TEMPLATES = [re.compile(t) for t in [
             r"Your (.+) repair \(ticket #(.+)\) of (.+) is complete and your device is ready to collect at your"
-            r" earliest convenience"
+            r" earliest convenience",
+            r"Hi, we're (.+). Thanks for choosing us for your repair! We've created an account for you so you can view"
+            r" the status of your repairs. Your username is (.+), and your temporary password is (.+). To view your"
+            r" repairs go to (.+) and follow the instructions"
         ]]
 
         return any(t.fullmatch(text) for t in TEMPLATES)
@@ -259,7 +262,7 @@ class Message(models.Model):
         (SENDING, "Sending"),
         (DELIVERED, "Delivered"),
         (READ, "Read"),
-        (FAILED, "Failed"),
+        (FAILED, "Failed")
     )
 
     platform = models.ForeignKey(
@@ -282,6 +285,7 @@ class Message(models.Model):
     end = models.BooleanField(default=False, null=True)
     reply_to = models.ForeignKey("self", on_delete=models.SET_NULL, related_name="replies", blank=True, null=True)
     reaction = models.CharField(blank=True, null=True, max_length=5)
+    device_data = models.CharField(blank=True, null=True, max_length=255)
 
     class Meta:
         ordering = ("timestamp",)

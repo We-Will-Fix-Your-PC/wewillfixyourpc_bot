@@ -75,6 +75,7 @@ def handle_twitter_message(mid: str, psid, message, user):
                 platform_message_id=mid,
                 text=html.conditional_escape(text.strip()),
                 direction=Message.FROM_CUSTOMER,
+                state=Message.DELIVERED,
             )
             platform.is_typing = False
             platform.save()

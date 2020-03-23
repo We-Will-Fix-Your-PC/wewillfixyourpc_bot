@@ -51,6 +51,7 @@ def handle_facebook_message(psid: dict, message: dict, timestamp: int) -> None:
                     platform_message_id=mid,
                     text=html.conditional_escape(text),
                     direction=Message.FROM_CUSTOMER,
+                    state=Message.DELIVERED,
                     timestamp=datetime.datetime.fromtimestamp(timestamp / 1000),
                 )
             if attachments:
@@ -73,6 +74,7 @@ def handle_facebook_message(psid: dict, message: dict, timestamp: int) -> None:
                                     platform_message_id=mid,
                                     image=fs.base_url + file_name,
                                     direction=Message.FROM_CUSTOMER,
+                                    state=Message.DELIVERED,
                                     timestamp=datetime.datetime.fromtimestamp(
                                         timestamp / 1000
                                     ),
@@ -82,6 +84,7 @@ def handle_facebook_message(psid: dict, message: dict, timestamp: int) -> None:
                                     platform=platform,
                                     platform_message_id=mid,
                                     direction=Message.FROM_CUSTOMER,
+                                    state=Message.DELIVERED,
                                     timestamp=datetime.datetime.fromtimestamp(
                                         timestamp / 1000
                                     ),
@@ -94,6 +97,7 @@ def handle_facebook_message(psid: dict, message: dict, timestamp: int) -> None:
                             platform=platform,
                             platform_message_id=mid,
                             direction=Message.FROM_CUSTOMER,
+                            state=Message.DELIVERED,
                             timestamp=datetime.datetime.fromtimestamp(timestamp / 1000),
                             text=f"<a href=\"{attachment.get('url')}\" target=\"_blank\">Location</a>",
                         )
@@ -102,6 +106,7 @@ def handle_facebook_message(psid: dict, message: dict, timestamp: int) -> None:
                             platform=platform,
                             platform_message_id=mid,
                             direction=Message.FROM_CUSTOMER,
+                            state=Message.DELIVERED,
                             timestamp=datetime.datetime.fromtimestamp(timestamp / 1000),
                             text=f"<a href=\"{payload.get('url')}\" target=\"_blank\">{payload.get('title')}</a>",
                         )
@@ -151,6 +156,7 @@ def handle_facebook_postback(psid: dict, postback: dict, timestamp: int) -> None
             message_id=uuid.uuid4(),
             text=html.conditional_escape(title),
             direction=Message.FROM_CUSTOMER,
+            state=Message.DELIVERED,
             timestamp=datetime.datetime.fromtimestamp(timestamp / 1000),
         )
         message_m.save()

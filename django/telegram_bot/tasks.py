@@ -35,6 +35,7 @@ def handle_telegram_message(message):
             conversation=conversation,
             message_id=mid,
             direction=Message.FROM_CUSTOMER,
+            state=Message.DELIVERED,
             timestamp=datetime.datetime.fromtimestamp(timestamp),
         )
         if text:

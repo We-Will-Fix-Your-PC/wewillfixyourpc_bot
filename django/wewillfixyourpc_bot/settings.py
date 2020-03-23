@@ -184,6 +184,8 @@ GOOGLE_PROJECT_ID = "we-will-fix-your-pc-c0198"
 PUSH_PRIV_KEY = os.getenv("PUSH_PRIV_KEY")
 
 BLIP_KEY = os.getenv("BLIP_KEY")
+ABC_PLATFORM = os.getenv("ABC_PLATFORM", "blip")
+ABC_KEY = os.getenv("ABC_KEY")
 
 SENDGRID_KEY = os.getenv("SENDGRID_KEY")
 

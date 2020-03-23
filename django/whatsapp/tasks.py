@@ -62,6 +62,7 @@ def handle_whatsapp(msg_id, msg_from, data):
                 platform_message_id=msg_id,
                 text=html.conditional_escape(text),
                 direction=Message.FROM_CUSTOMER,
+                state=Message.DELIVERED,
             )
             message_m.save()
             operator_interface.tasks.process_message.delay(message_m.id)
@@ -119,7 +120,7 @@ def attempt_alternative_delivery(mid: int):
         try:
             info = json.loads(platform.additional_platform_data)
         except json.JSONDecodeError:
-            return
+            info = {}
     try_others = info.get("try_others", [])
     already_tried = info.get("already_tried", [])
     if type(try_others) != list or type(already_tried) != list:

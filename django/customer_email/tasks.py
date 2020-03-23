@@ -78,6 +78,11 @@ def handle_email(
 
     msg_from = msg_headers["from"]
     msg_id = msg_headers["message-id"]
+    msg_device = None
+    if msg_headers["X-Mailer"]:
+        msg_device = msg_headers["X-Mailer"]
+    elif msg_headers["User-Agent"]:
+        msg_device = msg_headers["User-Agent"]
     platform = get_platform(msg_from)
 
     if not platform:
@@ -145,6 +150,8 @@ def handle_email(
             platform_message_id=str(msg_id),
             text=html.conditional_escape(msg_text),
             direction=Message.FROM_CUSTOMER,
+            state=Message.DELIVERED,
+            device_data=msg_device,
         )
         message_m.save()
         operator_interface.tasks.process_message.delay(message_m.id)
@@ -155,6 +162,8 @@ def handle_email(
                 platform_message_id=str(msg_id),
                 image=img,
                 direction=Message.FROM_CUSTOMER,
+                state=Message.DELIVERED,
+                device_data=msg_device,
             )
             message_m.save()
             operator_interface.tasks.process_message.delay(message_m.id)
@@ -165,6 +174,8 @@ def handle_email(
                 platform_message_id=str(msg_id),
                 text=f'<a href="{link[0]}" target="_blank">{link[1]}</a>',
                 direction=Message.FROM_CUSTOMER,
+                state=Message.DELIVERED,
+                device_data=msg_device,
             )
             message_m.save()
             operator_interface.tasks.process_message.delay(message_m.id)

@@ -77,6 +77,7 @@ def handle_azure_message(msg):
             conversation=conversation,
             message_id=mid,
             direction=Message.FROM_CUSTOMER,
+            state=Message.DELIVERED,
             timestamp=dateutil.parser.parse(timestamp),
         )
 
