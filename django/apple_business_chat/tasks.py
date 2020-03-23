@@ -335,6 +335,7 @@ def send_message(mid: int):
         for msg_data in messages:
             r = send_blip_abc_request(message.message_id, message.platform.platform_id, msg_data)
             if r.status_code != 202:
+                logging.error(f"Error sending ABC message: {r.status_code} {r.text}")
                 message.state = Message.FAILED
                 message.save()
 
@@ -427,5 +428,6 @@ def send_message(mid: int):
                 auto_reply=message.user is None
             )
             if r.status_code != 200:
+                logging.error(f"Error sending ABC message: {r.status_code} {r.text}")
                 message.state = Message.FAILED
                 message.save()
