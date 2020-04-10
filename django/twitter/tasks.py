@@ -30,15 +30,17 @@ def handle_twitter_message(mid: str, psid, message, user):
             ConversationPlatform.TWITTER, psid
         )
         if not platform:
-            user_id = None
-            user = django_keycloak_auth.users.get_user_by_federated_identity(
-                federated_provider="twitter", federated_user_id=psid
+            kc_user = django_keycloak_auth.users.get_or_create_user(
+                federated_provider="twitter",
+                federated_user_id=user.get("id"),
+                federated_user_name=user.get("screen_name"),
+                first_name=user.get("name"),
             )
-            if user:
+            if kc_user:
                 django_keycloak_auth.users.link_roles_to_user(
-                    user.get("id"), ["customer"]
+                    kc_user.get("id"), ["customer"]
                 )
-                user_id = user.get("id")
+                user_id = kc_user.get("id")
             platform = ConversationPlatform.create(
                 ConversationPlatform.TWITTER, psid, customer_user_id=user_id
             )
