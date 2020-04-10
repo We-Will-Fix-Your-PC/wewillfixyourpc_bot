@@ -32,7 +32,7 @@ def handle_twitter_message(mid: str, psid, message, user):
         if not platform:
             user_id = None
             user = django_keycloak_auth.users.get_user_by_federated_identity(
-                federated_provider="twitter", federated_user_id=user.get("id")
+                federated_provider="twitter", federated_user_id=psid
             )
             if user:
                 django_keycloak_auth.users.link_roles_to_user(

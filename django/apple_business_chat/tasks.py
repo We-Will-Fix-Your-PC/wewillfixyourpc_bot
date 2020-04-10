@@ -197,7 +197,7 @@ def handle_abc_own(data: dict):
                     device_data=device
                 )
                 m.save()
-                operator_interface.tasks.process_message.delay(m.id)
+                operator_interface.tasks.send_message_to_interface.delay(m.id)
 
     platform.additional_platform_data = json.dumps(info)
     platform.save()

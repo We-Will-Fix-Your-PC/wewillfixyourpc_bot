@@ -181,9 +181,57 @@ spec:
           command: ["celery", "worker", "-A", "wewillfixyourpc_bot", "--loglevel=INFO", "-c", "32"]
           ports:
             - containerPort: 8000
-          volumeMounts: *djangovolume
-          envFrom: *djangoenvfrom
-          env: *djangoenv
+          volumeMounts:
+            - mountPath: "/app/static/"
+              name: static
+            - mountPath: "/app/media/"
+              name: media
+          envFrom:
+            - configMapRef:
+                name: django-conf
+            - configMapRef:
+                name: db-conf
+              prefix: "DB_"
+            - secretRef:
+                name: db-creds
+              prefix: "DB_"
+            - secretRef:
+                name: rabbitmq-user
+              prefix: "CELERY_BROKER_"
+            - secretRef:
+                name: django-secret
+            - secretRef:
+                name: webpush-secrets
+            - secretRef:
+                name: facebook-secrets
+              prefix: "FACEBOOK_"
+            - secretRef:
+                name: twitter-secrets
+              prefix: "TWITTER_"
+            - secretRef:
+                name: telegram-secrets
+              prefix: "TELEGRAM_"
+            - secretRef:
+                name: email-creds
+              prefix: "EMAIL_"
+            - secretRef:
+                name: keycloak
+              prefix: "KEYCLOAK_"
+            - secretRef:
+                name: blip
+              prefix: "BLIP_"
+            - secretRef:
+                name: abc
+              prefix: "ABC_"
+            - secretRef:
+                name: twilio
+              prefix: "TWILIO_"
+            - secretRef:
+                name: sendgrid
+              prefix: "SENDGRID_"
+          env:
+            - name: RELEASE
+              value: (version)
 ---
 apiVersion: v1
 kind: Service
