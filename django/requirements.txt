@@ -37,4 +37,4 @@ sendgrid
 html2text
 git+https://github.com/Peter-Slump/python-keycloak-client.git@master
 git+https://github.com/TheEnbyperor/rasa-sdk.git@master
-git+https://github.com/TheEnbyperor/django-keycloak-auth.git@master
+git+https://github.com/TheEnbyperor/django-keycloak-auth.git@@8f8b3f8a6e554acb7aff21ab12ec54c6b59b5197
