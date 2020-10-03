@@ -338,6 +338,9 @@ def send_message(mid: int):
                 logging.error(f"Error sending ABC message: {r.status_code} {r.text}")
                 message.state = Message.FAILED
                 message.save()
+            else:
+                message.state = Message.DELIVERED
+                message.save()
 
     elif settings.ABC_PLATFORM == "own":
         messages = []
@@ -430,4 +433,7 @@ def send_message(mid: int):
             if r.status_code != 200:
                 logging.error(f"Error sending ABC message: {r.status_code} {r.text}")
                 message.state = Message.FAILED
+                message.save()
+            else:
+                message.state = Message.DELIVERED
                 message.save()
