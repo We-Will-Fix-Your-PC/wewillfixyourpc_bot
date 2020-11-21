@@ -43,7 +43,7 @@ def get_message_persona(user=None):
                         "Accept": "application/json"
                     },
                     data={
-                        "name": message.user.first_name,
+                        "name": user.first_name,
                         "is_bot": False,
                     },
                     files={
