@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     "sms",
     "customer_email",
     "whatsapp",
+    "as207960",
     "rasa_api",
     "api",
     "gactions",

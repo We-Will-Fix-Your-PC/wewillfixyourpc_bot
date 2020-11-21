@@ -36,6 +36,7 @@ urlpatterns = [
     path("sms/", include("sms.urls", namespace="sms")),
     path("email/", include("customer_email.urls", namespace="customer_email")),
     path("whatsapp/", include("whatsapp.urls", namespace="whatsapp")),
+    path("as207960/", include("as207960.urls", namespace="as207960")),
     path("", include("operator_interface.urls", namespace="operator")),
 ]
 

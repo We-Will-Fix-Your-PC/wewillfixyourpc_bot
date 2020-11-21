@@ -52,6 +52,7 @@ INSTALLED_APPS = [
     "sms",
     "customer_email",
     "whatsapp",
+    "as207960",
     "rasa_api",
     "api",
     "gactions",
@@ -177,6 +178,8 @@ with open(os.path.join(BASE_DIR, "secrets/twilio.json")) as f:
     twilio_conf = json.load(f)
 with open(os.path.join(BASE_DIR, "secrets/sendgrid.json")) as f:
     sendgrid_conf = json.load(f)
+with open(os.path.join(BASE_DIR, "secrets/as207960.json")) as f:
+    as207960_conf = json.load(f)
 
 AZURE_APP_ID = azure_conf["app-id"]
 AZURE_APP_PASSWORD = azure_conf["app-password"]
@@ -212,6 +215,10 @@ GOOGLE_PROJECT_ID = "we-will-fix-your-pc-dev"
 
 RASA_HTTP_URL = "http://172.30.0.13:5005"
 VSMS_URL = "http://localhost:3000/"
+
+AS207960_BRAND_ID = as207960_conf["brand_id"]
+AS207960_KEY = as207960_conf["key"]
+AS207960_SIG_KEY = as207960_conf["sig_key"]
 
 DEFAULT_PAYMENT_ENVIRONMENT = "TEST"
 PAYMENT_HTTP_URL = "https://wwfypc-payments.eu.ngrok.io"

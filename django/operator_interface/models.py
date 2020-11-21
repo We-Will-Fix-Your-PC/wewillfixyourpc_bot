@@ -113,6 +113,7 @@ class ConversationPlatform(models.Model):
     ABC = "AB"
     EMAIL = "EM"
     WHATSAPP = "WA"
+    AS207960 = "AS"
     PLATFORM_CHOICES = (
         (FACEBOOK, "Facebook"),
         (TWITTER, "Twitter"),
@@ -124,6 +125,7 @@ class ConversationPlatform(models.Model):
         (ABC, "Apple Business chat"),
         (EMAIL, "Email"),
         (WHATSAPP, "WhatsApp"),
+        (AS207960, "AS20790 Messaging"),
     )
 
     conversation = models.ForeignKey(Conversation, on_delete=models.CASCADE)

@@ -20,6 +20,7 @@ import apple_business_chat.tasks
 import sms.tasks
 import customer_email.tasks
 import whatsapp.tasks
+import as207960.tasks
 import keycloak.exceptions
 import django_keycloak_auth.clients
 from django.utils import timezone
@@ -160,6 +161,8 @@ def process_message(mid: int):
             customer_email.tasks.send_message(mid)
         elif platform == models.ConversationPlatform.WHATSAPP:
             whatsapp.tasks.send_message(mid)
+        elif platform == models.ConversationPlatform.AS207960:
+            as207960.tasks.send_message(mid)
         elif platform == models.ConversationPlatform.GOOGLE_ACTIONS:
             return mid
 
@@ -281,6 +284,8 @@ def process_typing_on(pid):
         telegram_bot.tasks.handle_telegram_message_typing_on(pid)
     elif platform.platform == models.ConversationPlatform.ABC:
         apple_business_chat.tasks.handle_abc_typing_on(pid)
+    elif platform.platform == models.ConversationPlatform.AS207960:
+        as207960.tasks.handle_as207960_typing_on(pid)
 
 
 @shared_task
@@ -290,3 +295,5 @@ def process_typing_off(pid):
         facebook.tasks.handle_facebook_message_typing_off(pid)
     elif platform.platform == models.ConversationPlatform.ABC:
         apple_business_chat.tasks.handle_abc_typing_off(pid)
+    elif platform.platform == models.ConversationPlatform.AS207960:
+        as207960.tasks.handle_as207960_typing_off(pid)
