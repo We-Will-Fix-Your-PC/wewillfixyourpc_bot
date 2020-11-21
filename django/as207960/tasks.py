@@ -3,14 +3,15 @@ import requests
 from celery import shared_task
 from django.conf import settings
 import mimetypes
-
+import operator_interface.models
 import operator_interface.consumers
 import operator_interface.tasks
 from operator_interface.models import ConversationPlatform, Message
+from django.contrib.auth.models import User
 from django.utils import html
 
 
-def send_as207960_request(mid, to: str, media_type: str, contents):
+def send_as207960_request(mid, to: str, media_type: str, contents, representative=None):
     platform, conv_id = to.split(";", 1)
     data = {
         "platform": platform,
@@ -18,7 +19,7 @@ def send_as207960_request(mid, to: str, media_type: str, contents):
         "client_message_id": None,
         "media_type": media_type,
         "content": contents,
-        "representative": None
+        "representative": representative
     }
     if mid:
         data["client_message_id"] = str(mid)
@@ -27,6 +28,39 @@ def send_as207960_request(mid, to: str, media_type: str, contents):
         headers={"Authorization": f"X-AS207960-PAT {settings.AS207960_KEY}"},
         json=data,
     )
+
+
+def get_message_persona(user=None):
+    persona_id = None
+    if user is not None:
+        try:
+            if user.userprofile.as207960_persona_id is None:
+                profile = user.userprofile  # type: operator_interface.models.UserProfile
+                persona_r = requests.post(
+                    f"https://messaging.as207960.net/api/brands/{settings.AS207960_BRAND_ID}/representatives/",
+                    headers={
+                        "Authorization": f"X-AS207960-PAT {settings.AS207960_KEY}",
+                        "Accept": "application/json"
+                    },
+                    data={
+                        "name": message.user.first_name,
+                        "is_bot": False,
+                    },
+                    files={
+                        "avatar": open(profile.picture.path, "rb")
+                    } if profile.picture else {}
+                )
+                if persona_r.status_code == 201:
+                    persona_json = persona_r.json()
+                    user.userprofile.as207960_persona_id = persona_json["id"]
+                    user.userprofile.save()
+                    persona_id = persona_json["id"]
+            else:
+                persona_id = user.userprofile.as207960_persona_id
+        except User.userprofile.RelatedObjectDoesNotExist:
+            pass
+
+    return persona_id
 
 
 def get_platform(platform, conv_id, metadata):
@@ -109,9 +143,10 @@ def handle_as207960_chatstate(_msg_id, msg_platform, msg_conv_id, metadata, cont
 @shared_task
 def handle_as207960_typing_on(pid: int):
     platform = ConversationPlatform.objects.get(id=pid)
+    persona_id = get_message_persona(platform.conversation.current_agent)
     r = send_as207960_request(None, platform.platform_id, "chat_state", {
         "state": "composing"
-    })
+    }, representative=persona_id)
     if r.status_code != 201:
         logging.error(f"Error sending AS207960 typing on: {r.status_code} {r.text}")
 
@@ -119,9 +154,10 @@ def handle_as207960_typing_on(pid: int):
 @shared_task
 def handle_as207960_typing_off(pid: int):
     platform = ConversationPlatform.objects.get(id=pid)
+    persona_id = get_message_persona(platform.conversation.current_agent)
     r = send_as207960_request(None, platform.platform_id, "chat_state", {
         "state": "paused"
-    })
+    }, representative=persona_id)
     if r.status_code != 201:
         logging.error(f"Error sending AS207960 typing on: {r.status_code} {r.text}")
 
@@ -129,6 +165,7 @@ def handle_as207960_typing_off(pid: int):
 @shared_task
 def send_message(mid: int):
     message = Message.objects.get(id=mid)
+    persona_id = get_message_persona(message.user)
     messages = []
 
     if message.image:
@@ -144,6 +181,7 @@ def send_message(mid: int):
     for msg_data in messages:
         r = send_as207960_request(
             msg_data[0], message.platform.platform_id, msg_data[1], msg_data[2],
+            representative=persona_id
         )
         if r.status_code != 201:
             logging.error(f"Error sending AS207960 message: {r.status_code} {r.text}")

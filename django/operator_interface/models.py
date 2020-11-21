@@ -17,6 +17,7 @@ class UserProfile(models.Model):
     )
     picture = models.ImageField()
     fb_persona_id = models.CharField(max_length=255, blank=True, null=True)
+    as207960_persona_id = models.CharField(max_length=255, blank=True, null=True)
 
     def save(self, *args, **kwargs):
         if self.pk is not None:
