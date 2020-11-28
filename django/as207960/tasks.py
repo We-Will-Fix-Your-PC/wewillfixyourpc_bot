@@ -127,7 +127,7 @@ def handle_as207960_file(msg_id, msg_platform, msg_conv_id, metadata, content):
 
 
 @shared_task
-def handle_as207960_chatstate(_msg_id, msg_platform, msg_conv_id, metadata, content):
+def handle_as207960_chatstate(msg_id, msg_platform, msg_conv_id, metadata, content):
     platform = get_platform(msg_platform, msg_conv_id, metadata)
     platform.is_typing = False
     platform.save()
@@ -138,6 +138,18 @@ def handle_as207960_chatstate(_msg_id, msg_platform, msg_conv_id, metadata, cont
     elif state == "paused":
         platform.is_typing = False
         platform.save()
+    elif state == "request_live_agent":
+        platform.is_typing = False
+        platform.save()
+        m = Message(
+            platform=platform,
+            platform_message_id=msg_id,
+            request_live_agent=True,
+            direction=Message.FROM_CUSTOMER,
+            state=Message.DELIVERED
+        )
+        m.save()
+        operator_interface.tasks.send_message_to_interface.delay(m.id)
 
 
 @shared_task

@@ -164,6 +164,7 @@ class OperatorConsumer(JsonWebsocketConsumer):
                 "image": message.image,
                 "state": message.state,
                 "platform": message.platform.platform,
+                "platform_id": message.platform.platform_id,
                 "payment_request": str(message.payment_request)
                 if message.payment_request
                 else None,
@@ -174,6 +175,7 @@ class OperatorConsumer(JsonWebsocketConsumer):
                 "request": message.request,
                 "sent_by": message.user.first_name if message.user else None,
                 "end": message.end,
+                "request_live_agent": message.request_live_agent,
                 "guessed_intent": message.guessed_intent,
                 "entities": [
                     {"entity": e.entity, "value": e.value}

@@ -176,6 +176,10 @@ class MessageData {
         return this.load() ? this.data.end : false;
     }
 
+    get request_live_agent() {
+        return this.load() ? this.data.request_live_agent : false;
+    }
+
     get selection() {
         return this.load() ? (this.data.selection ? JSON.parse(this.data.selection) : null) : false;
     }
@@ -225,6 +229,11 @@ class MessageData {
             return "Email";
         } else if (this.data.platform === "WA") {
             return "WhatsApp";
+        } else if (this.data.platform === "AS") {
+            const platform_id = this.data.platform_id.split(";", 1)[0];
+            if (platform_id === "google-business-messaging") {
+                return "Google Business Messaging";
+            }
         }
         return "Unknown platform"
     }

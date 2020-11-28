@@ -286,6 +286,7 @@ class Message(models.Model):
     request = models.CharField(max_length=255, null=True, blank=True)
     guessed_intent = models.CharField(max_length=255, null=True, blank=True)
     end = models.BooleanField(default=False, null=True)
+    request_live_agent = models.BooleanField(default=False, null=True)
     reply_to = models.ForeignKey("self", on_delete=models.SET_NULL, related_name="replies", blank=True, null=True)
     reaction = models.CharField(blank=True, null=True, max_length=5)
     device_data = models.CharField(blank=True, null=True, max_length=255)

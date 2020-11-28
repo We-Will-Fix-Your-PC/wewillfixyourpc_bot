@@ -206,9 +206,12 @@ export default class Conversation extends Component {
                             }
 
                             out.push(<div key={i * 3} data-msg-id={m.id}>
-                                {m.isLoaded() ? m.end ?
+                                {m.isLoaded() ? (m.end ?
                                     <span>
                                         <span>Session end</span>
+                                    </span> : (m.request_live_agent ?
+                                    <span>
+                                        <span>Live agent requested</span>
                                     </span>
                                     :
                                     <div className={"dir-" + m.direction}>
@@ -253,7 +256,7 @@ export default class Conversation extends Component {
                                         {m.direction === "I" && m.state ?
                                             <span>{status_map[m.state]}</span> : null
                                         }
-                                    </div> : <div className="dir-O">
+                                    </div>)) : <div className="dir-O">
                                     <div>Loading...</div>
                                 </div>
                                 }
