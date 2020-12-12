@@ -13,7 +13,9 @@
     </facet>
   </component>
   <component name="NewModuleRootManager">
-    <content url="file://$MODULE_DIR$/django" />
+    <content url="file://$MODULE_DIR$/django">
+      <excludeFolder url="file://$MODULE_DIR$/django/venv" />
+    </content>
     <content url="file://$MODULE_DIR$/kube" />
     <content url="file://$MODULE_DIR$/rasa" />
     <orderEntry type="jdk" jdkName="Python 3.8 (wewillfixyourpc_bot)" jdkType="Python SDK" />
@@ -30,8 +32,5 @@
         <option value="$MODULE_DIR$/django/twitter/templates" />
       </list>
     </option>
-  </component>
-  <component name="TestRunnerService">
-    <option name="PROJECT_TEST_RUNNER" value="Unittests" />
   </component>
 </module>

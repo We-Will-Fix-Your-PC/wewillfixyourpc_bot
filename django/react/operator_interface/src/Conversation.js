@@ -273,8 +273,12 @@ export default class Conversation extends Component {
                             textarea
                             onTrailingIconSelect={() => {
                                 if (this.state.value.length && this.props.conversation.can_message()) {
-                                    this.props.conversation.send(this.state.value);
-                                    this.setState({value: ""});
+                                    if (this.state.value.length > 600) {
+                                        this.props.onError("Message too long to send");
+                                    } else {
+                                        this.props.conversation.send(this.state.value);
+                                        this.setState({value: ""});
+                                    }
                                 }
                             }}
                             trailingIcon={<MaterialIcon role="button" icon="send"/>}

@@ -102,7 +102,7 @@ def process_message(mid: int):
     send_message_to_interface.delay(mid)
 
     if message.direction == models.Message.FROM_CUSTOMER:
-        extract_entities_from_message.delay(mid)
+        # extract_entities_from_message.delay(mid)
         if conversation.agent_responding:
             return rasa_api.tasks.handle_message(mid)
         else:

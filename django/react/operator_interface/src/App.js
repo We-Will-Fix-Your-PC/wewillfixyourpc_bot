@@ -717,6 +717,9 @@ class App extends Component {
                             <SockContext.Provider value={this.sock}>
                                 <Conversation
                                     conversation={this.state.conversations[this.state.selectedCid]}
+                                    onError={e => this.setState({
+                                        error: e
+                                    })}
                                 />
                             </SockContext.Provider>}
                     </TopAppBarFixedAdjust>
