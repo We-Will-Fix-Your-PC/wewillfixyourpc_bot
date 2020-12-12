@@ -10,6 +10,7 @@ import Drawer, {DrawerAppContent, DrawerContent, DrawerHeader, DrawerTitle,} fro
 import MaterialIcon from '@material/react-material-icon';
 import List, {ListItem, ListItemGraphic, ListItemMeta, ListItemText} from '@material/react-list';
 import Button from '@material/react-button';
+import Switch from '@material/react-switch';
 import ReconnectingWebSocket from './reconnecting-websocket';
 import Conversation from './Conversation';
 
@@ -427,6 +428,7 @@ class App extends Component {
             open: true,
             lastMessage: 0,
             selectedCid: null,
+            showCustomerPanel: true,
             conversations: {},
             messages: {},
             payments: {},
@@ -675,7 +677,7 @@ class App extends Component {
                                 <TopAppBarTitle>{this.state.selectedCid === null ? "Loading..." :
                                     this.state.conversations[this.state.selectedCid].customer_name}</TopAppBarTitle>
                             </TopAppBarSection>
-                            <TopAppBarSection role='toolbar'>
+                            <TopAppBarSection role='toolbar' className="top-bar">
                                 {this.state.selectedCid === null ||
                                 !this.state.conversations[this.state.selectedCid].can_interact() ? null :
                                     <React.Fragment>
@@ -705,6 +707,11 @@ class App extends Component {
                                         }
                                         Signed in as {this.state.config.user_name}
                                         <Button ripple colored raised href="/auth/logout">Logout</Button>
+                                        <Switch
+                                            nativeControlId="customer-panel-switch"
+                                            checked={this.state.showCustomerPanel}
+                                            onChange={e => this.setState({showCustomerPanel: e.target.checked})}/>
+                                        <label htmlFor="customer-panel-switch">Customer Panel</label>
                                     </React.Fragment>
                                 }
                             </TopAppBarSection>
@@ -717,6 +724,7 @@ class App extends Component {
                             <SockContext.Provider value={this.sock}>
                                 <Conversation
                                     conversation={this.state.conversations[this.state.selectedCid]}
+                                    showCustomerPanel={this.state.showCustomerPanel}
                                     onError={e => this.setState({
                                         error: e
                                     })}

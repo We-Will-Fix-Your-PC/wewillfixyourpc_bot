@@ -137,6 +137,7 @@ class OperatorConsumer(JsonWebsocketConsumer):
     #     self.send_payment_item(payment_item)
 
     def connect(self, *_args, **_kwargs):
+        print(self.scope)
         self.user = self.scope["user"]
 
         if not self.user.is_authenticated or not self.user.is_staff:

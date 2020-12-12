@@ -3,12 +3,17 @@ import requests
 from celery import shared_task
 from django.conf import settings
 import mimetypes
+import django_keycloak_auth.clients
 import operator_interface.models
 import operator_interface.consumers
 import operator_interface.tasks
 from operator_interface.models import ConversationPlatform, Message
 from django.contrib.auth.models import User
 from django.utils import html
+
+oauth_client = django_keycloak_auth.clients.get_keycloak_client().open_id_connect(
+    settings.AS207960_OIDC_CLIENT_ID, settings.AS207960_OIDC_CLIENT_SECRET
+)
 
 
 def send_as207960_request(mid, to: str, media_type: str, contents, representative=None):
@@ -153,6 +158,29 @@ def handle_as207960_chatstate(msg_id, msg_platform, msg_conv_id, metadata, conte
 
 
 @shared_task
+def handle_as207960_oauth_code(msg_id, msg_platform, msg_conv_id, metadata, content):
+    platform = get_platform(msg_platform, msg_conv_id, metadata)
+    token_response = oauth_client.authorization_code(
+        code=content, redirect_uri="https://messaging.as207960.net/brand_oauth/redirect/"
+    )
+    token_data = oauth_client.decode_token(
+        token_response["id_token"],
+        key=oauth_client.certs()["keys"][0],
+        algorithms=oauth_client.well_known["id_token_signing_alg_values_supported"],
+        issuer=oauth_client.well_known["issuer"],
+        access_token=token_response["access_token"],
+    )
+    platform.conversation.update_user_id(token_data["sub"])
+    message = Message(
+        platform=platform,
+        text="Login complete, thanks!",
+        direction=Message.TO_CUSTOMER,
+    )
+    message.save()
+    operator_interface.tasks.process_message.delay(message.id)
+
+
+@shared_task
 def handle_as207960_typing_on(pid: int):
     platform = ConversationPlatform.objects.get(id=pid)
     persona_id = get_message_persona(platform.conversation.current_agent)
@@ -180,7 +208,16 @@ def send_message(mid: int):
     persona_id = get_message_persona(message.user)
     messages = []
 
-    if message.image:
+    if message.request == "sign_in":
+        messages.append((message.message_id, "select", {
+            "content": message.text,
+            "media_type": "text",
+            "options": [{
+                "content": None,
+                "media_type": "login"
+            }]
+        }))
+    elif message.image:
         messages.append((message.message_id, "file", {
             "uri": message.image,
             "media_type": mimetypes.guess_type(message.image)

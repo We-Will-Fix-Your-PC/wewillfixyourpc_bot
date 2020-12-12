@@ -38,5 +38,7 @@ def webhook(request):
             tasks.handle_as207960_chatstate.delay(msg_id, msg_platform, msg_conv_id, msg_metadata, msg_content)
         elif msg_type == "file":
             tasks.handle_as207960_file.delay(msg_id, msg_platform, msg_conv_id, msg_metadata, msg_content)
+        elif msg_type == "oauth_code":
+            tasks.handle_as207960_oauth_code.delay(msg_id, msg_platform, msg_conv_id, msg_metadata, msg_content)
 
     return HttpResponse("")

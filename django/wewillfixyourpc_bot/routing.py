@@ -5,6 +5,7 @@ from django_keycloak_auth.middleware import OIDCChannelsMiddleware
 import operator_interface.consumers
 import customer_chat.consumers
 from django.urls import path
+import asgiref
 
 
 application = SentryAsgiMiddleware(
@@ -16,9 +17,9 @@ application = SentryAsgiMiddleware(
                         [
                             path(
                                 "ws/operator/",
-                                operator_interface.consumers.OperatorConsumer,
+                                 operator_interface.consumers.OperatorConsumer.as_asgi(),
                             ),
-                            path("ws/chat/", customer_chat.consumers.ChatConsumer),
+                            path("ws/chat/", customer_chat.consumers.ChatConsumer.as_asgi()),
                         ]
                     )
                 )

@@ -1878,6 +1878,15 @@
     "@material/select" "^1.1.1"
     classnames "^2.2.6"
 
+"@material/react-switch@^0.15.0":
+  version "0.15.0"
+  resolved "https://registry.yarnpkg.com/@material/react-switch/-/react-switch-0.15.0.tgz#759b7f7261a80daa1ddf53b3173191d70025953a"
+  integrity sha512-WHFQyfDLe+WDeEUF5qfQTmuNYu9jPUcdFBDRDBqEwJp3xZYNRINzRqfDN/6TuQuBhEQnmixMthlMlRi2rVDNsw==
+  dependencies:
+    "@material/react-ripple" "^0.15.0"
+    "@material/switch" "^1.0.0"
+    classnames "^2.2.6"
+
 "@material/react-tab-bar@^0.15.0":
   version "0.15.0"
   resolved "https://registry.yarnpkg.com/@material/react-tab-bar/-/react-tab-bar-0.15.0.tgz#8445712ec8b3295cc94bf43e7d27d1ec12ff50a0"
@@ -2011,6 +2020,21 @@
   integrity sha512-Jge/h1XBLjdLlam4QMSzVgM99e/N8+elQROPkltqVP7eyLc17BwM3aP5cLVfZDgrJgvsjUxbgAP1H1j8sqmUyg==
   dependencies:
     "@material/feature-targeting" "^0.44.1"
+
+"@material/switch@^1.0.0":
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/@material/switch/-/switch-1.1.0.tgz#c64b19523c4a495de9df022940ce5a5d2c21cbb2"
+  integrity sha512-hwgPzMgZksmJB/hOHQqrT7SZ6TpYaBtkW6BDhCojluBzaMDfDZxeXbNAhAYCO+tJI9p+CndPF+InsocCQDAJXA==
+  dependencies:
+    "@material/animation" "^1.0.0"
+    "@material/base" "^1.0.0"
+    "@material/dom" "^1.1.0"
+    "@material/elevation" "^1.1.0"
+    "@material/feature-targeting" "^0.44.1"
+    "@material/ripple" "^1.1.0"
+    "@material/rtl" "^0.42.0"
+    "@material/theme" "^1.1.0"
+    tslib "^1.9.3"
 
 "@material/tab-bar@^1.0.0":
   version "1.1.1"

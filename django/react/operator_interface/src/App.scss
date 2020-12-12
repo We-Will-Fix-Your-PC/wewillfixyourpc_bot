@@ -15,6 +15,7 @@
 @import '@material/react-menu-surface/index.scss';
 @import '@material/react-menu/index.scss';
 @import '@material/react-select/index.scss';
+@import '@material/react-switch/index.scss';
 @import "@material/shape/mixins";
 @import "@material/shape/functions";
 @import "@material/theme/mdc-theme.scss";
@@ -30,6 +31,10 @@
   flex: auto;
   overflow: auto;
   position: relative;
+
+  .top-bar {
+    grid-gap: 10px;
+  }
 }
 
 main {
@@ -47,6 +52,10 @@ main {
     height: 100%;
     display: grid;
     grid-template-columns: 1fr 500px;
+
+    &.no-customer-panel {
+      grid-template-columns: 1fr;
+    }
 
     .main {
       height: 100%;

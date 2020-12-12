@@ -145,7 +145,8 @@ USE_TZ = True
 
 SENTRY_ENVIRONMENT = "dev"
 
-EXTERNAL_URL_BASE = "https://wewillfixyourpc-bot.eu.ngrok.io"
+EXTERNAL_URL_BASE = "http://localhost:8000"
+# EXTERNAL_URL_BASE = "https://wewillfixyourpc-bot.eu.ngrok.io"
 
 STATIC_URL = f"{EXTERNAL_URL_BASE}/static/"
 STATIC_ROOT = os.path.join(BASE_DIR, "static")
@@ -231,6 +232,9 @@ KEYCLOAK_REALM = keycloak_conf["realm"]
 OIDC_CLIENT_ID = keycloak_conf["client_id"]
 OIDC_CLIENT_SECRET = keycloak_conf["client_secret"]
 OIDC_SCOPES = keycloak_conf["scopes"]
+
+AS207960_OIDC_CLIENT_ID = as207960_conf["oidc_client_id"]
+AS207960_OIDC_CLIENT_SECRET = as207960_conf["oidc_client_secret"]
 
 CORS_ORIGIN_ALLOW_ALL = True
 CORS_ALLOW_CREDENTIALS = True

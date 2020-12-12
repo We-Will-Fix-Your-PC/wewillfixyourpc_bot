@@ -138,7 +138,7 @@ export default class Conversation extends Component {
 
     render() {
         return (
-            <div className='conversation'>
+            <div className={'conversation' + (this.props.showCustomerPanel ? "" : " no-customer-panel")}>
                 <div className="main">
                     <Dialog
                         onClose={this.updateEntity}
@@ -295,9 +295,10 @@ export default class Conversation extends Component {
                         <div className="no-replies">Sender doesnt support replies</div>
                     }
                 </div>
+                {this.props.showCustomerPanel ?
                 <div className="panel">
                     <CustomerPanel conversation={this.props.conversation}/>
-                </div>
+                </div> : null}
             </div>
         );
     }
