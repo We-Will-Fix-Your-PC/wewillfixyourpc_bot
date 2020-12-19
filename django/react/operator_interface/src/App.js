@@ -602,15 +602,14 @@ class App extends Component {
                 } else {
                     let i = 1;
                     lastMsg = msgs[msgs.length - i];
-                    if (lastMsg) {
-                        while (lastMsg && !lastMsg.isLoaded()) {
+                        while (!lastMsg.isLoaded()) {
                             i++;
                             if (i >= msgs.length) {
                                 break;
                             }
                             lastMsg = msgs[msgs.length - i];
                         }
-                        if (lastMsg && !lastMsg.isLoaded()) {
+                        if (!lastMsg.isLoaded()) {
                             i = 1;
                             lastMsg = msgs[msgs.length - i];
                             if (lastMsg) {
@@ -622,6 +621,9 @@ class App extends Component {
                                 break;
                             }
                             i++;
+                            if (i >= msgs.length) {
+                                break;
+                            }
                             lastMsg = msgs[msgs.length - i];
                             if (lastMsg) {
                                  lastMsg.load();
