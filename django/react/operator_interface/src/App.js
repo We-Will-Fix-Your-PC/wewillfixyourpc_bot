@@ -603,21 +603,21 @@ class App extends Component {
                     let i = 1;
                     lastMsg = msgs[msgs.length - i];
                     if (lastMsg) {
-                        while (!lastMsg.isLoaded()) {
+                        while (lastMsg && !lastMsg.isLoaded()) {
                             i++;
                             if (i >= msgs.length) {
                                 break;
                             }
                             lastMsg = msgs[msgs.length - i];
                         }
-                        if (!lastMsg.isLoaded()) {
+                        if (lastMsg && !lastMsg.isLoaded()) {
                             i = 1;
                             lastMsg = msgs[msgs.length - i];
                             if (lastMsg) {
                                 lastMsg.load();
                             }
                         }
-                        while (lastMsg.isLoaded()) {
+                        while (lastMsg && lastMsg.isLoaded()) {
                             if (lastMsg.text) {
                                 break;
                             }
