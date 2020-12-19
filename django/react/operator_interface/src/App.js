@@ -602,28 +602,30 @@ class App extends Component {
                 } else {
                     let i = 1;
                     lastMsg = msgs[msgs.length - i];
-                    while (!lastMsg.isLoaded()) {
-                        i++;
-                        if (i >= msgs.length) {
-                            break;
+                    if (lastMsg) {
+                        while (!lastMsg.isLoaded()) {
+                            i++;
+                            if (i >= msgs.length) {
+                                break;
+                            }
+                            lastMsg = msgs[msgs.length - i];
                         }
-                        lastMsg = msgs[msgs.length - i];
-                    }
-                    if (!lastMsg.isLoaded()) {
-                        i = 1;
-                        lastMsg = msgs[msgs.length - i];
-                        if (lastMsg) {
-                            lastMsg.load();
+                        if (!lastMsg.isLoaded()) {
+                            i = 1;
+                            lastMsg = msgs[msgs.length - i];
+                            if (lastMsg) {
+                                lastMsg.load();
+                            }
                         }
-                    }
-                    while (lastMsg.isLoaded()) {
-                        if (lastMsg.text) {
-                            break;
-                        }
-                        i++;
-                        lastMsg = msgs[msgs.length - i];
-                        if (lastMsg) {
-                            lastMsg.load();
+                        while (lastMsg.isLoaded()) {
+                            if (lastMsg.text) {
+                                break;
+                            }
+                            i++;
+                            lastMsg = msgs[msgs.length - i];
+                            if (lastMsg) {
+                                 lastMsg.load();
+                            }
                         }
                     }
                 }
