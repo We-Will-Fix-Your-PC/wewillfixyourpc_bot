@@ -612,7 +612,9 @@ class App extends Component {
                     if (!lastMsg.isLoaded()) {
                         i = 1;
                         lastMsg = msgs[msgs.length - i];
-                        lastMsg.load();
+                        if (lastMsg) {
+                            lastMsg.load();
+                        }
                     }
                     while (lastMsg.isLoaded()) {
                         if (lastMsg.text) {
@@ -620,7 +622,9 @@ class App extends Component {
                         }
                         i++;
                         lastMsg = msgs[msgs.length - i];
-                        lastMsg.load();
+                        if (lastMsg) {
+                            lastMsg.load();
+                        }
                     }
                 }
 
