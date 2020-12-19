@@ -629,7 +629,6 @@ class App extends Component {
                                  lastMsg.load();
                             }
                         }
-                    }
                 }
 
                 return {c: c, lastMsg: lastMsg}
