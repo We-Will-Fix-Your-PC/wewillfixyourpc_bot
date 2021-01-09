@@ -18,7 +18,7 @@
     </content>
     <content url="file://$MODULE_DIR$/kube" />
     <content url="file://$MODULE_DIR$/rasa" />
-    <orderEntry type="jdk" jdkName="Python 3.8 (wewillfixyourpc_bot)" jdkType="Python SDK" />
+    <orderEntry type="jdk" jdkName="Python 3.9 (wewillfixyourpc_bot)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="merchant" level="application" />
     <orderEntry type="library" name="platform" level="application" />
