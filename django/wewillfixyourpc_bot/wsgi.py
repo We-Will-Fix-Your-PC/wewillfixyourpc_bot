@@ -15,6 +15,8 @@ from sentry_sdk.integrations.celery import CeleryIntegration
 from sentry_sdk.integrations.django import DjangoIntegration
 from sentry_sdk.integrations.redis import RedisIntegration
 from sentry_sdk.integrations.flask import FlaskIntegration
+from sentry_sdk.integrations.aiohttp import AioHttpIntegration
+from sentry_sdk.integrations.sanic import SanicIntegration
 
 if not settings.DEBUG:
     sentry_sdk.init(
@@ -25,8 +27,11 @@ if not settings.DEBUG:
             DjangoIntegration(),
             RedisIntegration(),
             FlaskIntegration(),
+            AioHttpIntegration(),
+            SanicIntegration(),
         ],
         release=os.getenv("RELEASE", None),
+        traces_sample_rate=1.0,
     )
 
 try:
