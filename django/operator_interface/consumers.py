@@ -558,7 +558,7 @@ class OperatorConsumer(JsonWebsocketConsumer):
             self.save_object(message)
             operator_interface.tasks.process_message.delay(message.id)
 
-    def receive_json(self, message, **kwargs):
+    def receive_json(self, message, *args, **kwargs):
         if message["type"] == "resyncReq":
             self.send_config()
             last_message = message["lastMessage"]
