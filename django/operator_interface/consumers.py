@@ -14,7 +14,7 @@ from channels.layers import get_channel_layer
 from django.contrib.auth.models import User
 from django.conf import settings
 from django.db import transaction
-from django.db.models import Max
+from django.db.models import Max, Count
 from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
 from django.utils import html
@@ -343,6 +343,8 @@ class OperatorConsumer(JsonWebsocketConsumer):
         for conversation in (
             operator_interface.models.Conversation.objects
                     .annotate(order_timestamp=Max('conversationplatform__messages__timestamp'))
+                    .annotate(message_count=Count('conversationplatform__messages'))
+                    .filter(message_count__gte=1)
                     .order_by('-order_timestamp')
                     .distinct()[offset:offset+50]
         ):
