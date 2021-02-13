@@ -426,7 +426,8 @@ class App extends Component {
         this.state = {
             error: null,
             open: true,
-            lastMessage: 0,
+            lastMessage: -1,
+            conversationOffset: 0,
             selectedCid: null,
             showCustomerPanel: true,
             conversations: {},
@@ -447,6 +448,8 @@ class App extends Component {
         this.onRequestSignIn = this.onRequestSignIn.bind(this);
         this.onTakeOver = this.onTakeOver.bind(this);
         this.onHandBack = this.onHandBack.bind(this);
+        this.convListScroll = this.convListScroll.bind(this);
+        this.convList = React.createRef();
     }
 
     componentDidMount() {
@@ -455,10 +458,27 @@ class App extends Component {
         this.sock.onopen = this.handleOpen;
         this.sock.onmessage = this.handleReceiveMessage;
         this.sock.open();
+        this.convList.current.addEventListener('scroll', this.convListScroll);
     }
 
     componentWillUnmount() {
         this.sock.close();
+        if (this.convList.current) {
+            this.convList.current.removeEventListener('scroll', this.convListScroll);
+        }
+    }
+
+    convListScroll() {
+        let scroll = this.convList.current.scrollHeight - this.convList.current.scrollTop
+            - this.convList.current.clientHeight;
+        if (scroll === 0) {
+            this.state.conversationOffset += 50;
+            this.sock.send(JSON.stringify({
+                type: "getConversations",
+                offset: this.state.conversationOffset
+            }));
+        }
+        console.log(scroll);
     }
 
     selectConversation(i) {
@@ -538,10 +558,17 @@ class App extends Component {
     }
 
     handleOpen() {
-        this.sock.send(JSON.stringify({
-            type: "resyncReq",
-            lastMessage: this.state.lastMessage
-        }));
+        if (this.state.lastMessage === -1) {
+            this.sock.send(JSON.stringify({
+                type: "getConversations",
+                offset: this.state.conversationOffset
+            }));
+        } else {
+            this.sock.send(JSON.stringify({
+                type: "resyncReq",
+                lastMessage: this.state.lastMessage
+            }));
+        }
 
         this.pending_messages.forEach(m => {
             this.sock.send(JSON.stringify({
@@ -644,7 +671,7 @@ class App extends Component {
                         </DrawerTitle>
                     </DrawerHeader>
 
-                    <DrawerContent>
+                    <div className="mdc-drawer__content" ref={this.convList}>
                         <List twoLine avatarList singleSelection
                               selectedIndex={this.state.selectedCid === null ? null :
                                   conversations.map((c, i) => ({c: c, i: i}))
@@ -660,7 +687,7 @@ class App extends Component {
                                 </ListItem>
                             })}
                         </List>
-                    </DrawerContent>
+                    </div>
                 </Drawer>
 
                 <DrawerAppContent className='drawer-app-content'>

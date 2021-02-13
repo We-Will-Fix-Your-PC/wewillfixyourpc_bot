@@ -14,6 +14,7 @@ from channels.layers import get_channel_layer
 from django.contrib.auth.models import User
 from django.conf import settings
 from django.db import transaction
+from django.db.models import Max
 from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
 from django.utils import html
@@ -27,7 +28,7 @@ channel_layer = get_channel_layer()
 
 @receiver(post_save, sender=operator_interface.models.Conversation)
 def conversation_saved(
-    sender, instance: operator_interface.models.Conversation, **kwargs
+        sender, instance: operator_interface.models.Conversation, **kwargs
 ):
     transaction.on_commit(
         lambda: async_to_sync(channel_layer.group_send)(
@@ -38,7 +39,7 @@ def conversation_saved(
 
 @receiver(post_save, sender=operator_interface.models.ConversationPlatform)
 def conversation_platform_saved(
-    sender, instance: operator_interface.models.ConversationPlatform, **kwargs
+        sender, instance: operator_interface.models.ConversationPlatform, **kwargs
 ):
     transaction.on_commit(
         lambda: async_to_sync(channel_layer.group_send)(
@@ -50,7 +51,7 @@ def conversation_platform_saved(
 
 @receiver(post_delete, sender=operator_interface.models.Conversation)
 def conversation_deleted(
-    sender, instance: operator_interface.models.Conversation, **kwargs
+        sender, instance: operator_interface.models.Conversation, **kwargs
 ):
     transaction.on_commit(
         lambda: async_to_sync(channel_layer.group_send)(
@@ -338,6 +339,15 @@ class OperatorConsumer(JsonWebsocketConsumer):
                 for message in platform.messages.filter(timestamp__gt=last_message):
                     yield message
 
+    def get_conversations(self, offset):
+        for conversation in (
+            operator_interface.models.Conversation.objects
+                    .annotate(order_timestamp=Max('conversationplatform__messages__timestamp'))
+                    .order_by('-order_timestamp')
+                    .distinct()[offset:offset+50]
+        ):
+            yield conversation
+
     def get_message(self, mid):
         return operator_interface.models.Message.objects.get(id=mid)
 
@@ -419,10 +429,10 @@ class OperatorConsumer(JsonWebsocketConsumer):
             return {"email": value}
 
     def attribute_update(
-        self,
-        conversation: operator_interface.models.Conversation,
-        attribute: str,
-        value: str,
+            self,
+            conversation: operator_interface.models.Conversation,
+            attribute: str,
+            value: str,
     ):
         value = json.loads(value)
         attr = self.decode_attribute(attribute, value)
@@ -473,8 +483,8 @@ class OperatorConsumer(JsonWebsocketConsumer):
                     message = operator_interface.models.Message(
                         platform=conversation.last_usable_platform(),
                         text="Welcome to your We Will Fix Your PC account. Your username is "
-                        f"{user.get('username')}, and details to setup your account have been"
-                        f"emailed to you.",
+                             f"{user.get('username')}, and details to setup your account have been"
+                             f"emailed to you.",
                         direction=operator_interface.models.Message.TO_CUSTOMER,
                         user=self.user,
                     )
@@ -492,10 +502,10 @@ class OperatorConsumer(JsonWebsocketConsumer):
                         except phonenumbers.NumberParseException:
                             continue
                         if (
-                            phonenumbers.format_number(
-                                num, phonenumbers.PhoneNumberFormat.E164
-                            )
-                            == attr
+                                phonenumbers.format_number(
+                                    num, phonenumbers.PhoneNumberFormat.E164
+                                )
+                                == attr
                         ):
                             return True
 
@@ -538,8 +548,8 @@ class OperatorConsumer(JsonWebsocketConsumer):
                     message = operator_interface.models.Message(
                         platform=conversation.last_usable_platform(),
                         text=f"Welcome to your We Will Fix Your PC account. Your username is "
-                        f"{user.get('username')}, and your temporary password is "
-                        f"{password}.",
+                             f"{user.get('username')}, and your temporary password is "
+                             f"{password}.",
                         direction=operator_interface.models.Message.TO_CUSTOMER,
                         user=self.user,
                     )
@@ -568,6 +578,11 @@ class OperatorConsumer(JsonWebsocketConsumer):
                 if message.platform.conversation not in conversations:
                     conversations.add(message.platform.conversation)
             for conversation in conversations:
+                self.send_conversation(conversation)
+        elif message["type"] == "getConversations":
+            self.send_config()
+            offset = message["offset"]
+            for conversation in self.get_conversations(offset):
                 self.send_conversation(conversation)
         elif message["type"] == "getMessage":
             msg_id = message["id"]
