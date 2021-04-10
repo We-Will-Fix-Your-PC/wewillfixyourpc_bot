@@ -5,12 +5,12 @@ import List, {ListItem, ListItemText} from '@material/react-list';
 import Card from '@material/react-card';
 import dateformat from "dateformat";
 import OrderCard from "./OrderCard";
-import RepairCard from "./RepairCard";
 import Dialog, {DialogButton, DialogContent, DialogFooter, DialogTitle} from "@material/react-dialog";
 import {entity_map} from "./Conversation";
 import TextField, {Input} from "@material/react-text-field";
 import MaterialIcon from "@material/react-material-icon";
 import Button from "@material/react-button";
+import Select, {Option} from "@material/react-select";
 
 export default class CustomerPanel extends Component {
     constructor(props) {
@@ -20,6 +20,7 @@ export default class CustomerPanel extends Component {
             activeTab: 0,
             attribute: null,
             attributeValue: "",
+            presetMessage: null,
         };
 
         this.updateAttribute = this.updateAttribute.bind(this);
@@ -80,7 +81,7 @@ export default class CustomerPanel extends Component {
                     <span className='mdc-tab__text-label'>Repairs</span>
                 </Tab>
                 <Tab>
-                    <span className='mdc-tab__text-label'>Ordering</span>
+                    <span className='mdc-tab__text-label'>Preset messages</span>
                 </Tab>
             </TabBar>
             {this.state.activeTab === 0 ?
@@ -136,68 +137,63 @@ export default class CustomerPanel extends Component {
             }
             {this.state.activeTab === 1 ?
                 <div className="repairs">
-                    <h3>Search for a repair</h3>
-                    <RepairCard conversation={this.props.conversation}/>
-                    <h3>Bookings</h3>
-                    {this.props.conversation.bookings.map(b => {
-                        return <Card key={b.id} outlined className="repair">
-                            <h4>{b.time ? dateformat(b.time, "h:MMTT dS mmm yyyy") : null}</h4>
-                            {b.repair ? <React.Fragment>
-                                <span><b>Brand:</b> {b.repair.device.brand.display_name}</span><br/>
-                                <span><b>Device:</b> {b.repair.device.display_name}</span><br/>
-                                <span><b>Repair:</b> {b.repair.repair.display_name}</span>
-                                <span><b>Price:</b> {b.repair.price}</span><br/>
-                                <span><b>Time:</b> {b.repair.time}</span>
-                            </React.Fragment> : null }
-                        </Card>;
-                    })}
+                    {/*<h3>Search for a repair</h3>*/}
+                    {/*<RepairCard conversation={this.props.conversation}/>*/}
+                    {/*<h3>Bookings</h3>*/}
+                    {/*{this.props.conversation.bookings.map(b => {*/}
+                    {/*    return <Card key={b.id} outlined className="repair">*/}
+                    {/*        <h4>{b.time ? dateformat(b.time, "h:MMTT dS mmm yyyy") : null}</h4>*/}
+                    {/*        {b.repair ? <React.Fragment>*/}
+                    {/*            <span><b>Brand:</b> {b.repair.device.brand.display_name}</span><br/>*/}
+                    {/*            <span><b>Device:</b> {b.repair.device.display_name}</span><br/>*/}
+                    {/*            <span><b>Repair:</b> {b.repair.repair.display_name}</span>*/}
+                    {/*            <span><b>Price:</b> {b.repair.price}</span><br/>*/}
+                    {/*            <span><b>Time:</b> {b.repair.time}</span>*/}
+                    {/*        </React.Fragment> : null }*/}
+                    {/*    </Card>;*/}
+                    {/*})}*/}
                     {this.props.conversation.customer_id ?
                         <React.Fragment>
                             <h3>CLS</h3>
-                            <Button ripple colored raised href={`https://cardifftec.uk/customers/customer/${this.props.conversation.customer_id}/`} target="_blank">
+                            <Button ripple colored raised
+                                    href={`https://cardifftec.uk/customers/customer/${this.props.conversation.customer_id}/`}
+                                    target="_blank" style={{
+                                display: "flex",
+                                margin: "10px",
+                            }}>
                                 View customer
                             </Button>
-                            <Button ripple colored raised href={`https://cardifftec.uk/tickets/new/${this.props.conversation.customer_id}/`} target="_blank">
+                            <Button ripple colored raised
+                                    href={`https://cardifftec.uk/tickets/new/${this.props.conversation.customer_id}/`}
+                                    target="_blank" style={{
+                                display: "flex",
+                                margin: "10px",
+                            }}>
                                 New ticket
                             </Button>
                         </React.Fragment> : null}
                 </div>
                 : null}
             {this.state.activeTab === 2 ?
-                <div className="ordering">
-                    <h3>Current order</h3>
-                    <OrderCard conversation={this.props.conversation}/>
-                    <h3>Order History</h3>
-                    <div className="orderHistory">
-                        {this.props.conversation.payments
-                            .sort((x, y) => y.timestamp - x.timestamp).map(p => {
-                                let d = new Date(0);
-                                d.setUTCSeconds(p.timestamp);
-
-                                return <Card key={p.id} className="order" outlined>
-                                    <div>{p.id}</div>
-                                    <span>State:</span>
-                                    <span>{orderStates[p.state]}</span>
-                                    <span>Time:</span>
-                                    <span>{dateformat(d, "h:MM TT ddd mmm dS yyyy")}</span>
-                                    <span>Payment method:</span>
-                                    <span>{p.payment_method}</span>
-                                    <span>Total:</span>
-                                    <span>{p.total} GBP</span>
-                                    <div className="items">
-                                        <h4>Items</h4>
-                                        <List twoLine>
-                                            {p.items.map(i => {
-                                                return <ListItem key={i.id}>
-                                                    <ListItemText primaryText={i.title}
-                                                                  secondaryText={`${i.quantity} @ ${i.price} GBP`}/>
-                                                </ListItem>
-                                            })}
-                                        </List>
-                                    </div>
-                                </Card>
-                            })}
-                    </div>
+                <div className="presetMessages">
+                    <Select
+                        label="Message"
+                        value={this.state.presetMessage ? this.state.presetMessage.toString() : undefined}
+                        onEnhancedChange={(index, item) => {
+                            console.log(index, item);
+                            this.setState({presetMessage: parseInt(item.dataset.value)})
+                        }}
+                        enhanced
+                    >
+                        {this.props.config.preset_responses.map(r => <Option value={r.id.toString()}>{r.description}</Option>)}
+                    </Select>
+                    <Button ripple colored raised onClick={() => {
+                        if (this.state.presetMessage !== null) {
+                            this.props.conversation.send_preset(this.state.presetMessage);
+                        }
+                    }}>
+                        Send
+                    </Button>
                 </div> : null
             }
 

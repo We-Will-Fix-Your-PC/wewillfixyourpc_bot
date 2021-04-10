@@ -1,4 +1,4 @@
-Django
+Django<3.2
 Pillow
 djsingleton
 django-phonenumber-field
@@ -35,6 +35,7 @@ flask
 twilio
 sendgrid
 html2text
-git+https://github.com/Peter-Slump/python-keycloak-client.git@master
+jinja2
 git+https://github.com/TheEnbyperor/rasa-sdk.git@master
-git+https://github.com/TheEnbyperor/django-keycloak-auth.git@ad999dc7b045fb2e037d44608464a86c29ca366e
+git+https://github.com/TheEnbyperor/django-keycloak-auth.git@947117e691767d6eb78277cbc36b02ad72aa48ce
+

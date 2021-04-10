@@ -395,6 +395,16 @@ class ConversationData {
         }
     }
 
+    send_preset(id) {
+        if (this.can_message()) {
+            this.app.sock.send(JSON.stringify({
+                type: "preset_msg",
+                id: id,
+                cid: this.id
+            }));
+        }
+    }
+
     save_entity(entity) {
         this.app.sock.send(JSON.stringify({
             type: "attribute_update",
@@ -434,7 +444,7 @@ class App extends Component {
             messages: {},
             payments: {},
             bookings: {},
-            config: {}
+            config: {},
         };
 
         this.pending_messages = [];
@@ -759,6 +769,7 @@ class App extends Component {
                                 <Conversation
                                     conversation={this.state.conversations[this.state.selectedCid]}
                                     showCustomerPanel={this.state.showCustomerPanel}
+                                    config={this.state.config}
                                     onError={e => this.setState({
                                         error: e
                                     })}

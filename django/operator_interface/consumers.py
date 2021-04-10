@@ -196,7 +196,12 @@ class OperatorConsumer(JsonWebsocketConsumer):
             {
                 "type": "config",
                 "config": {
-                    "user_name": f"{self.user.first_name} {self.user.last_name}"
+                    "user_name": f"{self.user.first_name} {self.user.last_name}",
+                    "preset_responses": list(map(lambda m: {
+                        "id": m.id,
+                        "description": m.description,
+                        "message": m.message,
+                    }, operator_interface.models.PresetMessage.objects.all()))
                 },
             }
         )
@@ -634,6 +639,10 @@ class OperatorConsumer(JsonWebsocketConsumer):
         elif message["type"] == "takeOver":
             cid = message["cid"]
             operator_interface.tasks.take_over.delay(cid, self.user.id)
+        elif message["type"] == "preset_msg":
+            cid = message["cid"]
+            pid = message["id"]
+            operator_interface.tasks.send_preset_message.delay(cid, pid, self.user.id)
         elif message["type"] == "attribute_update":
             cid = message["cid"]
             try:

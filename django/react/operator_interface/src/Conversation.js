@@ -297,7 +297,7 @@ export default class Conversation extends Component {
                 </div>
                 {this.props.showCustomerPanel ?
                 <div className="panel">
-                    <CustomerPanel conversation={this.props.conversation}/>
+                    <CustomerPanel conversation={this.props.conversation} config={this.props.config}/>
                 </div> : null}
             </div>
         );

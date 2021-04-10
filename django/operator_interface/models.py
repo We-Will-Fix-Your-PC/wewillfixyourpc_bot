@@ -321,3 +321,12 @@ class MessageEntity(models.Model):
 
     def __str__(self):
         return self.entity
+
+
+class PresetMessage(models.Model):
+    description = models.CharField(max_length=255)
+    name = models.CharField(max_length=255, blank=True, null=True, unique=True)
+    message = models.TextField()
+
+    def __str__(self):
+        return self.description

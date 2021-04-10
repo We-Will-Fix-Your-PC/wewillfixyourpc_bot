@@ -26,8 +26,10 @@ import django_keycloak_auth.clients
 from django.utils import timezone
 from . import models
 from django.contrib.auth.models import User
+import jinja2
 
 channel_layer = get_channel_layer()
+j2_env = jinja2.Environment()
 
 
 @shared_task
@@ -213,15 +215,24 @@ def send_welcome_message(pid):
 
     if platform.platform != models.ConversationPlatform.EMAIL:
         if rasa_api.actions.is_open():
-            text = "We're currently open and someone will be with you shortly."
+            preset_message = models.PresetMessage.objects.filter(name="welcome_open").first()
+            if not preset_message:
+                text = "Welcome to We Will Fix Your PC.\nWe're currently open and someone will be with you shortly."
+            else:
+                text = make_preset_message(preset_message, None, platform.conversation)
         else:
-            text = "We're currently closed, but someone will get back to you as soon as we're open again."
+            preset_message = models.PresetMessage.objects.filter(name="welcome_closed").first()
+            if not preset_message:
+                text = "Welcome to We Will Fix Your PC.\n" \
+                       "We're currently closed, but someone will get back to you as soon as we're open again."
+            else:
+                text = make_preset_message(preset_message, None, platform.conversation)
 
         message = models.Message(
             message_id=uuid.uuid4(),
             platform=platform,
             direction=models.Message.TO_CUSTOMER,
-            text=f"Welcome to We Will Fix Your PC.\n{text}",
+            text=text,
         )
         message.save()
         process_message(message.id)
@@ -258,9 +269,17 @@ def take_over(cid, uid):
 
     if platform.platform != models.ConversationPlatform.EMAIL:
         if old_agent is None:
-            text = f"Hello I'm {user.first_name} and I'll be happy to help you today"
+            preset_message = models.PresetMessage.objects.filter(name="first_takeover").first()
+            if not preset_message:
+                text = f"Hello I'm {user.first_name} and I'll be happy to help you today"
+            else:
+                text = make_preset_message(preset_message, user, conversation)
         else:
-            text = f"Hello I'm {user.first_name} and I'll be taking over from here"
+            preset_message = models.PresetMessage.objects.filter(name="other_takeover").first()
+            if not preset_message:
+                text = f"Hello I'm {user.first_name} and I'll be taking over from here"
+            else:
+                text = make_preset_message(preset_message, user, conversation)
 
         message = models.Message(
             message_id=uuid.uuid4(),
@@ -271,6 +290,34 @@ def take_over(cid, uid):
         )
         message.save()
         process_message(message.id)
+
+def make_preset_message(preset_message, user, conversation):
+    template = j2_env.from_string(preset_message.message)
+    return template.render(
+        user=user,
+        conversation=conversation
+    )
+
+
+
+@shared_task
+def send_preset_message(cid, pid, uid=None):
+    conversation = models.Conversation.objects.get(id=cid)
+    preset_message = models.PresetMessage.objects.get(id=pid)
+    if uid:
+        user = User.objects.get(id=uid)
+    else:
+        user = None
+
+    message = models.Message(
+        platform=conversation.last_usable_platform(),
+        text=make_preset_message(preset_message, user, conversation),
+        direction=models.Message.TO_CUSTOMER,
+        message_id=uuid.uuid4(),
+        user=user,
+    )
+    message.save()
+    process_message(message.id)
 
 
 @shared_task
