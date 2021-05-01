@@ -361,28 +361,28 @@ def send_facebook_message(mid: int) -> None:
     message: Message = Message.objects.get(id=mid)
     psid: str = message.platform.platform_id
 
-    # persona_id = None
-    # if message.user is not None:
-    #     try:
-    #         if message.user.userprofile.fb_persona_id is None:
-    #             persona_r = requests.post(
-    #                 "https://graph.facebook.com/me/personas",
-    #                 params={"access_token": settings.FACEBOOK_ACCESS_TOKEN},
-    #                 json={
-    #                     "name": message.user.first_name,
-    #                     "profile_picture_url": settings.EXTERNAL_URL_BASE
-    #                     + reverse("operator:profile_pic", args=[message.user.id]),
-    #                 },
-    #             )
-    #             if persona_r.status_code == 200:
-    #                 persona_json = persona_r.json()
-    #                 message.user.userprofile.fb_persona_id = persona_json["id"]
-    #                 message.user.userprofile.save()
-    #                 persona_id = persona_json["id"]
-    #         else:
-    #             persona_id = message.user.userprofile.fb_persona_id
-    #     except User.userprofile.RelatedObjectDoesNotExist:
-    #         pass
+    persona_id = None
+    if message.user is not None:
+        try:
+            if message.user.userprofile.fb_persona_id is None:
+                persona_r = requests.post(
+                    "https://graph.facebook.com/me/personas",
+                    params={"access_token": settings.FACEBOOK_ACCESS_TOKEN},
+                    json={
+                        "name": message.user.first_name,
+                        "profile_picture_url": settings.EXTERNAL_URL_BASE
+                        + reverse("operator:profile_pic", args=[message.user.id]),
+                    },
+                )
+                if persona_r.status_code == 200:
+                    persona_json = persona_r.json()
+                    message.user.userprofile.fb_persona_id = persona_json["id"]
+                    message.user.userprofile.save()
+                    persona_id = persona_json["id"]
+            else:
+                persona_id = message.user.userprofile.fb_persona_id
+        except User.userprofile.RelatedObjectDoesNotExist:
+            pass
 
     requests.post(
         "https://graph.facebook.com/me/messages",
@@ -402,8 +402,8 @@ def send_facebook_message(mid: int) -> None:
 
     request_body = {"recipient": {"id": psid}, "message": {}}
 
-    # if persona_id is not None:
-    #     request_body["persona_id"] = persona_id
+    if persona_id is not None:
+        request_body["persona_id"] = persona_id
     if len(quick_replies) > 0:
         request_body["message"]["quick_replies"] = quick_replies
 
