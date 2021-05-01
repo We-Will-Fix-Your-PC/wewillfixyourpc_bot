@@ -291,7 +291,7 @@ def update_facebook_profile(psid: str, cid) -> None:
     locale = profile.get("locale")
     gender = profile.get("gender")
 
-    if not conversation.conversation_pic:
+    if not conversation.conversation_pic and profile_pic:
         pic_r = requests.get(profile_pic)
         if pic_r.status_code == 200:
             conversation.conversation_pic.save(
