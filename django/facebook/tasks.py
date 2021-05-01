@@ -273,7 +273,7 @@ def update_facebook_profile(psid: str, cid) -> None:
     profile_r = requests.get(
         f"https://graph.facebook.com/{psid}",
         params={
-            "fields": "name,timezone,locale,gender,first_name,last_name",
+            "fields": "name,timezone,locale,gender,first_name,last_name,profile_pic",
             "access_token": settings.FACEBOOK_ACCESS_TOKEN,
         },
     )
