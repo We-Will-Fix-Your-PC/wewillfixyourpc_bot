@@ -402,8 +402,8 @@ def send_facebook_message(mid: int) -> None:
 
     request_body = {"recipient": {"id": psid}, "message": {}}
 
-    if persona_id is not None:
-        request_body["persona_id"] = persona_id
+    # if persona_id is not None:
+    #     request_body["persona_id"] = persona_id
     if len(quick_replies) > 0:
         request_body["message"]["quick_replies"] = quick_replies
 
