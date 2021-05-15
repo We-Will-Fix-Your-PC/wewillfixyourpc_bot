@@ -575,6 +575,90 @@ class OperatorConsumer(JsonWebsocketConsumer):
             self.save_object(message)
             operator_interface.tasks.process_message.delay(message.id)
 
+    def make_new_conversation(self, phone_number: str, name: str, text: str)\
+            -> typing.Optional[operator_interface.models.ConversationPlatform]:
+        if not phone_number:
+            self.send_error("Invalid phone number")
+            return
+
+        if not name:
+            self.send_error("Invalid name")
+            return
+
+        if not text:
+            self.send_error("Invalid message")
+            return
+
+        try:
+            n = phonenumbers.parse(phone_number, settings.PHONENUMBER_DEFAULT_REGION)
+        except phonenumbers.phonenumberutil.NumberParseException:
+            self.send_error("Invalid phone number")
+            return None
+
+        if not phonenumbers.is_valid_number(n):
+            self.send_error("Invalid phone number")
+            return None
+
+        formatted_num = phonenumbers.format_number(
+            n, phonenumbers.PhoneNumberFormat.E164
+        )
+        try:
+            platform = operator_interface.models.ConversationPlatform.objects.get(
+                platform=operator_interface.models.ConversationPlatform.WHATSAPP,
+                platform_id=formatted_num,
+            )
+            if not platform.can_message(None, True, text):
+                platform = None
+        except operator_interface.models.ConversationPlatform.DoesNotExist:
+            platform = None
+
+        if not platform:
+            try:
+                platform = operator_interface.models.ConversationPlatform.objects.get(
+                    platform=operator_interface.models.ConversationPlatform.AS207960,
+                    platform_id=f"msisdn-messaging;{formatted_num}",
+                )
+            except operator_interface.models.ConversationPlatform.DoesNotExist:
+                pass
+
+        if not platform:
+            try:
+                platform = operator_interface.models.ConversationPlatform.objects.get(
+                    platform=operator_interface.models.ConversationPlatform.SMS,
+                    platform_id=formatted_num,
+                )
+            except operator_interface.models.ConversationPlatform.DoesNotExist:
+                pass
+
+        if not platform:
+            conv = operator_interface.models.Conversation(conversation_name=name)
+            conv.save()
+
+            if operator_interface.models.ConversationPlatform.is_whatsapp_template(text):
+                platform_id = operator_interface.models.ConversationPlatform.WHATSAPP
+                platform_rcpt_id = formatted_num
+            else:
+                platform_id = operator_interface.models.ConversationPlatform.AS207960
+                platform_rcpt_id = f"msisdn-messaging;{formatted_num}"
+
+            platform = operator_interface.models.ConversationPlatform(
+                conversation=conv,
+                platform=platform_id,
+                platform_id=platform_rcpt_id,
+            )
+            platform.save()
+
+        if platform:
+            message = operator_interface.models.Message(
+                platform=platform,
+                text=text,
+                direction=operator_interface.models.Message.TO_CUSTOMER,
+                message_id=uuid.uuid4(),
+                user=self.user,
+            )
+            self.save_object(message)
+            operator_interface.tasks.process_message.delay(message.id)
+
     def receive_json(self, message, *args, **kwargs):
         if message["type"] == "resyncReq":
             self.send_config()
@@ -630,6 +714,11 @@ class OperatorConsumer(JsonWebsocketConsumer):
             text = message["text"]
             cid = message["cid"]
             self.make_message(cid, text)
+        elif message["type"] == "newMsg":
+            text = message["text"]
+            name = message["name"]
+            number = message["msisdn"]
+            self.make_new_conversation(number, name, text)
         elif message["type"] == "endConv":
             cid = message["cid"]
             operator_interface.tasks.end_conversation.delay(cid)

@@ -98,6 +98,14 @@ def send_message(request, customer_id):
                     pass
                 try:
                     platform = ConversationPlatform.objects.get(
+                        platform=ConversationPlatform.AS207960,
+                        platform_id=f"msisdn-messaging;{formatted_num}",
+                    )
+                    break
+                except ConversationPlatform.DoesNotExist:
+                    pass
+                try:
+                    platform = ConversationPlatform.objects.get(
                         platform=ConversationPlatform.SMS,
                         platform_id=formatted_num,
                     )
@@ -123,6 +131,14 @@ def send_message(request, customer_id):
                         pass
                     try:
                         platform = ConversationPlatform.objects.get(
+                            platform=ConversationPlatform.AS207960,
+                            platform_id=f"msisdn-messaging;{formatted_num}",
+                        )
+                        break
+                    except ConversationPlatform.DoesNotExist:
+                        pass
+                    try:
+                        platform = ConversationPlatform.objects.get(
                             platform=ConversationPlatform.SMS,
                             platform_id=formatted_num
                         )
@@ -135,21 +151,23 @@ def send_message(request, customer_id):
                     conv = Conversation(conversation_user_id=customer_id)
                     conv.save()
 
-                if ConversationPlatform.is_whatsapp_template(text):
-                    platform_id = ConversationPlatform.WHATSAPP
+                formatted_num = phonenumbers.format_number(
+                    mobile_numbers[0], phonenumbers.PhoneNumberFormat.E164
+                ) if len(mobile_numbers) else phonenumbers.format_number(
+                other_numbers[0], phonenumbers.PhoneNumberFormat.E164
+                )
+
+                if operator_interface.models.ConversationPlatform.is_whatsapp_template(text):
+                    platform_id = operator_interface.models.ConversationPlatform.WHATSAPP
+                    platform_rcpt_id = formatted_num
                 else:
-                    platform_id = ConversationPlatform.SMS
+                    platform_id = operator_interface.models.ConversationPlatform.AS207960
+                    platform_rcpt_id = f"msisdn-messaging;{formatted_num}"
 
                 platform = ConversationPlatform(
                     conversation=conv,
                     platform=platform_id,
-                    platform_id=phonenumbers.format_number(
-                        mobile_numbers[0], phonenumbers.PhoneNumberFormat.E164
-                    )
-                    if len(mobile_numbers)
-                    else phonenumbers.format_number(
-                        other_numbers[0], phonenumbers.PhoneNumberFormat.E164
-                    ),
+                    platform_id=platform_rcpt_id,
                     additional_platform_data=json.dumps({
                         "try_others": [phonenumbers.format_number(
                             n, phonenumbers.PhoneNumberFormat.E164

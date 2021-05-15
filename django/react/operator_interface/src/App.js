@@ -16,6 +16,8 @@ import Conversation from './Conversation';
 
 import './App.scss';
 import Dialog, {DialogButton, DialogContent, DialogFooter, DialogTitle} from "@material/react-dialog";
+import TextField, {Input} from "@material/react-text-field";
+import Select, {Option} from "@material/react-select";
 
 export const ROOT_URL = process.env.NODE_ENV === 'production' ?
     "https://" + window.location.host + "/" : "http://localhost:8000/";
@@ -234,6 +236,8 @@ class MessageData {
             const platform_id = this.data.platform_id.split(";", 1)[0];
             if (platform_id === "google-business-messaging") {
                 return "Google Business Messaging";
+            } else if (platform_id === "msisdn-messaging") {
+                return "Text Message";
             }
         }
         return "Unknown platform"
@@ -436,6 +440,7 @@ class App extends Component {
         this.state = {
             error: null,
             open: true,
+            newOpen: false,
             lastMessage: -1,
             conversationOffset: 0,
             selectedCid: null,
@@ -445,6 +450,9 @@ class App extends Component {
             payments: {},
             bookings: {},
             config: {},
+            newMessagePhoneValue: "",
+            newMessageNameValue: "",
+            newMessageValue: "",
         };
 
         this.pending_messages = [];
@@ -459,6 +467,8 @@ class App extends Component {
         this.onTakeOver = this.onTakeOver.bind(this);
         this.onHandBack = this.onHandBack.bind(this);
         this.convListScroll = this.convListScroll.bind(this);
+        this.canSendNewMessage = this.canSendNewMessage.bind(this);
+        this.onSendNewMessage = this.onSendNewMessage.bind(this);
         this.convList = React.createRef();
     }
 
@@ -628,6 +638,20 @@ class App extends Component {
         }));
     }
 
+    canSendNewMessage() {
+        return (!!this.state.newMessagePhoneValue.length) && (!!this.state.newMessageNameValue)
+            && (!!this.state.newMessageValue);
+    }
+
+    onSendNewMessage() {
+        this.sock.send(JSON.stringify({
+            type: "newMsg",
+            name: this.state.newMessageNameValue,
+            msisdn: this.state.newMessagePhoneValue,
+            text: this.state.newMessageValue,
+        }));
+    }
+
     render() {
         const conversations = Object.values(this.state.conversations)
             .map(c => {
@@ -639,33 +663,33 @@ class App extends Component {
                 } else {
                     let i = 1;
                     lastMsg = msgs[msgs.length - i];
-                        while (!lastMsg.isLoaded()) {
-                            i++;
-                            if (i >= msgs.length) {
-                                break;
-                            }
-                            lastMsg = msgs[msgs.length - i];
+                    while (!lastMsg.isLoaded()) {
+                        i++;
+                        if (i >= msgs.length) {
+                            break;
                         }
-                        if (!lastMsg.isLoaded()) {
-                            i = 1;
-                            lastMsg = msgs[msgs.length - i];
-                            if (lastMsg) {
-                                lastMsg.load();
-                            }
+                        lastMsg = msgs[msgs.length - i];
+                    }
+                    if (!lastMsg.isLoaded()) {
+                        i = 1;
+                        lastMsg = msgs[msgs.length - i];
+                        if (lastMsg) {
+                            lastMsg.load();
                         }
-                        while (lastMsg && lastMsg.isLoaded()) {
-                            if (lastMsg.text) {
-                                break;
-                            }
-                            i++;
-                            if (i >= msgs.length) {
-                                break;
-                            }
-                            lastMsg = msgs[msgs.length - i];
-                            if (lastMsg) {
-                                 lastMsg.load();
-                            }
+                    }
+                    while (lastMsg && lastMsg.isLoaded()) {
+                        if (lastMsg.text) {
+                            break;
                         }
+                        i++;
+                        if (i >= msgs.length) {
+                            break;
+                        }
+                        lastMsg = msgs[msgs.length - i];
+                        if (lastMsg) {
+                            lastMsg.load();
+                        }
+                    }
                 }
 
                 return {c: c, lastMsg: lastMsg}
@@ -712,11 +736,54 @@ class App extends Component {
                             <DialogButton action='dismiss' isDefault>Ok</DialogButton>
                         </DialogFooter>
                     </Dialog>
+                    <Dialog
+                        className="NewMessageDialog"
+                        onClose={() => this.setState({newOpen: false})}
+                        open={this.state.newOpen}>
+                        <DialogTitle>New message</DialogTitle>
+                        <DialogContent>
+                            <TextField outlined label="Phone number">
+                                <Input value={this.state.newMessagePhoneValue}
+                                       onChange={(e) => this.setState({newMessagePhoneValue: e.currentTarget.value})}/>
+                            </TextField>
+                            <TextField outlined label="Customer name">
+                                <Input value={this.state.newMessageNameValue}
+                                       onChange={(e) => this.setState({newMessageNameValue: e.currentTarget.value})}/>
+                            </TextField>
+                            {this.state.config.preset_responses ? <Select
+                                label="Preset message"
+                                onEnhancedChange={(index, item) => {
+                                    this.setState({
+                                        newMessageValue: this.state.config.preset_responses[index].message
+                                    });
+                                }}
+                                enhanced
+                                outlined
+                            >
+                                {this.state.config.preset_responses.map(r => <Option
+                                    value={r.id.toString()}>{r.description}</Option>)}
+                            </Select> : null}
+                            <TextField outlined label="Message" textarea>
+                                <Input value={this.state.newMessageValue}
+                                       onChange={(e) => this.setState({newMessageValue: e.currentTarget.value})}/>
+                            </TextField>
+                        </DialogContent>
+                        <DialogFooter>
+                            <DialogButton action='dismiss'>Cancel</DialogButton>
+                            <DialogButton action='confirm' isDefault disabled={!this.canSendNewMessage()} onClick={this.onSendNewMessage}>
+                                Send
+                            </DialogButton>
+                        </DialogFooter>
+                    </Dialog>
                     <TopAppBar>
                         <TopAppBarRow>
                             <TopAppBarSection align='start'>
                                 <TopAppBarIcon navIcon>
                                     <MaterialIcon icon='menu' onClick={() => this.setState({open: !this.state.open})}/>
+                                </TopAppBarIcon>
+                                <TopAppBarIcon navIcon>
+                                    <MaterialIcon icon='add'
+                                                  onClick={() => this.setState({newOpen: !this.state.newOpen})}/>
                                 </TopAppBarIcon>
                                 <TopAppBarTitle>{this.state.selectedCid === null ? "Loading..." :
                                     this.state.conversations[this.state.selectedCid].customer_name}</TopAppBarTitle>
