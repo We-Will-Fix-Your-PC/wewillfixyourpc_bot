@@ -277,54 +277,54 @@ def update_facebook_profile(psid: str, cid) -> None:
             "access_token": settings.FACEBOOK_ACCESS_TOKEN,
         },
     )
-    profile_r.raise_for_status()
-    profile = profile_r.json()
-    name = profile.get("name")
-    first_name = profile.get("first_name")
-    last_name = profile.get("last_name")
-    profile_pic = profile.get("profile_pic")
-    user_timezone = profile.get("timezone")
-    if user_timezone < 0:
-        user_timezone = f"Etc/GMT-{abs(user_timezone)}"
-    else:
-        user_timezone = f"Etc/GMT+{abs(user_timezone)}"
-    locale = profile.get("locale")
-    gender = profile.get("gender")
+    if profile_r.status_code == 200:
+        profile = profile_r.json()
+        name = profile.get("name")
+        first_name = profile.get("first_name")
+        last_name = profile.get("last_name")
+        profile_pic = profile.get("profile_pic")
+        user_timezone = profile.get("timezone")
+        if user_timezone < 0:
+            user_timezone = f"Etc/GMT-{abs(user_timezone)}"
+        else:
+            user_timezone = f"Etc/GMT+{abs(user_timezone)}"
+        locale = profile.get("locale")
+        gender = profile.get("gender")
 
-    if not conversation.conversation_pic and profile_pic:
-        pic_r = requests.get(profile_pic)
-        if pic_r.status_code == 200:
-            conversation.conversation_pic.save(
-                psid,
-                InMemoryUploadedFile(
-                    file=BytesIO(pic_r.content),
-                    size=len(pic_r.content),
-                    charset=pic_r.encoding,
-                    content_type=pic_r.headers.get("content-type"),
-                    field_name=psid,
-                    name=psid,
-                ),
-            )
-    if not conversation.conversation_name:
-        conversation.conversation_name = name
-    conversation.save()
+        if not conversation.conversation_pic and profile_pic:
+            pic_r = requests.get(profile_pic)
+            if pic_r.status_code == 200:
+                conversation.conversation_pic.save(
+                    psid,
+                    InMemoryUploadedFile(
+                        file=BytesIO(pic_r.content),
+                        size=len(pic_r.content),
+                        charset=pic_r.encoding,
+                        content_type=pic_r.headers.get("content-type"),
+                        field_name=psid,
+                        name=psid,
+                    ),
+                )
+        if not conversation.conversation_name:
+            conversation.conversation_name = name
+        conversation.save()
 
-    if conversation.conversation_user_id:
-        django_keycloak_auth.users.update_user(
-            str(conversation.conversation_user_id),
-            first_name=first_name,
-            last_name=last_name,
-            gender=gender,
-            locale=locale,
-            timezone=user_timezone,
-            force_update=False,
-        )
-        if conversation.conversation_pic:
+        if conversation.conversation_user_id:
             django_keycloak_auth.users.update_user(
                 str(conversation.conversation_user_id),
-                profile_pictrue=conversation.conversation_pic.url,
+                first_name=first_name,
+                last_name=last_name,
+                gender=gender,
+                locale=locale,
+                timezone=user_timezone,
                 force_update=False,
             )
+            if conversation.conversation_pic:
+                django_keycloak_auth.users.update_user(
+                    str(conversation.conversation_user_id),
+                    profile_pictrue=conversation.conversation_pic.url,
+                    force_update=False,
+                )
 
 
 @shared_task
